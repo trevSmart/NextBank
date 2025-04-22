@@ -1,0 +1,42 @@
+<!-- Chat Widget Component -->
+<div class="chat-widget" id="chatWidget">
+    <div class="chat-header">
+        <div class="chat-title">
+            <div class="chat-title-wrapper">
+                <div class="chat-title-main">
+                    <i class="fas fa-comments"></i>
+                    <span>Live Chat</span>
+                </div>
+                <div class="chat-powered-by">
+                    powered by
+                    <img src="/src/assets/agentforce_logo.png" alt="Powered by agentforce" class="agentforce-logo" draggable="false">
+                </div>
+            </div>
+        </div>
+        <button class="chat-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="chat-messages">
+        <div class="message system">
+            Welcome to FutureBank live chat!
+        </div>
+        <div class="message agent">
+            <div class="message-avatar">
+                <i class="fas fa-headset"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-name">Sarah</div>
+                <div class="message-text">Hi! I'm Sarah, your personal assistant. How may I assist you today?</div>
+                <div class="message-time">14:30</div>
+            </div>
+        </div>
+    </div>
+    <div class="chat-input">
+        <input type="text" placeholder="Type your message..." id="chatInput">
+        <button class="send-button">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+<script src="chat.js"></script>

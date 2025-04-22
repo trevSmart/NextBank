@@ -1,0 +1,28 @@
+.support-button,
+.user-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.support-button {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.user-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.support-button i,
+.user-button i {
+    font-size: 1.1rem;
+}
