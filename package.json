@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint src/js/",
     "lint:fix": "eslint src/js/ --fix",
-    "start": "npx http-server . -c-1 --config http-server.json -o /src/"
+    "start": "node proxy-server/proxy-server.js"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +17,11 @@
     "http-server": "^14.1.1"
   },
   "dependencies": {
-    "@fontsource/mona-sans": "^5.2.5"
+    "@fontsource/mona-sans": "^5.2.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
+    "uuid": "^9.0.1"
   }
 }

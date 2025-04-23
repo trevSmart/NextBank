@@ -55,7 +55,9 @@
 
     <main>
         <div class="dashboard-grid">
-            <!-- Total Balance -->
+
+            <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+            <!-- Total balance -->
             <section class="dashboard-card saldo-total">
                 <h2>Total balance</h2>
                 <div class="saldo-amount">24.567,89</div>
@@ -83,7 +85,7 @@
                 </div>
             </section>
 
-            <!-- Recent Transactions -->
+            <!-- Recent tansactions -->
             <section class="dashboard-card moviments">
                 <h2>Recent transactions</h2>
                 <div class="moviment-item">
@@ -118,7 +120,7 @@
                 </div>
             </section>
 
-            <!-- Cards 2 - Nova versió -->
+            <!-- My cards -->
             <section class="dashboard-card targetes-2">
                 <h2>My cards</h2>
                 <div class="targetes-2-container">
@@ -171,7 +173,37 @@
                 </div>
             </section>
 
-            <!-- Cards -->
+            <!-- Assistant -->
+            <section class="dashboard-card assistant">
+                <div class="resize-handle"></div>
+
+                <h2>
+                    <div class="chat-title-wrapper">
+                        <div class="chat-title-main">
+                            <h2>Assistant</h2>
+                        </div>
+                        <div class="chat-powered-by">
+                            powered by
+                            <img src="/src/assets/agentforce_logo.png" alt="Powered by agentforce" class="agentforce-logo" draggable="false">
+                        </div>
+                    </div>
+                </h2>
+                <div class="chat-messages">
+                    <ul class="messages-list">
+                        <li class="message system">
+                            Chat session started.
+                        </li>
+                    </ul>
+                </div>
+                <div class="chat-input">
+                    <input type="text" placeholder="Type your message..." id="chatInputFixed" autocomplete="off">
+                    <button class="send-button disabled">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Targetes -->
             <section class="dashboard-card targetes">
                 <h2>My cards 1</h2>
                 <div class="targeta-item">
@@ -207,12 +239,12 @@
     <div id="chatContainer"></div>
 
     <!-- Scripts -->
-    <script src="components/chat/chat.js"></script>
+    <script src="components/chat/chat.js" type="module"></script>
     <script src="js/main.js"></script>
 
     <!-- Support Popover -->
     <div class="support-popover">
-        <a href="#" class="support-option">
+        <a href="#" class="support-option support-option-live-chat">
             <i class="fas fa-comments"></i>
             <div class="support-option-text">
                 <span class="support-option-title">Live chat</span>
@@ -241,5 +273,6 @@
             </div>
         </a>
     </div>
+
 </body>
 </html>

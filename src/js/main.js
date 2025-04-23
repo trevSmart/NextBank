@@ -1,8 +1,44 @@
 'use strict';
 
-// Funció que s'executa quan el DOM està completament carregat
+// Function that executes when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     initializeDashboard();
+    const assistantCard = document.querySelector('.dashboard-card.assistant');
+    const resizeHandle = document.querySelector('.resize-handle');
+    let isResizing = false;
+    let startX;
+    let startWidth;
+
+    function startResize(e) {
+        isResizing = true;
+        startX = e.pageX;
+        startWidth = assistantCard.offsetWidth;
+        resizeHandle.classList.add('active');
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    }
+
+    function resize(e) {
+        if (!isResizing) return;
+
+        const width = startWidth - (e.pageX - startX);
+        if (width >= 300 && width <= 800) {
+            assistantCard.style.width = `${width}px`;
+        }
+    }
+
+    function stopResize() {
+        isResizing = false;
+        resizeHandle.classList.remove('active');
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
+
+    resizeHandle.addEventListener('mousedown', startResize);
 });
 
 function initializeDashboard() {
@@ -40,20 +76,25 @@ function initializeSupportPopover() {
     let isPopoverVisible = false;
     let timeoutId = null;
 
-    // Movem el popover fora del header
+    // Move popover outside header
     document.body.appendChild(popover);
 
     function updatePopoverPosition() {
+        const styleTransition = popover.style.transition;
+        popover.style.transition = 'none';
+
         const buttonRect = supportButton.getBoundingClientRect();
 
-        // Calculem la posició
-        const top = buttonRect.bottom + window.scrollY + 12; // 12px de marge
+        // Calculate position
+        const top = buttonRect.bottom + window.scrollY + 12; // 12px margin
         const left = buttonRect.left + (buttonRect.width / 2);
 
-        // Apliquem la posició
+        // Apply position
         popover.style.top = `${top}px`;
         popover.style.left = `${left}px`;
         popover.style.transform = 'translateX(-50%)';
+
+        popover.style.transition = styleTransition;
     }
 
     function showPopover() {
@@ -67,10 +108,10 @@ function initializeSupportPopover() {
         timeoutId = setTimeout(() => {
             isPopoverVisible = false;
             popover.classList.remove('visible');
-        }, 100); // Petit delay per permetre que el ratolí arribi al popover
+        }, 100); // Small delay to allow mouse to reach popover
     }
 
-    // Gestionar la visibilitat i posició
+    // Handle visibility and position
     supportButton.addEventListener('mouseenter', showPopover);
     supportButton.addEventListener('mouseleave', hidePopover);
 
@@ -83,7 +124,7 @@ function initializeSupportPopover() {
         hidePopover();
     });
 
-    // Actualitzar posició en scroll i resize només si el popover és visible
+    // Update position on scroll and resize only if popover is visible
     window.addEventListener('scroll', () => {
         if (isPopoverVisible) updatePopoverPosition();
     });
