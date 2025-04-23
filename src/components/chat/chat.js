@@ -34,7 +34,7 @@ const ChatWidget = {
 
         this.elements.chatButton = document.querySelector('.support-button');
         if (this.elements.chatButton) {
-            this.elements.chatButton.addEventListener('click', (e) => {
+            const chatButtonOnclick = e => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (!this.elements.isLoaded) {
@@ -42,7 +42,8 @@ const ChatWidget = {
                 } else if (!this.elements.isOpen) {
                     this.toggle();
                 }
-            });
+            };
+            this.elements.chatButton.addEventListener('click', chatButtonOnclick);
         } else {
             console.error('No s\'ha trobat el botó de xat');
         }
@@ -131,7 +132,6 @@ const ChatWidget = {
         if (isOpen) {
             this.elements.isOpen = false;
             requestAnimationFrame(() => {
-                this.elements.widget.classList.add('chat-widget-closing');
 
                 const handleTransitionEnd = () => {
                     this.elements.widget.classList.remove('chat-widget-open');
@@ -140,6 +140,8 @@ const ChatWidget = {
                 };
 
                 this.elements.widget.addEventListener('transitionend', handleTransitionEnd, { once: true });
+                this.elements.widget.classList.add('chat-widget-closing');
+
             });
         } else if (!this.elements.isOpen) {
             this.elements.isOpen = true;

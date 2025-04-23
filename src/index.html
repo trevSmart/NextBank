@@ -44,36 +44,6 @@
                 <button class="support-button">
                     <i class="fas fa-comments"></i>
                     <span>Need help?</span>
-                    <div class="support-popover">
-                        <a href="#" class="support-option">
-                            <i class="fas fa-comments"></i>
-                            <div class="support-option-text">
-                                <span class="support-option-title">Live Chat</span>
-                                <span class="support-option-description">Talk to our support team in real-time</span>
-                            </div>
-                        </a>
-                        <a href="#" class="support-option">
-                            <i class="fas fa-phone"></i>
-                            <div class="support-option-text">
-                                <span class="support-option-title">Call Us</span>
-                                <span class="support-option-description">Speak with a representative</span>
-                            </div>
-                        </a>
-                        <a href="#" class="support-option">
-                            <i class="fas fa-envelope"></i>
-                            <div class="support-option-text">
-                                <span class="support-option-title">Email Support</span>
-                                <span class="support-option-description">Get help within 24 hours</span>
-                            </div>
-                        </a>
-                        <a href="#" class="support-option">
-                            <i class="fas fa-book"></i>
-                            <div class="support-option-text">
-                                <span class="support-option-title">Help Center</span>
-                                <span class="support-option-description">Browse FAQs and tutorials</span>
-                            </div>
-                        </a>
-                    </div>
                 </button>
                 <div class="user-info">
                     <i class="fas fa-user"></i>
@@ -150,9 +120,10 @@
 
             <!-- Cards 2 - Nova versió -->
             <section class="dashboard-card targetes-2">
-                <h2>My cards 2</h2>
+                <h2>My cards</h2>
                 <div class="targetes-2-container">
                     <div class="targeta-item-2 visa">
+                        <div class="targeta-title">Visa Debit</div>
                         <div class="targeta-inner">
                             <div class="targeta-front">
                                 <div class="targeta-chip">
@@ -175,6 +146,7 @@
                         <div class="targeta-available">Available: 2.890,00 €</div>
                     </div>
                     <div class="targeta-item-2 mastercard">
+                        <div class="targeta-title">Mastercard Gold</div>
                         <div class="targeta-inner">
                             <div class="targeta-front">
                                 <div class="targeta-chip">
@@ -236,5 +208,38 @@
 
     <!-- Scripts -->
     <script src="components/chat/chat.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Support Popover -->
+    <div class="support-popover">
+        <a href="#" class="support-option">
+            <i class="fas fa-comments"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Live chat</span>
+                <span class="support-option-description">Talk to our support team in real-time</span>
+            </div>
+        </a>
+        <a href="#" class="support-option">
+            <i class="fas fa-phone"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Call us</span>
+                <span class="support-option-description">Speak with a representative</span>
+            </div>
+        </a>
+        <a href="#" class="support-option">
+            <i class="fas fa-envelope"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Email support</span>
+                <span class="support-option-description">Get help within 24 hours</span>
+            </div>
+        </a>
+        <a href="#" class="support-option">
+            <i class="fas fa-book"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Help center</span>
+                <span class="support-option-description">Browse FAQs and tutorials</span>
+            </div>
+        </a>
+    </div>
 </body>
 </html>

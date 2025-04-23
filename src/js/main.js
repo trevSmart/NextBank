@@ -9,6 +9,7 @@ function initializeDashboard() {
     // Initialize components
     initializeNavigation();
     initializeCards();
+    initializeSupportPopover();
 
     // Simulate real-time updates
     simulateDataUpdates();
@@ -30,6 +31,64 @@ function initializeNavigation() {
             // Here we could add real navigation
             showDevelopmentMessage(link.textContent.trim());
         });
+    });
+}
+
+function initializeSupportPopover() {
+    const supportButton = document.querySelector('.support-button');
+    const popover = document.querySelector('.support-popover');
+    let isPopoverVisible = false;
+    let timeoutId = null;
+
+    // Movem el popover fora del header
+    document.body.appendChild(popover);
+
+    function updatePopoverPosition() {
+        const buttonRect = supportButton.getBoundingClientRect();
+
+        // Calculem la posició
+        const top = buttonRect.bottom + window.scrollY + 12; // 12px de marge
+        const left = buttonRect.left + (buttonRect.width / 2);
+
+        // Apliquem la posició
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+        popover.style.transform = 'translateX(-50%)';
+    }
+
+    function showPopover() {
+        if (timeoutId) clearTimeout(timeoutId);
+        updatePopoverPosition();
+        isPopoverVisible = true;
+        popover.classList.add('visible');
+    }
+
+    function hidePopover() {
+        timeoutId = setTimeout(() => {
+            isPopoverVisible = false;
+            popover.classList.remove('visible');
+        }, 100); // Petit delay per permetre que el ratolí arribi al popover
+    }
+
+    // Gestionar la visibilitat i posició
+    supportButton.addEventListener('mouseenter', showPopover);
+    supportButton.addEventListener('mouseleave', hidePopover);
+
+    popover.addEventListener('mouseenter', () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        isPopoverVisible = true;
+    });
+
+    popover.addEventListener('mouseleave', () => {
+        hidePopover();
+    });
+
+    // Actualitzar posició en scroll i resize només si el popover és visible
+    window.addEventListener('scroll', () => {
+        if (isPopoverVisible) updatePopoverPosition();
+    });
+    window.addEventListener('resize', () => {
+        if (isPopoverVisible) updatePopoverPosition();
     });
 }
 
