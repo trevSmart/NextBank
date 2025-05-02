@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="dark light">
+    <link rel="icon" type="image/png" href="../public/favicon.webp">
+    <title>NextBank</title>
+
+    <!-- Estils -->
+    <link rel="stylesheet" href="../src/pages/styles.css" type="text/css">
+    <link rel="stylesheet" href="../src/components/agentforceClient/style.css">
+    <link rel="stylesheet" href="../src/components/toggle/toggle.css" type="text/css">
+    <link rel="stylesheet" href="../src/components/tooltip/tooltip.css" type="text/css">
+    <link rel="stylesheet" href="../src/components/creditCard/creditCard.css" type="text/css">
+    <link rel="stylesheet" href="../src/assets/fonts/fontawesome/all.min.css" type="text/css">
+    <script type="module" src="../src/components/InputMultiline/InputMultiline.js"></script>
+    <script type="module" src="../src/components/StockView/StockView.js"></script>
+</head>
+
+<body>
+    <div class="background-logo">
+        <img src="../src/assets/images/logo.webp" alt="Background Logo">
+    </div>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <a href="/public/index.html" draggable="false">
+                    <img src="../src/assets/images/logo.webp" alt="NextBank Logo" draggable="false">
+                    <span>NextBank</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" draggable="false">Summary</a></li>
+                    <li><a href="#" draggable="false">Accounts</a></li>
+                    <li><a href="#" draggable="false">Cards</a></li>
+                    <li><a href="#" draggable="false">Transfers</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="support-button">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Need help?</span>
+                </button>
+
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="main-areas">
+
+            <!-- Dashboard -->
+            <div class="dashboard-grid">
+                <!-- Total balance -->
+                <section class="dashboard-card salutation">
+                    <h2>
+                        Summary
+                        <span class="tooltip-wrapper">
+                            <span class="tooltip">I'm a Tooltip!</span>
+                            <span class="help-point">?</span>
+                        </span>
+                    </h2>
+                    <div class="salutation-message-container">
+                        <div class="salutation-message">
+                            <i class="fas fa-user"></i>
+                            <span class="user-name">Good morning Elizabeth!</span>
+                        </div>
+                        <div class="weather-container">
+                            <img src="../src/assets/images/weather_cloudy.webp" alt="Cloudy weather" class="weather-icon">
+                            <div class="weather-info">
+                                <span class="weather-city">Barcelona</span>
+                                <span class="weather-temperature">
+                                    <span class="weather-temperature-value">20°C</span>
+                                    <span>(17ºC - 23ºC)</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <h3>Total balance</h3>
+                    <div class="saldo-amount">24.567,89</div>
+                    <div class="saldo-change positive">
+                        <i class="fas fa-arrow-up"></i> +2,3% this month
+                    </div>
+                </section>
+
+                <!-- Accounts -->
+                <section class="dashboard-card accounts">
+                    <h2>My accounts</h2>
+                    <div class="compte-item">
+                        <div class="compte-info">
+                            <h3>Checking</h3>
+                            <span class="compte-numero">
+                                <span class="compte-numero-mask">
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                </span>
+                                <span class="compte-numero-last">
+                                    4589
+                                </span>
+                            </span>
+                        </div>
+                        <div class="compte-amount">
+                            <div class="compte-saldo">15.678,45</div>
+                            <div class="compte-change negative">-82,45%</div>
+                        </div>
+                    </div>
+                    <div class="compte-item">
+                        <div class="compte-info">
+                            <h3>Savings</h3>
+                            <span class="compte-numero">
+                                <span class="compte-numero-mask">
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                </span>
+                                <span class="compte-numero-last">
+                                    7823
+                                </span>
+                            </span>
+                        </div>
+                        <div class="compte-amount">
+                            <div class="compte-saldo">8.889,44</div>
+                            <div class="compte-change positive">+2,3%</div>
+                        </div>
+                    </div>
+                    <div class="compte-item">
+                        <div class="compte-info">
+                            <h3>Shared household</h3>
+                            <span class="compte-numero">
+                                <span class="compte-numero-mask">
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                    <i class="fa-solid fa-circle"></i>
+                                </span>
+                                <span class="compte-numero-last">
+                                    3879
+                                </span>
+                            </span>
+                        </div>
+                        <div class="compte-amount">
+                            <div class="compte-saldo">898,01</div>
+                            <div class="compte-change positive">+2,3%</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent tansactions -->
+                <section class="dashboard-card transactions">
+                    <h2>Recent transactions</h2>
+                    <div class="moviment-item">
+                        <div class="moviment-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="moviment-info">
+                            <h3>
+                                <img src="../src/assets/images/under_age.webp" alt="Under age" class="card-under-age">
+                                Whole Foods Market
+                            </h3>
+                            <span class="moviment-data">Today, 14:30</span>
+                        </div>
+                        <div class="moviment-amount despesa">-82,45</div>
+                    </div>
+                    <div class="moviment-item">
+                        <div class="moviment-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="moviment-info">
+                            <h3>Salary Payment</h3>
+                            <span class="moviment-data">03/01/2024</span>
+                        </div>
+                        <div class="moviment-amount ingrés">+2.450,00</div>
+                    </div>
+                    <div class="moviment-item">
+                        <div class="moviment-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="moviment-info">
+                            <h3>Rent Payment</h3>
+                            <span class="moviment-data">03/01/2024</span>
+                        </div>
+                        <div class="moviment-amount despesa">-950,00</div>
+                    </div>
+                    <div class="moviment-item">
+                        <div class="moviment-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="moviment-info">
+                            <h3>Whole Foods Market</h3>
+                            <span class="moviment-data">Today, 14:30</span>
+                        </div>
+                        <div class="moviment-amount despesa">-82,45</div>
+                    </div>
+                    <div class="moviment-item">
+                        <div class="moviment-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="moviment-info">
+                            <h3>Whole Foods Market</h3>
+                            <span class="moviment-data">Today, 14:30</span>
+                        </div>
+                        <div class="moviment-amount despesa">-82,45</div>
+                    </div>
+                </section>
+
+                <!-- My cards -->
+                <section class="dashboard-card cards">
+                    <h2>Cards</h2>
+                    <div class="cards-container">
+                        <div class="targeta-container">
+                            <div class="targeta-title">
+                                <div class="targeta-title-name">
+                                    Mastercard Gold
+                                </div>
+                                <div class="targeta-title-switch">
+                                    <input type="checkbox" class="toggle" checked id="toggle-mastercard">
+                                </div>
+                            </div>
+                            <div class="targeta mastercard">
+                                <div class="targeta-front">
+                                    <div class="targeta-chip">
+                                        <img src="../src/assets/images/chip.webp" alt="chip">
+                                    </div>
+                                    <div class="targeta-logo">
+                                        <img src="../src/assets/images/mastercard.svg" alt="Mastercard">
+                                    </div>
+                                    <div class="targeta-details">
+                                        <div class="targeta-number">2101 •••• •••• 4589</div>
+                                        <div class="targeta-name">
+                                            ELIZABETH WILLIAMS
+                                        </div>
+                                        <div class="targeta-expiry">12/28</div>
+                                    </div>
+                                </div>
+                                <div class="targeta-back">
+                                    <div class="targeta-stripe"></div>
+                                    <div class="targeta-cvv">CVV •••</div>
+                                </div>
+                            </div>
+                            <div class="targeta-available">Available: 2.890,00 €</div>
+                        </div>
+                        <div class="targeta-container">
+                            <div class="targeta-title">
+                                <div class="targeta-title-name">
+                                    <img src="../src/assets/images/under_age.webp" alt="Under age" class="card-under-age">
+                                    Visa Debit
+                                </div>
+                                <div class="targeta-title-switch">
+                                    <input type="checkbox" class="toggle" id="toggle-visa">
+                                </div>
+                            </div>
+                            <!-- <div class="targeta visa alert"> -->
+                            <div class="targeta visa">
+                                <div class="targeta-front">
+                                    <div class="targeta-chip">
+                                        <img src="../src/assets/images/chip.webp" alt="chip">
+                                    </div>
+                                    <div class="targeta-logo">
+                                        <img src="../src/assets/images/visa.svg" alt="Visa">
+                                    </div>
+                                    <div class="targeta-details">
+                                        <div class="targeta-number">2101 •••• •••• 7823</div>
+                                        <div class="targeta-name">
+                                            OSCAR WILLIAMS
+                                        </div>
+                                        <div class="targeta-expiry">9/26</div>
+                                    </div>
+                                </div>
+                                <div class="targeta-back">
+                                    <div class="targeta-stripe"></div>
+                                    <div class="targeta-cvv">CVV •••</div>
+                                </div>
+                            </div>
+                            <div class="targeta-available">Available: 485,42 €</div>
+                        </div>
+                    </div>
+
+
+
+                    <!--
+                    <div class="cardNewContainer">
+                        <div class="cardNew">
+                            <div class="face front">
+                                <h3 class="debit">Cartão de Débito</h3>
+                                <h3 class="bank">Banco</h3>
+                                <img class="chip" src="../src/assets/images/chip.webp" alt="chip">
+                                <h3 class="number">0000 0000 0000 0000</h3>
+                                <h5 class="valid"><span>Válido <br> até</span><span>10/28</span></h5>
+                                <h5 class="card-holder">Bianca Gualter</h5>
+                            </div>
+                            <div class="face back">
+                                <div class="blackbar"></div>
+                                <div class="cvvtext">
+                                    <div class="white-bar"></div>
+                                    <div class="cvv">123</div>
+                                </div>
+                                <p class="text">
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus quis ex nec nulla posuere sollicitudin. Proin nec orci at est pellentesque malesuada eu a neque. Maecenas quis porttitor odio. Praesent faucibus dui nisl, ac luctus mauris pulvinar in. Morbi vitae ante a nunc ullamcorper rutrum. Donec non interdum purus, gravida elementum mi.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    -->
+                </section>
+
+                <section class="dashboard-card calendar">
+                    <script type="module" src="../src/components/calendar/calendar.js"></script>
+                    <custom-calendar></custom-calendar>
+                </section>
+
+                <section class="dashboard-card stocks">
+                    <h2>Held stocks</h2>
+                    <stock-chart-card></stock-chart-card>
+                </section>
+
+                <div class="grid-footer-spacer"></div>
+            </div>
+
+            <!-- Assistant -->
+            <div class="assistant-container">
+                <section class="dashboard-card assistant">
+                    <div class="resize-handle"></div>
+                    <h2>
+                        <div class="chat-title-wrapper">
+                            <div class="chat-title-main">
+                                <h2>
+                                    <button class="popoutChat">
+                                        <img src="../src/assets/icons/popout.webp" alt="Pop out" class="popoutChatIcon" draggable="false">
+                                    </button>
+                                    Assistant
+                                </h2>
+                                <!--
+                                <div class="chat-title-switch">
+                                    <input type="checkbox" class="toggle" id="toggle-assistant">
+                                </div> -->
+                            </div>
+                            <div class="chat-powered-by">
+                                <span>powered by</span>
+                                <div class="agentforce-logo-container">
+                                    <img src="../src/assets/images/salesforce_logo.webp" alt="Salesforce logo" class="salesforce-logo" draggable="false">
+                                    <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
+                                </div>
+                            </div>
+                        </div>
+                    </h2>
+                    <div class="chat-messages">
+                        <ul class="messages-list">
+                        </ul>
+                    </div>
+                    <div class="chat-input">
+                        <input-multiline class="chat-input-input" placeholder="Chat with your assistant..."></input-multiline>
+                        <button class="send-button" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-text">
+            <div class="legal-text">
+                <img src="/src/assets/images/ibm_logo.webp" alt="IBM Logo" class="footer-logo" style="width: 65px;" draggable="false">
+                <span>© 2025</span>
+                <span>International Business Machines, S.A.</span>
+                <span>All rights reserved.</span>
+            </div>
+            <div>
+                <button class="language-switcher" aria-label="Change language">
+                    English
+                    <i class="fas fa-globe"></i>
+                </button>
+            </div>
+        </div>
+    </footer>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+
+
+    <!-- Support Popover -->
+    <div class="support-popover">
+        <a href="#" class="support-option">
+            <i class="fas fa-phone"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Call us</span>
+                <span class="support-option-description">Speak with a representative</span>
+            </div>
+        </a>
+        <a href="#" class="support-option">
+            <i class="fas fa-envelope"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Email support</span>
+                <span class="support-option-description">Get help within 24 hours</span>
+            </div>
+        </a>
+        <a href="#" class="support-option">
+            <i class="fas fa-book"></i>
+            <div class="support-option-text">
+                <span class="support-option-title">Help center</span>
+                <span class="support-option-description">Browse FAQs and tutorials</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Scripts -->
+    <!-- <script src="../src/components/agentforceClient/script.js" type="module"></script> -->
+    <script src="../src/main.js" type="module"></script>
+    <script type="module" src="../src/components/calendar/calendar.js"></script>
+    <!-- <script type="module" src="../src/components/agentforceClient/script.js"></script> -->
+</body>
+
+</html>
