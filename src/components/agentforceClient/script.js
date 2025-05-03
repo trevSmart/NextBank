@@ -198,8 +198,8 @@ const ChatWidget = {
 	async init() {
 		console.log('init');
 		this.elements.chatContainer = document.getElementById('chatContainer');
-		this.elements.dashboardAssistant = document.querySelector('.dashboard-card.assistant');
-
+		this.elements.dashboardAssistant = document.querySelector('.assistant-container .dashboard-card.assistant');
+		this.elements.assistantDetached = document.querySelector('.assistant-detached');
 		// Si no tenim cap dels dos contenidors, sortim
 		if (!this.elements.chatContainer && !this.elements.dashboardAssistant) {
 			return;
@@ -209,6 +209,7 @@ const ChatWidget = {
 		try {
 			if (!this.session.id) {
 				const sessionData = await SfAgentApi.startSession();
+				console.log('Agentforce session started with id:', sessionData.sessionId);
 				this.session.id = sessionData.sessionId;
 				this.messageStore.addSystemMessage('Your AI assistant is ready.');
 				this.messageStore.addAgentMessage(sessionData.welcomeMessage);
@@ -226,7 +227,7 @@ const ChatWidget = {
 
 		// Carreguem el xat flotant si existeix el contenidor
 		if (this.elements.chatContainer) {
-			// await this.loadAndShowChat(false);
+			await this.loadAndShowChat(false);
 		}
 
 		// Configurem el botó de live chat si existeix
@@ -246,7 +247,7 @@ const ChatWidget = {
 	},
 
 	async initDashboardChat() {
-		this.elements.input = document.querySelector('.chat-input-input');
+		this.elements.input = document.querySelector('input-multiline');
 		const chatContainer = document.getElementById('chatContainer');
 		if (chatContainer) {
 			this.elements.messages = chatContainer.querySelector('.chat-messages');
@@ -305,12 +306,12 @@ const ChatWidget = {
 
 	async loadAndShowChat(shouldShow = true) {
 		try {
-			const response = await fetch('index.html');
+/* 			const response = await fetch('index.html');
 			if (!response.ok) throw new Error('Could not load chat');
 
 			const html = await response.text();
 			this.elements.chatContainer.innerHTML = html;
-			this.elements.isLoaded = true;
+			this.elements.isLoaded = true; */
 			this.cacheElements();
 			this.setupEventListeners();
 
@@ -341,7 +342,7 @@ const ChatWidget = {
 
 	cacheElements() {
 		this.elements.dashboardGrid = document.querySelector('.dashboard-grid');
-		this.elements.widget = document.getElementById('chatWidget');
+		this.elements.widget = document.querySelector('.assistant-detached');
 		this.elements.messages = document.querySelector('.chat-messages');
 		this.elements.input = document.querySelector('.chat-input-input');
 		this.elements.sendButton = document.querySelector('.send-button');
@@ -368,22 +369,10 @@ const ChatWidget = {
 			});
 		}
 
-		if (this.elements.widget) {
-			const closeButton = this.elements.widget.querySelector('.chat-close');
-			if (closeButton) {
-				closeButton.addEventListener('click', () => this.toggle());
-			}
-
-			const sendButton = this.elements.widget.querySelector('.send-button');
-			if (sendButton) {
-				sendButton.addEventListener('click', () => this.sendMessage());
-			}
-
-			const chatHeader = this.elements.widget.querySelector('.chat-header');
-			if (chatHeader) {
-				chatHeader.addEventListener('selectstart', (e) => e.preventDefault());
-			}
-		}
+		const sendButton = document.querySelectorAll('.send-button');
+		sendButton.forEach(button => {
+			button.addEventListener('click', () => this.sendMessage());
+		});
 
 		this.initDragListeners();
 	},
@@ -392,7 +381,7 @@ const ChatWidget = {
 		if (this._dragListenersInitialized) return;
 		this._dragListenersInitialized = true;
 
-		const chatHeader = this.elements.widget?.querySelector('.chat-header');
+		const chatHeader = document.querySelector('.assistant-detached-header');
 		if (!chatHeader) return;
 
 		this._dragMouseMove = this.drag.bind(this);
@@ -404,18 +393,17 @@ const ChatWidget = {
 	toggle() {
 		if (!this.elements.widget || !this.elements.isLoaded) return;
 
-		const isOpen = this.elements.widget.classList.contains('chat-widget-open');
+		const isOpen = this.elements.widget.classList.contains('visible');
 
 		if (isOpen) {
 			//Closing
 			this.elements.isOpen = false;
 			requestAnimationFrame(() => {
 				const handleTransitionEnd = () => {
-					this.elements.widget.classList.remove('chat-widget-open');
+					this.elements.widget.classList.remove('visible');
 					this.elements.dashboardGrid.classList.remove('chatDetached');
 					this.elements.widget.classList.remove('chat-widget-closing');
 					this.elements.widget.removeEventListener('transitionend', handleTransitionEnd);
-					// this.endSession(); // Close session when chat is closed
 				};
 
 				this.elements.widget.addEventListener('transitionend', handleTransitionEnd, { once: true });
@@ -426,7 +414,7 @@ const ChatWidget = {
 			this.elements.isOpen = true;
 			requestAnimationFrame(() => {
 				this.elements.widget.classList.remove('chat-widget-closing');
-				this.elements.widget.classList.add('chat-widget-open');
+				this.elements.widget.classList.add('visible');
 				this.elements.dashboardGrid.classList.add('chatDetached');
 			});
 		}
@@ -575,7 +563,13 @@ const ChatWidget = {
 	},
 
 	dragStart(e) {
+		console.log('e.button:', e.button, 'e.type:', e.type);
+		if (typeof e.button !== 'undefined' && e.button !== 0) return;
 		const { dragState } = this.elements;
+
+		if (e.target.closest('.popoutChat')) {
+			return; // si es fa clic sobre el botó, no iniciar drag
+		}
 
 		dragState.limits = {
 			minX: - (this.elements.widget.offsetLeft) + 20,
@@ -587,17 +581,20 @@ const ChatWidget = {
 		dragState.initialX = e.clientX - dragState.xOffset;
 		dragState.initialY = e.clientY - dragState.yOffset;
 
-		if (e.target.closest('.chat-header')) {
+		if (e.target.closest('.assistant-detached-header')) {
 			document.body.style.userSelect = 'none';
 			document.addEventListener('mousemove', this._dragMouseMove, false);
 			document.addEventListener('mouseup', this._dragMouseUp, false);
 			dragState.isDragging = true;
 			this.elements.widget.style.transition = 'none';
 			this.elements.widget.style.willChange = 'transform';
+			setTimeout(() => {
+				document.addEventListener('mousedown', this._dragMouseUp, false);
+			}, 10);
 		}
 	},
 
-	dragEnd() {
+	dragEnd(e) {
 		const { dragState } = this.elements;
 		dragState.isDragging = false;
 
@@ -611,15 +608,21 @@ const ChatWidget = {
 		document.body.style.userSelect = '';
 		document.removeEventListener('mousemove', this._dragMouseMove, false);
 		document.removeEventListener('mouseup', this._dragMouseUp, false);
+		document.removeEventListener('mousedown', this._dragMouseUp, false);
 	},
 
 	drag(e) {
-		const { dragState } = this.elements;
+		const {dragState} = this.elements;
 		if (!dragState.isDragging) return;
-		e.preventDefault();
 
-		dragState.currentX = e.clientX - dragState.initialX;
-		dragState.currentY = e.clientY - dragState.initialY;
+		const newX = e.clientX - dragState.initialX;
+		const newY = e.clientY - dragState.initialY;
+
+		// Si el ratolí no s’ha mogut, no cal demanar un nou frame
+		if (newX === dragState.widgetLastX && newY === dragState.widgetLastY) return;
+
+		dragState.currentX = newX;
+		dragState.currentY = newY;
 
 		if (!dragState.animationFrameId) {
 			dragState.animationFrameId = requestAnimationFrame(() => this.updatePosition());
@@ -637,10 +640,6 @@ const ChatWidget = {
 
 		dragState.xOffset = Math.min(Math.max(minX, dragState.xOffset), maxX);
 		dragState.yOffset = Math.min(Math.max(minY, dragState.yOffset), maxY);
-
-		if (dragState.widgetLastX === dragState.xOffset && dragState.widgetLastY === dragState.yOffset) {
-			return;
-		}
 
 		dragState.widgetLastX = dragState.xOffset;
 		dragState.widgetLastY = dragState.yOffset;

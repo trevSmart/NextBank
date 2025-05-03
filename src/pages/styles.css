@@ -417,12 +417,13 @@ main {
 	gap: 1.5rem;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas:
-		"salutation stocks stocks calendar"
-		"accounts cards transactions transactions"
+		"salutation calendar accounts accounts"
+		"stocks stocks stocks stocks"
+		"transactions transactions cards cards"
 }
 
 /* Card Styles Base */
-.dashboard-card {
+.dashboard-card, .assistant-detached {
 	background: rgba(30, 30, 30, 0.3);
 	backdrop-filter: blur(16px) saturate(180%);
 	border-radius: var(--border-radius);
@@ -456,7 +457,7 @@ main {
 }
 
 .dashboard-card h2,
-.chat-widget h2 {
+.assistant-detached  h2 {
 	color: var(--text-primary);
 	font-size: 0.98em;
 	font-weight: 100;
@@ -471,12 +472,20 @@ main {
 /* Salutation card */
 .dashboard-card.salutation {
 	grid-area: salutation;
-	background: rgba(203, 60, 255, 0.02);
+	background: rgba(203, 60, 255, 0.006);
 	position: relative;
 	border: 1px solid rgba(255, 255, 255, 0.05);
 	box-shadow:
 		0 4px 6px -1px rgba(0, 0, 0, 0.2),
 		inset 0 1px 1px rgba(255, 255, 255, 0.03);
+}
+
+.dashboard-card.salutation h3 {
+	font-weight: 300;
+	font-size: 0.89rem;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .dashboard-card.accounts {
@@ -497,6 +506,11 @@ main {
 	padding-right: 1rem;
 }
 
+.dashboard-card.stocks h2 {
+	padding-left: 1rem;
+	margin-bottom: 0;
+}
+
 .dashboard-card.calendar {
 	grid-area: calendar;
 	padding: 1rem;
@@ -505,14 +519,67 @@ main {
 }
 
 .assistant-container {
-	grid-template-columns: 2 / span 1;
+	position: sticky;
+	top: 93px;
+	display: none;
+	/* height: calc(100vh - 174px); */
+}
+
+.assistant-container.visible {
+	display: block;
+}
+
+.assistant {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+	flex-basis: auto;
+	position: sticky;
+	height: calc(100vh - 174px);
+}
+
+.assistant-detached {
+	position: fixed;
+    top: 185px;
+    left: calc(100vw - 540px); /* 100vw - (width + right margin) */
+    height: 700px;
+    min-width: 300px;
+    min-height: 400px;
+    max-width: 1200px;
+    max-height: calc(100vh - 80px); /* Ajustem el max-height per deixar marge superior i inferior */
+    background-color: #00000022;
+    backdrop-filter: blur(9px);
+    border-radius: 20px;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 2px 20px 6px rgba(0, 0, 0, 0.22);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 1000;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    resize: both;
+    overflow: hidden;
+	opacity: 0;
+	pointer-events: none;
+	visibility: hidden;
+	padding: 0.9rem 1.2rem 1rem;
+}
+
+.assistant-detached.visible {
+    opacity: 1;
+    pointer-events: all;
+    visibility: visible;
+}
+
+.assistant-detached .chat-input {
+	padding-top: 1.2rem;
 }
 
 .dashboard-grid.chatDetached {
 	grid-template-columns: repeat(5, 1fr);
-}
-.dashboard-grid.chatDetached .dashboard-card.assistant {
-	display: none;
 }
 
 .salutation::before {
@@ -522,7 +589,7 @@ main {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: radial-gradient(circle at top right, rgba(203, 60, 255, 0.15), transparent 50%);
+	background: radial-gradient(circle at top right, rgba(203, 60, 255, 0.05), transparent 50%);
 	pointer-events: none;
 	border-radius: var(--border-radius);
 }
@@ -606,13 +673,11 @@ main {
 	align-items: center;
 	padding: 0.6rem 1.1rem 1rem;
 	border-radius: var(--border-radius);
-	background: rgba(14, 67, 251, 0.1);
+	background: rgba(14, 67, 251, 0.05);
 	margin-bottom: 0.8rem;
 	transition: all 250ms ease;
 	position: relative;
 	overflow: hidden;
-	backdrop-filter: blur(8px) saturate(180%);
-	border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .compte-item::before {
@@ -664,18 +729,19 @@ main {
 	font-family: 'Poppins';
 	font-size: 0.8rem;
 	font-weight: 200;
-	letter-spacing: 0.45em;
-	gap: 6px;
+	letter-spacing: 0.17em;
+	gap: 3px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	flex-shrink: 1;
 }
 
 .compte-numero .compte-numero-mask {
-	font-size: 5px;
-	letter-spacing: 0.55em;
+	font-size: 4px;
+	letter-spacing: 0.48em;
 	white-space: nowrap;
 	text-overflow: ellipsis;
+	position: relative;
 }
 
 .compte-numero .compte-numero-last {
@@ -719,7 +785,7 @@ main {
 	align-items: center;
 	gap: 0.5rem;
 	font-size: 12px;
-	padding: 0.1rem 0.4rem;
+	padding: 0.05rem 0.4rem;
 	background: rgba(255, 255, 255, 0.1);
 	border-radius: 20px;
 	width: fit-content;
@@ -739,15 +805,39 @@ main {
 	border: 1px solid rgba(255, 107, 107, 0.08);
 }
 
+.moviments-list {
+	list-style-type: disc;
+	max-height: 270px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	padding-right: 10px;
+}
+
+/* Estils per a l'scroll */
+.moviments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.moviments-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.moviments-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+
+.moviments-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 .moviment-item {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
-	padding: 0.7rem 1rem;
+	padding: 0.6rem 1rem;
 	border-radius: var(--border-radius);
-	/* background: rgba(33, 195, 252, 0.06); */
-	backdrop-filter: blur(8px) saturate(180%);
-	transition: all 250ms ease;
+	transition: all 150ms ease;
 	position: relative;
 	overflow: hidden;
 }
@@ -769,12 +859,12 @@ main {
 }
 
 .moviment-item:hover {
-	background: rgba(33, 195, 252, 0.15);
+	background: rgba(37, 92, 112, 0.15);
 	transform: translateX(5px);
 }
 
 .moviment-icon {
-	background: #2351ab;
+	background: #3593c6;
 	color: white;
 	width: 32px;
 	height: 32px;
@@ -797,14 +887,17 @@ main {
 .moviment-info h3 {
 	font-size: 0.9rem;
 	color: #dfdfdf;
-	font-weight: 300;
+	font-weight: 200;
 	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.32);
 	cursor: default;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .moviment-data {
 	color: var(--text-secondary);
-	font-size: 0.85rem;
+	font-size: 0.82rem;
 	font-weight: 100;
 	cursor: default;
 }
@@ -1183,6 +1276,8 @@ footer {
 	justify-content: flex-start;
 	flex-direction: row;
 	min-width: 100%;
+	container-name: cards-container;
+	container-type: inline-size;
 }
 
 .targeta-container {
@@ -1194,7 +1289,7 @@ footer {
 	cursor: default;
 }
 
-@media (max-width: 1400px) {
+@container cards-container (width <= 40px) {
 	.targeta-container {
 		flex: 1 1 100%;
 	}
@@ -1556,17 +1651,6 @@ img.card-under-age {
 	display: none;
 }
 
-.dashboard-card.assistant {
-	-ms-overflow-style: none;
-	scrollbar-width: none;
-	display: flex;
-	flex-direction: column;
-	flex-shrink: 0;
-	flex-basis: auto;
-	position: sticky;
-	height: calc(100vh - 174px);
-}
-
 .salutation-message-container {
 	display: flex;
 	flex-direction: column;
@@ -1607,8 +1691,9 @@ button.popoutChat {
 	cursor: pointer;
 	transition: opacity 250ms ease, transform 250ms ease;
 	position: relative;
-	top: 1px;
+	top: 3px;
 	opacity: 0.45;
+	color: var(--text-secondary);
 }
 
 button.popoutChat:hover {
@@ -1647,11 +1732,10 @@ input-multiline {
 	transform: scale(0.4);
 }
 
-stock-chart-card {
+stock-view {
 	display: block;
 	width: 100%;
 	height: auto;
 	/* aspect-ratio: 3 / 2; */
 }
-
 

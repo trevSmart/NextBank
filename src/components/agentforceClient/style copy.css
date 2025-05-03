@@ -1,38 +1,69 @@
+/* Chat Widget Styles */
+.chat-widget {
+    position: fixed;
+    top: 185px;
+    left: calc(100vw - 540px); /* 100vw - (width + right margin) */
+    width: 500px;
+    height: 700px;
+    min-width: 300px;
+    min-height: 400px;
+    max-width: 1200px;
+    max-height: calc(100vh - 80px); /* Ajustem el max-height per deixar marge superior i inferior */
+    background-color: #743f9d29;
+    backdrop-filter: blur(13px);
+    border-radius: var(--border-radius);
+    border-bottom-right-radius: 0;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    resize: both;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
 
-.old.visible {
+.chat-widget.visible {
     opacity: 1;
     pointer-events: all;
     visibility: visible;
 }
 
-.chat-widget-closing {
+.chat-widget.chat-widget-closing {
     opacity: 0;
     pointer-events: none;
 }
 
 /* Restablim els cursors per defecte pel component de xat */
-.old,
-.old * {
+.chat-widget,
+.chat-widget * {
     cursor: default;
 }
 
 /* Elements interactius */
-.old .chat-close,
-.old .send-button,
-.old input {
+.chat-widget .chat-close,
+.chat-widget .send-button,
+.chat-widget input {
     cursor: pointer;
 }
 
-.old input {
+.chat-widget input {
     cursor: text;
 }
 
-.old .message {
+.chat-widget .message {
     cursor: default;
     max-width: 92%;
 }
 
-.message-text {
+.chat-widget .message-text,
+.dashboard-card.assistant .message-text {
     cursor: text;
     user-select: text;
     font-size: 0.8rem;
@@ -40,13 +71,23 @@
     word-break: break-word;
 }
 
-.assistant-detached-header {
-    cursor: move !important;
+.chat-header {
+    padding: 0.7rem 1.5rem 0;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
     user-select: none;
 }
 
+/* Assegurem que tots els elements dins la capçalera tinguin el cursor move */
+.chat-header *:not(.chat-close) {
+    cursor: move !important;
+}
+
 /* Prevenim l'arrossegament d'imatges */
-.assistant-detached-header img {
+.chat-header img {
     pointer-events: none;
 }
 
@@ -140,7 +181,7 @@
     gap: 1rem;
     position: relative;
     z-index: 1;
-    /* min-width: 350px;     */
+    min-width: 350px;
 }
 
 .message {
@@ -257,6 +298,30 @@
     background: transparent;
 }
 
+.chat-input input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    padding-right: 3.5rem;
+    border: none;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.chat-input input:focus, .chat-input input:active {
+    background: rgba(255, 255, 255, 0.15);
+    outline: solid 1px #6d2ea4;
+}
+
+.chat-input input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 100;
+}
+
 .send-button {
     position: absolute;
     right: 9px;
@@ -366,11 +431,11 @@
 }
 
 /* Amaguem el resizer per defecte del navegador */
-.old::-webkit-resizer {
+.chat-widget::-webkit-resizer {
     display: none;
 }
 
-.old::-moz-resizer {
+.chat-widget::-moz-resizer {
     display: none;
 }
 
@@ -421,11 +486,11 @@
     }
 }
 
-.assistant h2 {
+.dashboard-card.assistant h2 {
     margin-bottom: 0;
 }
 
-.assistant .chat-title-wrapper {
+.dashboard-card.assistant .chat-title-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -434,19 +499,19 @@
     gap: 0.8rem;
 }
 
-.assistant .chat-title-main {
+.dashboard-card.assistant .chat-title-main {
     display: flex;
     align-items: center;
     gap: 0.4rem;
 }
 
-.assistant .agentforce-logo {
+.dashboard-card.assistant .agentforce-logo {
     margin-left: 2px;
     height: 20px;
     vertical-align: middle;
 }
 
-.assistant .chat-messages {
+.dashboard-card.assistant .chat-messages {
     flex: 1;
     padding: 0.7rem 0.8rem;
     overflow-y: auto;
@@ -454,10 +519,25 @@
     background: rgba(255, 255, 255, 0.03);
     border-radius: var(--border-radius);
     position: relative;
-	border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.assistant .messages-list {
+/* .dashboard-card.assistant .chat-messages::before {
+    content: '';
+    position: absolute;
+    right: 0rem;
+    bottom: 0rem;
+    width: 250px;
+    height: 350px;
+    background-image: url('/src/assets/astro.webp');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+} */
+
+.dashboard-card.assistant .messages-list {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -468,14 +548,14 @@
     z-index: 1;
 }
 
-.assistant .message {
+.dashboard-card.assistant .message {
     padding: 0.5rem 0.7rem;
     border-radius: 1rem;
     line-height: 1.5;
     font-size: 0.95rem;
 }
 
-.assistant .message.system {
+.dashboard-card.assistant .message.system {
     align-self: center;
     background-color: #215d62;
     color: var(--text-secondary);
@@ -484,7 +564,7 @@
     width: 100%;
 }
 
-.assistant .message.user {
+.dashboard-card.assistant .message.user {
     align-self: flex-start;
     display: flex;
     gap: 0.75rem;
@@ -493,7 +573,7 @@
     flex-direction: row-reverse;
 }
 
-.assistant .message.agent {
+.dashboard-card.assistant .message.agent {
     align-self: flex-end;
     display: flex;
     gap: 0.4rem;
@@ -501,7 +581,7 @@
     padding: 0;
 }
 
-.assistant .message.agent {
+.dashboard-card.assistant .message.agent {
     align-self: flex-end;
     display: flex;
     gap: 0.4rem;
@@ -509,7 +589,7 @@
     padding: 0;
 }
 
-.assistant .message-avatar {
+.dashboard-card.assistant .message-avatar {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.03);
     border: solid 1px #154679;
     width: 2.2rem;
@@ -522,18 +602,16 @@
     flex-shrink: 0;
     opacity: 0.8;
     user-select: none;
-    position: relative;
-    top: -6px;
 }
 
-.assistant .message-avatar .agent-avatar {
+.dashboard-card.assistant .message-avatar .agent-avatar {
     width: 60%;
     height: 60%;
     object-fit: contain;
     opacity: 1;
 }
 
-.assistant .message-avatar .user-avatar {
+.dashboard-card.assistant .message-avatar .user-avatar {
     width: 100%;
     height: 100%;
     color: white;
@@ -544,30 +622,30 @@
     font-size: 1.1rem;
 }
 
-.assistant .message.user .message-content {
+.dashboard-card.assistant .message.user .message-content {
     background: rgba(255, 255, 255, 0.1);
     padding: 0.8rem 1rem 0.8rem 1rem;
     border-radius: 0 1.2rem 1.2rem 1.2rem;
 }
 
-.assistant .message.agent .message-content {
+.dashboard-card.assistant .message.agent .message-content {
     background: linear-gradient(135deg, rgba(203, 60, 255, 0.5) 20%, rgba(127, 37, 251, 0.5) 68%);
     border-radius: 1.2rem 0 1.2rem 1.2rem;
     padding: 0.8rem 1rem 0.8rem 1rem;
     color: white;
 }
 
-.assistant .message.agent .message-content:has(dotlottie-player) {
+.dashboard-card.assistant .message.agent .message-content:has(dotlottie-player) {
     padding: 0.8rem 1rem 0 1rem;
 }
 
-.assistant .message-name {
+.dashboard-card.assistant .message-name {
     font-size: 0.8rem;
     font-weight: 300;
     margin-bottom: 0.3rem;
 }
 
-.assistant .message-time {
+.dashboard-card.assistant .message-time {
 	font-size: 0.6rem;
 	color: var(--text-secondary);
 	margin-top: 0.15rem;
@@ -576,31 +654,62 @@
     cursor: default;
 }
 
-.assistant .send-button:disabled {
+.dashboard-card.assistant .chat-input {
+    display: flex;
+    gap: 0.5rem;
+    position: relative;
+    background: transparent;
+}
+
+.dashboard-card.assistant .chat-input input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    padding-right: 3.5rem;
+    border: none;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.dashboard-card.assistant .chat-input input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    outline: solid 1px #6d2ea4;
+}
+
+.dashboard-card.assistant .chat-input input::placeholder {
+    color: rgba(255, 255, 255, 0.32);
+    font-weight: 100;
+}
+
+.dashboard-card.assistant .send-button:disabled {
     background: rgba(255, 255, 255, 0.1);
     cursor: not-allowed;
     color: rgba(255, 255, 255, 0.3);
 }
 
-.assistant .send-button i {
+.dashboard-card.assistant .send-button i {
     font-size: 1rem;
 }
 
 /* Estils per a l'scroll */
-.assistant .chat-messages::-webkit-scrollbar {
+.dashboard-card.assistant .chat-messages::-webkit-scrollbar {
     width: 6px;
 }
 
-.assistant .chat-messages::-webkit-scrollbar-track {
+.dashboard-card.assistant .chat-messages::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.assistant .chat-messages::-webkit-scrollbar-thumb {
+.dashboard-card.assistant .chat-messages::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
 }
 
-.assistant .chat-messages::-webkit-scrollbar-thumb:hover {
+.dashboard-card.assistant .chat-messages::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
@@ -651,4 +760,40 @@
     padding: 8px 15px;
     border-radius: 15px;
     font-weight: 300;
+}
+
+.input-form {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    background-color: white;
+    border-top: 1px solid #eee;
+}
+
+.input-form input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.input-form button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.input-form button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.input-form input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
 }

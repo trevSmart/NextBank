@@ -29,7 +29,7 @@
     visibility: hidden;
 }
 
-.chat-widget.chat-widget-open {
+.chat-widget.visible {
     opacity: 1;
     pointer-events: all;
     visibility: visible;
@@ -154,6 +154,7 @@
     padding: 0.7rem 1rem 0;
     overflow-y: auto;
     position: relative;
+    border: 1px solid red;
 }
 
 /* .chat-messages::before {

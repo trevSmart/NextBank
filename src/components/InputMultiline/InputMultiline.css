@@ -9,8 +9,6 @@ input-multiline.input-multiline {
 	padding: 0.7rem 1.1rem;
 	color: var(--text-color);
 	background: rgba(255, 255, 255, 0.07);
-	border-radius: 20px;
-	border: none;
 	font-size: 1rem;
 	font-family: var(--font-family);
 	font-weight: 300;
@@ -23,6 +21,10 @@ input-multiline.input-multiline {
 	white-space: pre-wrap;
 	word-break: break-word;
 	overflow-y: auto;
+}
+
+.editable {
+	border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .editable::-webkit-scrollbar {

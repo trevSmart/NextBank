@@ -1,9 +1,16 @@
 import {Chart, registerables} from 'https://esm.sh/chart.js';
 import {CandlestickController, CandlestickElement} from 'https://esm.sh/chartjs-chart-financial';
 import 'https://esm.sh/chartjs-adapter-date-fns';
-import MOCK_DATA from './mock.js';
+import MOCK_DATA from './mock2.js';
 
 const TEST_MODE = true;
+const INTERVAL = '1h';
+const OUTPUT_SIZE = '168';
+const SYMBOLS = {
+	'IBM': 'International Bussiness Machines (IBM)',
+	'CRM': 'Salesforce (CRM)',
+	'NVDA': 'NVIDIA (NVDA)'
+};
 
 Chart.register(...registerables, CandlestickController, CandlestickElement);
 
@@ -23,7 +30,6 @@ class StockChartCard extends HTMLElement {
 		//Observem la card contenidora
 		this.stockCard = this.closest('.dashboard-card.stock');
 
-
 		async function fetchStockData(symbols = []) {
 			const token = '7a30623f47ae4c7da49796d280a41ebf';
 			const res = await fetch('http://localhost:3000/proxy', {
@@ -32,7 +38,7 @@ class StockChartCard extends HTMLElement {
 				body: JSON.stringify({
 					method: 'GET',
 					headers: {},
-					url: `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=1h&outputsize=168&&apikey=${token}`
+					url: `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=${INTERVAL}&outputsize=${OUTPUT_SIZE}&apikey=${token}`
 				})
 			});
 
@@ -45,9 +51,9 @@ class StockChartCard extends HTMLElement {
 				if (!symbolData || !symbolData.values || !Array.isArray(symbolData.values)) {
 					return null;
 				}
-
 				return {
-					label: symbol === 'CRM' ? 'Salesforce' : symbol,
+
+					label: SYMBOLS[symbol] || symbol,
 					type: 'candlestick',
 					data: symbolData.values.map(entry => ({
 						x: new Date(entry.datetime),
@@ -84,7 +90,7 @@ class StockChartCard extends HTMLElement {
 				borderWidth: 2,
 				pointRadius: 0,
 				pointHoverRadius: 5,
-				tension: 0.4,
+				tension: 0.3,
 				fill: false
 			}));
 			datasets = [...datasets, ...lineDatasets];
@@ -92,7 +98,16 @@ class StockChartCard extends HTMLElement {
 			return datasets;
 		}
 
-		let datasets = await fetchStockData(['IBM', 'CRM']);
+		let datasets = await fetchStockData(Object.keys(SYMBOLS));
+
+		const allValues = datasets.flatMap(ds =>
+			ds.data.map(d => d.y ?? d.l) // y per línies, l per candlestick
+		);
+		const min = Math.min(...allValues);
+		const max = Math.max(...allValues);
+		const paddingMin = min * 0.1;
+		const paddingMax = max * 0.1;
+
 		this.chart = new Chart(canvas.getContext('2d'), {
 			type: 'candlestick',
 			data: {datasets},
@@ -117,7 +132,9 @@ class StockChartCard extends HTMLElement {
 									return {
 										...item,
 										strokeStyle: dataset.borderColor,
-										fillStyle: dataset.borderColor
+										fillStyle: dataset.borderColor,
+										fontColor: dataset.borderColor, // per compatibilitat antiga
+										color: dataset.borderColor // per versions modernes
 									};
 								});
 							}
@@ -144,10 +161,18 @@ class StockChartCard extends HTMLElement {
 						time: {
 							unit: 'day',
 							displayFormats: {day: 'MMM d'}
+						},
+						grid: {
+							color: '#292929'
 						}
 					},
 					y: {
 						title: {display: true, text: 'EUR'},
+						suggestedMin: min - min * 0.2,
+						suggestedMax: max + max * 0.1,
+						grid: {
+							color: '#393939'
+						}
 					}
 				}
 			}

@@ -398,14 +398,14 @@ const ChatWidget = {
 	toggle() {
 		if (!this.elements.widget || !this.elements.isLoaded) return;
 
-		const isOpen = this.elements.widget.classList.contains('chat-widget-open');
+		const isOpen = this.elements.widget.classList.contains('visible');
 
 		if (isOpen) {
 			//Closing
 			this.elements.isOpen = false;
 			requestAnimationFrame(() => {
 				const handleTransitionEnd = () => {
-					this.elements.widget.classList.remove('chat-widget-open');
+					this.elements.widget.classList.remove('visible');
 					this.elements.dashboardGrid.classList.remove('chatDetached');
 					this.elements.widget.classList.remove('chat-widget-closing');
 					this.elements.widget.removeEventListener('transitionend', handleTransitionEnd);
@@ -420,7 +420,7 @@ const ChatWidget = {
 			this.elements.isOpen = true;
 			requestAnimationFrame(() => {
 				this.elements.widget.classList.remove('chat-widget-closing');
-				this.elements.widget.classList.add('chat-widget-open');
+				this.elements.widget.classList.add('visible');
 				this.elements.dashboardGrid.classList.add('chatDetached');
 			});
 		}
