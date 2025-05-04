@@ -148,6 +148,13 @@ function initializeNavigation() {
 			supportButton.removeEventListener('mouseleave', handleMouseLeave);
 		});
 	}
+
+	const stockView = document.querySelector('.dashboard-card.stocks h2');
+	if (stockView) {
+		stockView.addEventListener('click', () => {
+			document.querySelector('stock-view').update();
+		});
+	}
 }
 
 function initializeResizeHandling() {

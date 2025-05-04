@@ -49,85 +49,6 @@ button {
 	font-family: var(--font-family);
 }
 
-@font-face {
-	font-family: 'Nunito';
-	src: url('../assets/fonts/Nunito-ExtraLight.woff2') format('woff2');
-	font-weight: 100;
-	font-style: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Josefin Sans';
-	font-style: normal;
-	font-weight: 400;
-	src: url('../assets/fonts/josefin-sans-v32-latin-regular.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Josefin Sans';
-	font-style: normal;
-	font-weight: 600;
-	src: url('../assets/fonts/josefin-sans-v32-latin-600.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Poppins';
-	font-style: normal;
-	font-weight: 100;
-	src: url('../assets/fonts/poppins-v23-latin-100.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Poppins';
-	font-style: normal;
-	font-weight: 200;
-	src: url('../assets/fonts/poppins-v23-latin-200.woff2') format('woff2');
-}
-@font-face {
-	font-display: swap;
-	font-family: 'Poppins';
-	font-style: normal;
-	font-weight: 300;
-	src: url('../assets/fonts/poppins-v23-latin-300.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Poppins';
-	font-style: normal;
-	font-weight: 400;
-	src: url('../assets/fonts/poppins-v23-latin-regular.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Source Sans Pro';
-	font-style: normal;
-	font-weight: 400;
-	src: url('../assets/fonts/source-sans-3-v18-latin-regular.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Source Sans Pro';
-	font-style: normal;
-	font-weight: 600;
-	src: url('../assets/fonts/source-sans-3-v18-latin-600.woff2') format('woff2');
-}
-
-@font-face {
-	font-display: swap;
-	font-family: 'Source Sans Pro';
-	font-style: normal;
-	font-weight: 300;
-	src: url('../assets/fonts/source-sans-3-v18-latin-300.woff2') format('woff2');
-}
-
 * {
 	margin: 0;
 	padding: 0;
@@ -220,17 +141,6 @@ header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-}
-
-h1 {
-	font-size: 1.75rem;
-	font-weight: var(--font-weight-semibold);
-	background: var(--primary-gradient);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
-	letter-spacing: -0.03em;
-	cursor: default;
 }
 
 h1 a {
@@ -417,9 +327,9 @@ main {
 	gap: 1.5rem;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas:
-		"salutation calendar accounts accounts"
-		"stocks stocks stocks stocks"
-		"transactions transactions cards cards"
+		"salutation accounts transactions transactions"
+		"calendar stocks stocks cards"
+		"goals goals goals cards";
 }
 
 /* Card Styles Base */
@@ -494,6 +404,7 @@ main {
 
 .dashboard-card.cards {
 	grid-area: cards;
+	grid-row: span 2;
 }
 
 .dashboard-card.transactions {
@@ -516,6 +427,37 @@ main {
 	padding: 1rem;
 	display: flex;
 	flex-direction: column;
+}
+
+.dashboard-card.goals {
+	grid-area: goals;
+}
+
+.dashboard-card.goals .goals-list {
+	display: flex;
+	flex-direction: row;
+	gap: 1rem;
+	align-items: start;
+}
+
+.dashboard-card.goals .goals-list .goal-item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	max-height: 70px;
+}
+
+.dashboard-card.goals .goals-list .goal-item .goal-item-info {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.dashboard-card.goals .goals-list .goal-item progress-ring	{
+	max-height: 50px;
+	position: relative;
 }
 
 .assistant-container {
@@ -940,7 +882,7 @@ main {
 
 .grid-footer-spacer {
 	grid-area: unset;
-	grid-column: 1 / -1;
+	grid-column: 1 / 1;
 	background: transparent;
 	pointer-events: none;
 }
@@ -1739,3 +1681,82 @@ stock-view {
 	/* aspect-ratio: 3 / 2; */
 }
 
+
+@font-face {
+	font-family: 'Nunito';
+	src: url('../assets/fonts/Nunito-ExtraLight.woff2') format('woff2');
+	font-weight: 100;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Josefin Sans';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../assets/fonts/josefin-sans-v32-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Josefin Sans';
+	font-style: normal;
+	font-weight: 600;
+	src: url('../assets/fonts/josefin-sans-v32-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Poppins';
+	font-style: normal;
+	font-weight: 100;
+	src: url('../assets/fonts/poppins-v23-latin-100.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Poppins';
+	font-style: normal;
+	font-weight: 200;
+	src: url('../assets/fonts/poppins-v23-latin-200.woff2') format('woff2');
+}
+@font-face {
+	font-display: swap;
+	font-family: 'Poppins';
+	font-style: normal;
+	font-weight: 300;
+	src: url('../assets/fonts/poppins-v23-latin-300.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Poppins';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../assets/fonts/poppins-v23-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Source Sans Pro';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../assets/fonts/source-sans-3-v18-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Source Sans Pro';
+	font-style: normal;
+	font-weight: 600;
+	src: url('../assets/fonts/source-sans-3-v18-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+	font-display: swap;
+	font-family: 'Source Sans Pro';
+	font-style: normal;
+	font-weight: 300;
+	src: url('../assets/fonts/source-sans-3-v18-latin-300.woff2') format('woff2');
+}

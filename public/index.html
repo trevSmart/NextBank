@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="../src/components/creditCard/creditCard.css" type="text/css">
     <link rel="stylesheet" href="../src/assets/fonts/fontawesome/all.min.css" type="text/css">
     <script type="module" src="../src/components/InputMultiline/InputMultiline.js"></script>
-    <!-- <script type="module" src="../src/components/StockView/StockView.js"></script> -->
+    <script type="module" src="../src/components/ProgressRing/ProgressRing.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
     <script src="/src/assets/libs/chartjs-chart-financial.js" type="text/javascript"></script>
@@ -328,6 +328,37 @@
                     <h2>Held stocks</h2>
                     <!-- <stock-chart-card></stock-chart-card> -->
                     <stock-view></stock-view>
+                </section>
+
+                <!-- Goals -->
+                <section class="dashboard-card goals">
+                    <h2>Goals</h2>
+                    <div class="goals-list">
+                        <div class="goal-item">
+                            <div class="goal-item-info">
+                                <span>Hola</span>
+                                <span>Hola</span>
+                                <span>Hola</span>
+                            </div>
+                            <progress-ring class="goal-item-progress" percent="23" color="#4932af" bgcolor="transparent" line="26" font-size="35px"></progress-ring>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-item-info">
+                                <span>Hola</span>
+                                <span>Hola</span>
+                                <span>Hola</span>
+                            </div>
+                            <progress-ring class="goal-item" percent="87" color="#fbc08b" bgcolor="transparent" line="26" font-size="35px"></progress-ring>
+                        </div>
+                        <div class="goal-item">
+                            <div class="goal-item-info">
+                                <span>Hola</span>
+                                <span>Hola</span>
+                                <span>Hola</span>
+                            </div>
+                            <progress-ring class="goal-item" percent="33" color="#f8def8" bgcolor="transparent" line="26" font-size="35px"></progress-ring>
+                        </div>
+                    </div>
                 </section>
 
                 <div class="grid-footer-spacer"></div>

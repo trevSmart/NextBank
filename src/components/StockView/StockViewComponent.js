@@ -57,7 +57,7 @@ class StockViewComponent extends HTMLElement {
 					type: 'candlestick',
 					data: barData,
 					fill: false,
-					barThickness: 8,
+					barThickness: 7,
 					barPercentage: 1
 				});
 				datasets.push({
@@ -159,6 +159,15 @@ class StockViewComponent extends HTMLElement {
 				c: parseFloat(d.close)
 			});
 			lineData.push({ x: date.valueOf(), y: parseFloat(d.close) });
+		}
+	}
+
+	update() {
+		console.log('update');
+		if (this._chart) {
+			// this._chart.update();
+			this._chart.destroy();
+			this._initChart();
 		}
 	}
 }
