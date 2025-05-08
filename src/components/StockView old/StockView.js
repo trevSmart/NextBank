@@ -14,21 +14,21 @@ const SYMBOLS = {
 
 Chart.register(...registerables, CandlestickController, CandlestickElement);
 
-class StockChartCard extends HTMLElement {
+class StockChart extends HTMLElement {
 	constructor() {
 		super();
 		this.chart = null;
-		this.resizeObserver = null;
-		this.stockCard = null;
+		this.resize = this.resize.bind(this);
 	}
 
 	async connectedCallback() {
 		const {width, height} = getComputedStyle(this);
-		this.innerHTML = `<canvas style="width: ${width}; height: ${height};"></canvas>`;
+		// this.innerHTML = `<canvas style="width: ${width}; height: ${height};"></canvas>`;
+		this.innerHTML = `<canvas></canvas>`;
 		const canvas = this.querySelector('canvas');
 
 		//Observem la card contenidora
-		this.stockCard = this.closest('.dashboard-card.stock');
+		// this.stockCard = this.closest('.dashboard-card.stocks');
 
 		async function fetchStockData(symbols = []) {
 			const token = '7a30623f47ae4c7da49796d280a41ebf';
@@ -68,20 +68,13 @@ class StockChartCard extends HTMLElement {
 						unchanged: symbol === 'CRM' ? '#2a8ec1' : '#d09a66'
 					},
 					borderWidth: 1,
-					barThickness: 4,
-					borderColor: symbol === 'CRM' ? '#2a8ec1' : '#d09a66',
-					options: {
-						responsive: true,
-					}
+					barThickness: 4
 				};
 			}).filter(dataset => dataset !== null);
 
 			const lineDatasets = datasets.map(dataset => ({
 				label: `${dataset.label} trend`,
 				type: 'line',
-				options: {
-					responsive: true,
-				},
 				data: dataset.data.map(entry => ({
 					x: entry.x,
 					y: entry.c
@@ -186,6 +179,10 @@ class StockChartCard extends HTMLElement {
 			this.chart = null;
 		}
 	}
+
+	resize() {
+		alert('a');
+	}
 }
 
-customElements.define('stock-chart-card', StockChartCard);
+customElements.define('stock-chart', StockChart);

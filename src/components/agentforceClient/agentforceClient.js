@@ -1,0 +1,415 @@
+import SfAgentApi from './libs/sfAgentApi.js';
+//eslint-disable-next-line no-unused-vars
+import InputMultiline from './libs/InputMultiline.js';
+import 'https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs';
+
+class Session {
+	constructor() {
+		this.sessionId = null;
+		this.sequenceId = 0;
+	}
+
+	async startSession() {
+		const response = await SfAgentApi.startSession();
+		//eslint-disable-next-line no-console
+		console.log('Agentforce session started with id:', response.sessionId);
+		this.sessionId = response.sessionId;
+		return response;
+	}
+
+	async endSession() {
+		if (this.sessionId) {
+			await SfAgentApi.endSession();
+			this.sessionId = null;
+			this.sequenceId = 0;
+		}
+	}
+}
+
+class UiInstance {
+	constructor(afClient, id, node ) {
+		this.afClient = afClient;
+		this.id = id || node.id;
+		this.node = node;
+		this.options = {
+			scrollOnResponse: true,
+			speak: false
+		};
+
+		const createElements = () => {
+			const uiContainer = document.createElement('div' ) ;
+			uiContainer.id = 'uiContainer';
+			uiContainer.className = 'ui-container';
+
+			const uiChatMessages = document.createElement('div');
+			uiChatMessages.className = 'chat-messages';
+
+			const uiMessagesList = document.createElement('ul');
+			uiMessagesList.className = 'messages-list';
+
+			const chatInput = document.createElement('div');
+			chatInput.className = 'chat-input';
+
+			const chatInputInput = document.createElement('input-multiline');
+
+			const chatInputButtons = document.createElement('div');
+			chatInputButtons.className = 'chat-input-buttons';
+
+			const buttonStartConextSelection = document.createElement('button');
+			buttonStartConextSelection.className = 'add-context-button';
+			buttonStartConextSelection.innerHTML = '<i class="fas fa-plus"></i>';
+			buttonStartConextSelection.disabled = true;
+
+			const buttonSendMessage = document.createElement('button');
+			buttonSendMessage.className = 'send-button';
+			buttonSendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
+			buttonSendMessage.disabled = true;
+
+			uiChatMessages.appendChild(uiMessagesList);
+			uiChatMessages.appendChild(chatInput);
+			chatInput.appendChild(chatInputInput);
+			chatInputButtons.appendChild(buttonStartConextSelection);
+			chatInputButtons.appendChild(buttonSendMessage);
+			chatInput.appendChild(chatInputButtons);
+			uiContainer.appendChild(uiChatMessages);
+			uiContainer.appendChild(chatInput);
+
+			this.node.appendChild(uiContainer);
+
+			chatInputInput.addEventListener('keydown', async event => {
+				if (event.key === 'Enter' && !event.shiftKey) {
+					event.preventDefault();
+					await this.afClient.sendMessage(chatInputInput.value);
+					chatInputInput.value = '';
+				}
+			});
+
+			chatInputInput.addEventListener('input', () => {
+				const disabled = !this.afClient.session.sessionId
+					|| !chatInputInput.value.trim()
+					|| this.afClient.conversation.awaitingAgentResponse;
+				buttonStartConextSelection.disabled = disabled;
+				buttonSendMessage.disabled = disabled;
+			});
+
+			buttonStartConextSelection.addEventListener('click', () => this.afClient.startContextSelection());
+			buttonSendMessage.addEventListener('click', () => this.afClient.sendMessage(chatInputInput.value.toString()));
+
+			this.messageListNode = uiMessagesList;
+		}
+
+		if (!document.querySelector('link[href$="agentforceClient.css"]')) {
+			const linkStyle = document.createElement('link');
+			linkStyle.rel = 'stylesheet';
+			linkStyle.href = new URL('./agentforceClient.css', import.meta.url).href;
+			linkStyle.addEventListener('load', () => {
+				createElements();
+				this.afClient.conversation.render([this.messageListNode]);
+			}, {once: true});
+			document.head.appendChild(linkStyle);
+		} else {
+			createElements();
+			this.afClient.conversation.render([this.messageListNode]);
+		}
+	}
+
+	scrollToBottom() {
+		requestAnimationFrame(() => {
+			const chatMessages = this.node.querySelector('.chat-messages');
+			if (chatMessages) {
+				chatMessages.scrollTo({top: chatMessages.scrollHeight, behavior: 'smooth'});
+			}
+		});
+	}
+}
+
+class Message {
+	constructor(id, type, text, context = null, ref) {
+		if (!id || !type || !text && type !== 'typing') {
+			throw new Error('Invalid message format');
+		}
+		this.id = id;
+		this.type = type;
+		this.text = text;
+		this.context = context;
+		this.ref = ref;
+		this.timestamp = new Date();
+		return this;
+	}
+
+	async render(nodes) {
+		if (!nodes.some(node => node)) {
+			return;
+		}
+
+		const messageListItem = document.createElement('li');
+		messageListItem.className = `message ${this.type === 'typing' ? 'agent typing' : this.type} new-message`;
+		messageListItem.dataset.id = this.id;
+
+		//Eliminem la classe new-message després de l'animació
+		messageListItem.addEventListener('animationend', () => {
+			messageListItem.classList.remove('new-message');
+		});
+
+		const messageContent = document.createElement('div');
+		if (this.type !== 'typing') {
+			messageContent.className = 'message-content';
+		}
+
+		const messageAvatar = document.createElement('div');
+
+		const messageSpeak = document.createElement('div');
+		//if (this.type === 'agent') {
+		//messageSpeak.className = 'message-speak';
+		//messageSpeak.innerHTML = '<button class="message-speak-button"><i class="fas fa-volume-high"></i></button>';
+		//messageContent.appendChild(messageSpeak);
+		//}
+
+		const messageTime = document.createElement('div');
+		if (this.type === 'user' || this.type === 'agent' || this.type === 'typing') {
+			messageAvatar.className = 'message-avatar';
+			//messageAvatar.draggable = false;
+			if (this.type === 'agent' || this.type === 'typing') {
+				const avatarImg = document.createElement('img');
+				avatarImg.src = '/src/assets/images/agent_astro.svg';
+				avatarImg.alt = 'Agent Avatar';
+				avatarImg.className = 'agent-avatar';
+				avatarImg.title = 'Agentforce';
+				avatarImg.draggable = false;
+				messageAvatar.appendChild(avatarImg);
+
+				if (this.type === 'agent') {
+					const messageName = document.createElement('div');
+					messageName.className = 'message-name';
+					messageName.textContent = 'Agentforce';
+					messageContent.appendChild(messageName);
+				}
+			} else {
+				const userAvatar = document.createElement('div');
+				userAvatar.className = 'user-avatar';
+				userAvatar.textContent = 'E';
+				messageAvatar.appendChild(userAvatar);
+			}
+
+			messageTime.className = 'message-time';
+			messageTime.textContent = this.timestamp.toLocaleTimeString(navigator.language, {hour: '2-digit', minute: '2-digit'});
+		}
+
+		const messageText = document.createElement('div');
+		messageText.className = 'message-text';
+		if (this.type === 'typing') {
+			messageText.innerHTML = '<dotlottie-player src="/src/assets/animations/typing.json" background="transparent" speed="1" style="width: 53px"; loop autoplay></dotlottie-player>';
+		} else {
+			messageText.innerHTML = this.text.replace(/\n/g, '<br>');
+		}
+
+		messageContent.appendChild(messageText);
+		messageListItem.appendChild(messageContent);
+		if (this.type === 'user' || this.type === 'agent' || this.type === 'typing') {
+			messageListItem.appendChild(messageAvatar);
+			this.type === 'agent' && messageContent.appendChild(messageSpeak);
+			this.type !== 'typing' && messageContent.appendChild(messageTime);
+		}
+
+		nodes.forEach(node => node.appendChild(messageListItem));
+
+		return messageListItem;
+
+	}
+}
+
+class Conversation {
+	constructor(afClient) {
+		this.afClient = afClient;
+		this.messages = [];
+		this.lastMessageId = 0;
+		this.awaitingAgentResponse = false;
+	}
+
+	async render(nodes) {
+		this.messages.forEach(async message => {
+			await message.render(nodes);
+		});
+	}
+
+	async addMessage(type, text, context = null, id) {
+		const message = new Message(id || ++this.lastMessageId, type, text, context);
+		this.messages.push(message);
+		if (type === 'user') {
+			this.awaitingAgentResponse = true;
+			//Llancem la crida asíncrona sense esperar-la per no bloquejar el retorn
+			SfAgentApi.sendMessageSynchronous(text)
+			.then(response => this.afClient.onAgentMessageReceived(response))
+			.catch(error => {throw error})
+			.finally(() => this.awaitingAgentResponse = false);
+		}
+
+		return message;
+	}
+
+	removeMessages(ids) {
+		this.messages = this.messages.filter(message => !ids.includes(message.id));
+		this.afClient.uiInstances.forEach(ui => {
+			ui.node.querySelectorAll('.message').forEach(uiMessage => {
+				if (ids.includes(uiMessage.dataset.id)) {
+					uiMessage.remove();
+				}
+			});
+		});
+	}
+
+	getMessages() {
+		return this.messages;
+	}
+
+	getMessage(id) {
+		return this.messages.find(message => message.id === id);
+	}
+}
+
+class AfClient {
+	constructor() {
+		this.uiInstances = [];
+		this.session = new Session();
+		this.conversation = new Conversation(this);
+	}
+
+	contextAreaHandlers = new Map();
+
+	async startSession() {
+		try {
+			const {welcomeMessage} = await this.session.startSession();
+			this.addMessage('system', 'Your AI assistant is ready');
+			this.addMessage('agent', welcomeMessage);
+
+			document.querySelector('.add-context-button').disabled = false;
+
+		} catch (error) {
+			console.error('Error starting session:', error);
+			this.addMessage('error', 'Error starting session: ' + error.message);
+		}
+	}
+
+	async endSession() {
+		await this.session.endSession();
+	}
+
+	async newUiInstance(node, id) {
+		let newId;
+		if (id) {
+			newId = id;
+		} else if (id === 'auto') {
+			newId = this.uiInstances.reduce((max, ui) => ui.id > max ? ui.id : max, 0) + 1;
+		} else if (node.id) {
+			newId = node.id;
+		} else {
+			throw new Error('Invalid id for new UI instance');
+		}
+		const uiInstance = new UiInstance(this, newId, node);
+		this.uiInstances.push(uiInstance);
+		return uiInstance;
+	}
+
+	getUiInstance(id) {
+		return this.uiInstances.find(ui => ui.id === id);
+	}
+
+	async addMessage(type, text, context = null, id) {
+		const message = await this.conversation.addMessage(type, text, context, id);
+		this.uiInstances.forEach(async ui => await message.render([ui.messageListNode]));
+		this.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
+	}
+
+	async sendMessage(text, context = null) {
+		if (this.session.sessionId) {
+			this.addMessage('user', text, context);
+			setTimeout(() => this.addMessage('typing', null, null), 1100);
+		}
+	}
+
+	onAgentMessageReceived(message) {
+		this.addMessage('agent', message);
+		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
+		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
+	}
+
+	async startContextSelection() {
+		if (!this.addingContext) {
+			this.addingContext = true;
+			document.querySelector('body').classList.toggle('afclient-is-adding-context', true);
+			const contextAreas = document.querySelectorAll('.afclient-context-area');
+			contextAreas.forEach(area => {
+				const handler = () => this.selectContext(area);
+				this.contextAreaHandlers.set(area, handler);
+				area.addEventListener('click', handler);
+			});
+		} else {
+			this.endContextSelection();
+		}
+	}
+
+	async endContextSelection() {
+		this.addingContext = false;
+		document.querySelector('body').classList.remove('afclient-is-adding-context');
+		const contextAreas = document.querySelectorAll('.afclient-context-area');
+		contextAreas.forEach(area => {
+			const handler = this.contextAreaHandlers.get(area);
+			if (handler) {
+				area.removeEventListener('click', handler);
+				this.contextAreaHandlers.delete(area);
+			}
+		});
+	}
+
+	async selectContext(node) {
+		document.querySelectorAll('body .afclient-selected-context').forEach(context => {
+			context.classList.remove('afclient-selected-context');
+		});
+		document.querySelector('body').classList.add('afclient-selected-context');
+		this.selectedContext = node;
+		node.classList.add('afclient-selected-context');
+		document.querySelector('body').classList.remove('afclient-is-adding-context');
+		this.endContextSelection();
+
+		const chatInputContextIcon = document.createElement('div');
+		chatInputContextIcon.className = 'chat-input-context-icon';
+		chatInputContextIcon.innerHTML = '<i class="fa-solid fa-paperclip"></i>';
+
+		const chatInputContextLabel = document.createElement('div');
+		chatInputContextLabel.className = 'chat-input-context-label';
+		chatInputContextLabel.textContent = node.dataset.contextLabel;
+
+		const chatInputContextCloseButton = document.createElement('button');
+		chatInputContextCloseButton.className = 'chat-input-context-close-button';
+		chatInputContextCloseButton.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+		chatInputContextCloseButton.addEventListener('click', () => this.removeContext());
+
+		const chatInputContext = document.createElement('div');
+		chatInputContext.className = 'chat-input-context';
+		chatInputContext.appendChild(chatInputContextIcon);
+		chatInputContext.appendChild(chatInputContextLabel);
+		chatInputContext.appendChild(chatInputContextCloseButton);
+
+		const inputMultiline = document.querySelector('.chat-input');
+		inputMultiline.appendChild(chatInputContext);
+	}
+
+	async removeContext() {
+		this.selectedContext.classList.remove('afclient-selected-context');
+		this.selectedContext = null;
+		document.querySelector('body').classList.remove('afclient-selected-context');
+
+		const chatInputContext = document.querySelectorAll('.chat-input-context');
+		chatInputContext.forEach(context => context.remove());
+
+		this.endContextSelection();
+	}
+}
+
+export default AfClient;
+
+document.addEventListener('DOMContentLoaded', () => {
+	const chatContainer = document.createElement('div');
+	chatContainer.id = 'chatContainer';
+	document.body.appendChild(chatContainer);
+});

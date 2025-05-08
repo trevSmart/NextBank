@@ -14,7 +14,6 @@ class SfAgentApi {
     }
 
     async login() {
-        console.log('login');
         try {
             const body = JSON.stringify({
                 url: `${salesforceParameters.urlMyDomain}/services/oauth2/token`,
@@ -44,17 +43,15 @@ class SfAgentApi {
             }
 
             const data = await response.json();
-            localStorage.setItem('futureBankSalesforceAccessToken', data.access_token);
+            localStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
             salesforceParameters.accessToken = data.access_token;
             return response;
         } catch (error) {
-            console.error('Error getting access token:', error);
             throw error;
         }
     }
 
     async startSession() {
-        console.log('startSession');
         try {
             if (this.session.id) {
                 return;

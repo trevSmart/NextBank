@@ -212,4 +212,4 @@ class StockViewComponent extends HTMLElement {
   }
 }
 
-customElements.define('stock-view', StockViewComponent);
+customElements.define('stock-chart', StockViewComponent);

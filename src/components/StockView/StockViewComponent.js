@@ -4,10 +4,11 @@ const SYMBOLS = {
 	'CRM': 'Salesforce (CRM)'
 };
 
-class StockViewComponent extends HTMLElement {
+class StockChart extends HTMLElement {
 	constructor() {
 		super();
 		this.attachShadow({ mode: 'open' });
+
 		const { width, height } = getComputedStyle(this);
 		this.shadowRoot.innerHTML = `
 		<style>
@@ -25,15 +26,18 @@ class StockViewComponent extends HTMLElement {
 				display: flex;
 				flex-direction: column;
 				justify-content: stretch;
+				margin: 1px;
+				box-sizing: border-box;
 			}
 			canvas {
 				height: 100% !important;
 				width: 100% !important;
 				display: block;
+				box-sizing: border-box;
 			}
 		</style>
 		<div class="container">
-			<canvas id="chart" width="1000" height="240"></canvas>
+			<canvas id="chart"></canvas>
 		</div>
 		`;
 		this._dependenciesLoaded = false;
@@ -56,16 +60,15 @@ class StockViewComponent extends HTMLElement {
 					label: sym,
 					type: 'candlestick',
 					data: barData,
-					fill: false,
-					barThickness: 7,
-					barPercentage: 1
+					fill: true,
+					barThickness: 5
 				});
 				datasets.push({
 					label: sym + ' - Closing price',
 					type: 'line',
 					data: lineData,
-					borderColor: sym === 'IBM' ? '#7155c4' : '#5dade2', // blau fosc per IBM, blau clar per CRM
-					backgroundColor: sym === 'IBM' ? '#7155c4' : '#5dade2',
+					borderColor: sym === 'IBM' ? '#7155c4' : '#936b3c',
+					backgroundColor: sym === 'IBM' ? '#7155c4' : '#936b3c',
 					borderWidth: 1,
 					fill: false,
 					tension: 0.3,
@@ -82,7 +85,8 @@ class StockViewComponent extends HTMLElement {
 			type: 'candlestick',
 			data: { datasets },
 			options: {
-				responsive: true,
+				responsive: false,
+				animation: false,
 				scales: {
 					x: {
 						type: 'timeseries',
@@ -98,7 +102,7 @@ class StockViewComponent extends HTMLElement {
 						position: 'top',
 						labels: {
 							filter: function (item, _chart) {
-								return !item.text.includes('Closing price');
+								return !item.text.includes('Change');
 							},
 							usePointStyle: true,
 							boxHeight: 5,
@@ -113,7 +117,7 @@ class StockViewComponent extends HTMLElement {
 
 									return {
 										...item,
-										text: (SYMBOLS[symbolKey] || baseLabel) + (isLine ? ' (Value)' : ' (Change)'),
+										text: (SYMBOLS[symbolKey] || baseLabel) + (isLine ? '' : ' (Change)'),
 										pointStyle: isLine ? 'line' : 'circle',
 										strokeStyle: dataset.borderColor,
 										fillStyle: dataset.borderColor,
@@ -151,25 +155,34 @@ class StockViewComponent extends HTMLElement {
 		for (let i = 0; i < dataSlice.length; i++) {
 			const d = dataSlice[i];
 			const date = new Date(d.datetime);
+			const o = parseFloat(d.open);
+			const h = parseFloat(d.high);
+			const l = parseFloat(d.low);
+			const c = parseFloat(d.close);
+
+			const scale = 1 / 3;
 			barData.push({
 				x: date.valueOf(),
-				o: parseFloat(d.open),
-				h: parseFloat(d.high),
-				l: parseFloat(d.low),
-				c: parseFloat(d.close)
+				o: c + (o - c) * scale,
+				h: c + (h - c) * scale,
+				l: c + (l - c) * scale,
+				c: c
 			});
-			lineData.push({ x: date.valueOf(), y: parseFloat(d.close) });
+			lineData.push({ x: date.valueOf(), y: c });
 		}
 	}
 
 	update() {
-		console.log('update');
 		if (this._chart) {
-			// this._chart.update();
 			this._chart.destroy();
 			this._initChart();
 		}
 	}
+
+	resize() {
+		const { height } = getComputedStyle(this);
+		this.shadowRoot.querySelector('.container').style.height = `${height}`;
+	}
 }
 
-customElements.define('stock-view', StockViewComponent);
+customElements.define('stock-chart', StockChart);
