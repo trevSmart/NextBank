@@ -51,6 +51,7 @@ class UiInstance {
 			chatInput.className = 'chat-input';
 
 			const chatInputInput = document.createElement('input-multiline');
+			chatInputInput.id = 'chatInputInput';
 
 			const chatInputButtons = document.createElement('div');
 			chatInputButtons.className = 'chat-input-buttons';
@@ -61,6 +62,7 @@ class UiInstance {
 			buttonStartConextSelection.disabled = true;
 
 			const buttonSendMessage = document.createElement('button');
+			buttonSendMessage.id = 'buttonSendMessage';
 			buttonSendMessage.className = 'send-button';
 			buttonSendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
 			buttonSendMessage.disabled = this.afClient.session.sessionId === null;
@@ -85,7 +87,7 @@ class UiInstance {
 				if (event.key === 'Enter' && !event.shiftKey)  {
 					event.preventDefault();
 					if (chatInputInput.value.trim()) {
-						await this.afClient.sendMessage(chatInputInput.value);
+						this.sendMessage(chatInputInput.value);
 						chatInputInput.value = '';
 					}
 				}
@@ -100,7 +102,7 @@ class UiInstance {
 			});
 
 			buttonStartConextSelection.addEventListener('click', () => this.afClient.startContextSelection());
-			buttonSendMessage.addEventListener('click', () => this.afClient.sendMessage(chatInputInput.value.toString()));
+			buttonSendMessage.addEventListener('click', () => this.sendMessage(chatInputInput.value.toString()));
 			contextSelectionBackdrop.addEventListener('click', () => this.afClient.endContextSelection());
 
 			this.messageListNode = uiMessagesList;
@@ -128,6 +130,12 @@ class UiInstance {
 				chatMessages.scrollTo({top: chatMessages.scrollHeight, behavior: 'smooth'});
 			}
 		});
+	}
+
+	sendMessage(text) {
+		this.afClient.sendMessage(text);
+		document.getElementById('chatInputInput').value = '';
+		document.getElementById('buttonSendMessage').disabled = true;
 	}
 }
 
@@ -244,25 +252,28 @@ class Conversation {
 		const message = new Message(id || ++this.lastMessageId, type, text, context);
 		this.messages.push(message);
 		if (type === 'user') {
+			const chatInputInput = document.getElementById('chatInputInput');
+			const buttonSendMessage = document.getElementById('buttonSendMessage');
 			this.awaitingAgentResponse = true;
+			buttonSendMessage.disabled = true;
 			//Llancem la crida asíncrona sense esperar-la per no bloquejar el retorn
 			SfAgentApi.sendMessageSynchronous(text)
 			.then(response => this.afClient.onAgentMessageReceived(response))
 			.catch(error => {throw error})
-			.finally(() => this.awaitingAgentResponse = false);
+			.finally(() => {
+				this.awaitingAgentResponse = false;
+				buttonSendMessage.disabled = chatInputInput.value.length === 0;
+			});
 		}
-
 		return message;
 	}
 
 	removeMessages(ids) {
 		this.messages = this.messages.filter(message => !ids.includes(message.id));
 		this.afClient.uiInstances.forEach(ui => {
-			ui.node.querySelectorAll('.message').forEach(uiMessage => {
-				if (ids.includes(uiMessage.dataset.id)) {
-					uiMessage.remove();
-				}
-			});
+			Array.from(ui.messageListNode.querySelectorAll('.message'))
+				.filter(msg => ids.map(String).includes(msg.dataset.id))
+				.forEach(uiMessage => uiMessage.remove());
 		});
 	}
 
@@ -280,12 +291,11 @@ class AfClient {
 		this.uiInstances = [];
 		this.session = new Session();
 		this.conversation = new Conversation(this);
+		this.typingTimeoutId = null;
+		this.contextAreaHandlers = new Map();
 	}
 
-	contextAreaHandlers = new Map();
-
 	async startSession() {
-		console.log('AFClient startSession');
 		try {
 			const {welcomeMessage} = await this.session.startSession();
 			this.addMessage('system', 'Your AI assistant is ready');
@@ -332,14 +342,24 @@ class AfClient {
 	async sendMessage(text, context = null) {
 		if (this.session.sessionId) {
 			this.addMessage('user', text, context);
-			setTimeout(() => this.addMessage('typing', null, null), 1100);
+			if (this.typingTimeoutId) {
+				clearTimeout(this.typingTimeoutId);
+			}
+			this.typingTimeoutId = setTimeout(() => this.addMessage('typing', null, null), 1100);
 		}
 	}
 
 	async onAgentMessageReceived(message) {
 		await this.addMessage('agent', message);
+		if (this.typingTimeoutId) {
+			clearTimeout(this.typingTimeoutId);
+			this.typingTimeoutId = null;
+		}
 		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
 		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
+		const chatInputInput = document.getElementById('chatInputInput');
+		const buttonSendMessage = document.getElementById('buttonSendMessage');
+		buttonSendMessage.disabled = !chatInputInput.value;
 	}
 
 	async startContextSelection() {
