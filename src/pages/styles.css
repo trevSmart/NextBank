@@ -40,8 +40,9 @@
 
 html {
 	letter-spacing: 0.05em;
-	-webkit-font-smoothing: antialiased;
+	-webkit-font-smoothing: subpixel-antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
 }
 
 html,
@@ -132,7 +133,7 @@ header {
 	box-shadow: var(--shadow);
 	position: sticky;
 	top: 0;
-	z-index: 100;
+	z-index: 800;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	overflow: hidden;
 }
@@ -371,6 +372,7 @@ main {
 		inset 0 1px 1px rgba(255, 255, 255, 0.03);
 	transition: transform 250ms ease;
 	position: relative;
+	z-index: 1;
 	/* overflow: hidden; */
 }
 
@@ -396,13 +398,12 @@ main {
 .dashboard-card h2,
 .assistant-detached  h2 {
 	color: var(--text-primary);
-	font-size: 0.98em;
-	font-weight: 100;
+	font-size: 0.96em;
+	font-weight: 200;
 	margin-bottom: 0.8rem;
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	text-shadow: 0 0 6px rgb(205 104 242 / 57%);
 	cursor: default;
 }
 
@@ -515,13 +516,14 @@ main {
 	transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1);
 	max-width: 40%;
 	width: 430px;
+
 }
 
 .assistant-container.visible {
 	display: block;
 }
 
-.dashboard-card.assistant, .dashboard-card.assistantNew {
+.dashboard-card.assistant {
 	-ms-overflow-style: none;
 	scrollbar-width: none;
 	display: flex;
@@ -641,8 +643,7 @@ main {
 }
 
 .saldo-change .fas {
-	position: relative;
-	top: 2px;
+	font-size: 15px;
 }
 
 .saldo-change.positive {
@@ -688,13 +689,17 @@ main {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: var(--secondary-gradient);
+	background: var(--accent-gradient);
 	opacity: 0;
 	transition: opacity 250ms ease;
 }
 
 .compte-item:hover::before {
 	opacity: 0.05;
+}
+
+.compte-item:hover {
+	background: rgba(37, 92, 112, 0.15);
 }
 
 .compte-info {
@@ -789,6 +794,7 @@ main {
 	letter-spacing: 0.07em;
 	cursor: default;
 	font-weight: 300;
+	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.32);
 }
 
 .compte-change.positive {
@@ -806,11 +812,12 @@ main {
 .moviments-list {
 	list-style-type: disc;
 	max-height: 270px;
-	overflow-x: visible;
+	overflow-x: hidden;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 0.6rem;
+	border-radius: var(--border-radius);
 }
 
 .moviments-list::-webkit-scrollbar {
@@ -838,6 +845,7 @@ main {
 	transition: background-color 150ms ease;
 	position: relative;
 	overflow: hidden;
+	border-radius: var(--border-radius);
 }
 
 .moviment-item::before {
@@ -854,7 +862,7 @@ main {
 }
 
 .moviment-item:hover::before {
-	opacity: 0.05;
+	opacity: 0.06;
 }
 
 .moviment-item:hover {
@@ -887,7 +895,7 @@ main {
 	flex-wrap: nowrap;
 	text-overflow: ellipsis;
 	align-items: center;
-	gap: 1rem;
+	gap: 0.8rem;
 }
 
 .moviment-info .moviment-data h3 {
@@ -915,7 +923,7 @@ main {
 .moviment-amount {
 	position: relative;
 	z-index: 1;
-	padding: 0.05rem 0.4rem;
+	padding: 0.06rem 0.4rem;
 	border-radius: 15px;
 	letter-spacing: 0.05em;
 	font-family: var(--font-family);
@@ -923,6 +931,7 @@ main {
 	font-size: 12px;
 	white-space: nowrap;
 	font-weight: 300;
+	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.32);
 }
 
 .moviment-amount::after {
@@ -974,7 +983,7 @@ footer {
 	font-size: 0.8rem;
 	font-weight: 100;
 	cursor: default;
-	z-index: 100;
+	z-index: 800;
 }
 
 .footer-text {
@@ -1692,7 +1701,7 @@ button.popoutChat {
 	cursor: pointer;
 	transition: opacity 250ms ease, transform 250ms ease;
 	position: relative;
-	top: 3px;
+	top: 2px;
 	opacity: 0.45;
 	color: var(--text-secondary);
 }

@@ -63,7 +63,10 @@ class UiInstance {
 			const buttonSendMessage = document.createElement('button');
 			buttonSendMessage.className = 'send-button';
 			buttonSendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
-			buttonSendMessage.disabled = true;
+			buttonSendMessage.disabled = this.afClient.session.sessionId === null;
+
+			const contextSelectionBackdrop = document.createElement('div');
+			contextSelectionBackdrop.className = 'context-selection-backdrop';
 
 			uiChatMessages.appendChild(uiMessagesList);
 			uiChatMessages.appendChild(chatInput);
@@ -74,13 +77,17 @@ class UiInstance {
 			uiContainer.appendChild(uiChatMessages);
 			uiContainer.appendChild(chatInput);
 
+			document.body.insertBefore(contextSelectionBackdrop, document.body.firstChild);
+
 			this.node.appendChild(uiContainer);
 
 			chatInputInput.addEventListener('keydown', async event => {
-				if (event.key === 'Enter' && !event.shiftKey) {
+				if (event.key === 'Enter' && !event.shiftKey)  {
 					event.preventDefault();
-					await this.afClient.sendMessage(chatInputInput.value);
-					chatInputInput.value = '';
+					if (chatInputInput.value.trim()) {
+						await this.afClient.sendMessage(chatInputInput.value);
+						chatInputInput.value = '';
+					}
 				}
 			});
 
@@ -94,6 +101,7 @@ class UiInstance {
 
 			buttonStartConextSelection.addEventListener('click', () => this.afClient.startContextSelection());
 			buttonSendMessage.addEventListener('click', () => this.afClient.sendMessage(chatInputInput.value.toString()));
+			contextSelectionBackdrop.addEventListener('click', () => this.afClient.endContextSelection());
 
 			this.messageListNode = uiMessagesList;
 		}
@@ -126,7 +134,7 @@ class UiInstance {
 class Message {
 	constructor(id, type, text, context = null, ref) {
 		if (!id || !type || !text && type !== 'typing') {
-			throw new Error('Invalid message format');
+			return;
 		}
 		this.id = id;
 		this.type = type;
@@ -277,6 +285,7 @@ class AfClient {
 	contextAreaHandlers = new Map();
 
 	async startSession() {
+		console.log('AFClient startSession');
 		try {
 			const {welcomeMessage} = await this.session.startSession();
 			this.addMessage('system', 'Your AI assistant is ready');
@@ -327,8 +336,8 @@ class AfClient {
 		}
 	}
 
-	onAgentMessageReceived(message) {
-		this.addMessage('agent', message);
+	async onAgentMessageReceived(message) {
+		await this.addMessage('agent', message);
 		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
 		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
 	}
@@ -336,10 +345,21 @@ class AfClient {
 	async startContextSelection() {
 		if (!this.addingContext) {
 			this.addingContext = true;
+
+			document.querySelectorAll('.dashboard-card').forEach(card => {
+				if (card.querySelector('.afclient-context-area')) {
+					card.style.zIndex = 101;
+					card.style.color = 'white';
+				} else {
+					card.style.removeProperty('z-index'); // Netegem si no toca
+					card.style.removeProperty('color');
+				}
+			});
+
 			document.querySelector('body').classList.toggle('afclient-is-adding-context', true);
 			const contextAreas = document.querySelectorAll('.afclient-context-area');
 			contextAreas.forEach(area => {
-				const handler = () => this.selectContext(area);
+				const handler = event => this.selectContext(area, event);
 				this.contextAreaHandlers.set(area, handler);
 				area.addEventListener('click', handler);
 			});
@@ -361,7 +381,9 @@ class AfClient {
 		});
 	}
 
-	async selectContext(node) {
+	async selectContext(node, event) {
+		event.preventDefault();
+		event.stopPropagation();
 		document.querySelectorAll('body .afclient-selected-context').forEach(context => {
 			context.classList.remove('afclient-selected-context');
 		});

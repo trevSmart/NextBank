@@ -53,15 +53,14 @@
 }
 
 .tooltip-wrapper .help-point {
-	align-items: center;
-	/* background-color: black; */
-	border-radius: 50%;
-	color: darkgray;
+	color: #515151;
 	display: flex;
-	font-size: 0.7rem;
+	font-size: 1.06rem;
 	font-weight: bold;
-	height: 1rem;
 	justify-content: center;
 	width: 1rem;
-	border: 1px solid gray;
+}
+
+.tooltip-wrapper .help-point:hover {
+	color: #6e6e6e;
 }

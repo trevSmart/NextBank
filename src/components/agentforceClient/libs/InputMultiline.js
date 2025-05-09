@@ -23,8 +23,8 @@ export default class InputMultiline extends HTMLElement {
 				font-family: var(--font-family);
 				font-size: 0.8rem;
 				font-weight: 200;
-				outline: none;
-				outline-color: transparent;
+				// outline: none;
+				// outline-color: transparent;
 				margin-right: 0.7rem;
 				box-sizing: border-box;
 				line-height: 1.4;

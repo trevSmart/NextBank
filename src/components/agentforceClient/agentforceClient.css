@@ -9,6 +9,7 @@
     font-size: 0.75rem;
     /* font-weight: 200; */
     word-break: break-word;
+    line-height: 1.6;
 }
 .ui-container {
     display: flex;
@@ -32,6 +33,10 @@
 /* Classe específica per a nous missatges */
 .message.new-message {
     animation: slideInFromTop 0.3s ease-out forwards;
+}
+
+.message.user.new-message {
+    animation: slideInFromBottom 0.3s ease-out forwards;
 }
 
 .message.error {
@@ -126,7 +131,7 @@
 
 .chat-input-buttons {
     display: flex;
-    gap: 0.7rem;
+    gap: 1rem;
     position: absolute;
     right: 11px;
     background: transparent;
@@ -138,7 +143,7 @@
 .send-button, .add-context-button {
     /* position: absolute; */
     /* right: 9px; */
-    background: var(--primary-gradient-opacity);
+    background: rgba(127, 37, 251, 0.4);
     border: none;
     color: white;
     width: 1.5rem;
@@ -154,6 +159,7 @@
 }
 
 .add-context-button i {
+    border-radius: 50%;
     transform: rotate(0deg);
     transition: transform 0.2s ease;
 }
@@ -261,6 +267,17 @@ body.afclient-is-adding-context .add-context-button i {
     0% {
         opacity: 0;
         transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromBottom {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
     }
     100% {
         opacity: 1;
@@ -401,7 +418,7 @@ body.afclient-is-adding-context .add-context-button i {
 .message-time {
 	font-size: 0.6rem;
 	color: var(--text-secondary);
-	font-weight: 100;
+	font-weight: 200;
     text-align: right;
     cursor: default;
 }
@@ -476,11 +493,14 @@ body.afclient-is-adding-context .add-context-button i {
 .afclient-is-adding-context .afclient-context-area {
     position: relative;
     overflow: visible;
+    z-index: 9999;
 }
 
+/*
 .afclient-is-adding-context .afclient-context-area * {
-    cursor: url('/src/assets/images/logo.png'), copy !important; /* PENDENT: canviar a cursor-pointer */
+    cursor: url('/src/assets/images/logo.png'), copy !important;
 }
+*/
 
 .afclient-is-adding-context .afclient-context-area::after {
     content: "";
@@ -490,10 +510,10 @@ body.afclient-is-adding-context .add-context-button i {
     top: -2px;
     left: -2px;
     pointer-events: none;
-    z-index: 2;
+    z-index: 101;
     border-radius: 10px;
-    animation: context-area-adding-context-kf 500ms infinite alternate;
-    cursor: url('/src/assets/images/logo.png'), copy !important; /* PENDENT: canviar a cursor-pointer */
+    animation: context-area-adding-context-kf 420ms infinite alternate;
+    /* cursor: url('/src/assets/images/logo.png'), copy !important; */ /* PENDENT: canviar a cursor-pointer */
 
 }
 
@@ -567,15 +587,37 @@ body .afclient-selected-context::after {
     margin-left: 0.3em;
 }
 
+div.context-selection-backdrop {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 300ms, opacity 300ms ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(9px);
+    z-index: 100;
+}
+
+body.afclient-is-adding-context div.context-selection-backdrop {
+    visibility: visible;
+    opacity: 1;
+}
+
+body.afclient-is-adding-context .afclient-context-area {
+    z-index: 101;
+}
+
 @keyframes context-area-adding-context-kf {
     from {
         /* box-shadow: 0 0 2px 2px rgba(145, 27, 255, 0.25); */
-                background-color: rgba(145, 27, 255, 0.25);
+                background-color: rgba(145, 27, 255, 0.15);
 
     }
     to {
         /* box-shadow: 0 0 4px 4px rgba(145, 27, 255, 0.70); */
-                background-color: rgba(145, 27, 255, 0.48);
+                background-color: rgba(145, 27, 255, 0.28);
     }
 }
 

@@ -116,7 +116,6 @@ class SfAgentApi {
                 welcomeMessage: data.messages[0].message
             };
         } catch (error) {
-            console.error('Error starting session:', error);
             throw error;
         }
     }
