@@ -5,17 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="dark light">
-    <link rel="icon" type="image/png" href="../public/favicon.webp">
+    <link rel="icon" type="image/png" href="favicon.webp">
     <title>NextBank</title>
 
     <!-- Estils -->
     <link rel="stylesheet" href="../src/pages/styles.css" type="text/css">
-    <!-- <link rel="stylesheet" href="../src/components/agentforceClient/afclient.css"> -->
     <link rel="stylesheet" href="../src/components/toggle/toggle.css" type="text/css">
     <link rel="stylesheet" href="../src/components/tooltip/tooltip.css" type="text/css">
     <link rel="stylesheet" href="../src/components/creditCard/creditCard.css" type="text/css">
     <link rel="stylesheet" href="../src/assets/fonts/fontawesome/all.min.css" type="text/css">
-    <!-- <script type="module" src="../src/components/InputMultiline/InputMultiline.js"></script> -->
     <script type="module" src="../src/components/ProgressRing/ProgressRing.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
@@ -25,10 +23,9 @@
     <script type="module" src="../src/components/StockView/StockViewComponent.js"></script>
 </head>
 
-<body>
-    <div class="background-logo">
-        <img src="../src/assets/images/logo.webp" alt="Background Logo">
-    </div>
+<body class="preload">
+    <div class="background-logo"/>
+
     <header>
         <div class="header-content">
             <div class="logo">
@@ -289,7 +286,7 @@
                                 </div>
                             </div>
                             <!-- <div class="targeta visa alert"> -->
-                            <div class="targeta visa afclient-context-area">
+                            <div class="targeta visa alert afclient-context-area">
                                 <div class="targeta-front">
                                     <div class="targeta-chip">
                                         <img src="../src/assets/images/chip.webp" alt="chip">
@@ -394,7 +391,7 @@
                     <h2>
                         <div class="chat-title-wrapper">
                             <div class="chat-title-main">
-                                <h2>
+                                <!-- <h2> -->
                                     <button class="popoutChat">
                                         <img src="../src/assets/icons/popout.webp" alt="Pop out" class="popoutChatIcon" draggable="false">
                                     </button>
@@ -403,7 +400,7 @@
                                         <span class="tooltip">I'm a Tooltip!</span>
                                         <i class="fa-solid fa-circle-question help-point"></i>
                                     </span>
-                                </h2>
+                                <!-- </h2> -->
                                 <!--
                                 <div class="chat-title-switch">
                                     <input type="checkbox" class="toggle" id="toggle-assistant">
@@ -411,10 +408,7 @@
                             </div>
                             <div class="chat-powered-by">
                                 <span>powered by</span>
-                                <div class="agentforce-logo-container">
-                                    <img src="../src/assets/images/salesforce_logo.webp" alt="Salesforce logo" class="salesforce-logo" draggable="false">
-                                    <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
-                                </div>
+                                <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
                             </div>
                         </div>
                     </h2>
@@ -474,10 +468,7 @@
                 </div>
                 <div class="chat-powered-by">
                     <span>powered by</span>
-                    <div class="agentforce-logo-container">
-                        <img src="../src/assets/images/salesforce_logo.webp" alt="Salesforce logo" class="salesforce-logo" draggable="false">
-                        <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
-                    </div>
+                    <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
                 </div>
             </div>
         </h2>

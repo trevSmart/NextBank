@@ -18,7 +18,7 @@ export default class InputMultiline extends HTMLElement {
 				padding: 0.7rem 3.5rem 0.7rem 0.9rem;
 				color: white;
 				background: rgba(255, 255, 255, 0.07);
-				border-radius: var(--border-radius);
+				border-radius: var(--border-radius-small);
 				border: none;
 				font-family: var(--font-family);
 				font-size: 0.8rem;

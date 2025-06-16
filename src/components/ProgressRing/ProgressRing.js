@@ -31,6 +31,7 @@ class ProgressRing extends HTMLElement {
 				justify-content: center;
 				width: 100%;
 				height: 100%;
+				cursor: default;
 			}
 			svg {
 				display: block;

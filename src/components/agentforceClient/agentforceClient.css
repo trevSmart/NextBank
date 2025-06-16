@@ -285,6 +285,7 @@ body.afclient-is-adding-context .add-context-button i {
     }
 }
 
+/*
 .assistant h2 {
     margin-bottom: 0;
 }
@@ -309,6 +310,7 @@ body.afclient-is-adding-context .add-context-button i {
     height: 20px;
     vertical-align: middle;
 }
+*/
 
 .chat-messages {
     flex: 1;
@@ -316,7 +318,7 @@ body.afclient-is-adding-context .add-context-button i {
     overflow-y: auto;
     margin-top: 0.7rem;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-small);
     position: relative;
 	border: 1px solid rgba(255, 255, 255, 0.04);
 }

@@ -191,6 +191,78 @@ class SfAgentApi {
             throw error;
         }
     }
+
+    async sendMessageStreaming(message, onChunk, onEnd, onError) {
+        try {
+            if (!this.session.id) {
+                throw new Error('No active session');
+            }
+            const response = await fetch('http://localhost:3000/proxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream'
+                },
+                body: JSON.stringify({
+                    url: `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages/stream`,
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream'
+                    },
+                    body: {
+                        message: {
+                            sequenceId: ++this.session.sequenceId,
+                            type: 'Text',
+                            text: message
+                        },
+                        variables: []
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error('Error al enviar el missatge (streaming): ' + errorText);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                // Processa cada línia d'event SSE
+                let lines = buffer.split('\n');
+                buffer = lines.pop(); // L'última pot estar incompleta
+
+                for (const line of lines) {
+                    if (line.startsWith('data:')) {
+                        try {
+                            const event = JSON.parse(line.replace('data:', '').trim());
+                            if (event.eventType === 'TextChunk') {
+                                onChunk && onChunk(event.textChunk);
+                            } else if (event.eventType === 'EndOfTurn') {
+                                onEnd && onEnd();
+                            } else if (event.eventType === 'ValidationFailureChunk') {
+                                onError && onError(event);
+                            }
+                            // Pots afegir més gestió d'events segons la documentació
+                        } catch (e) {
+                            // Error de parseig, ignora o mostra log
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            onError && onError(error);
+            throw error;
+        }
+    }
 }
 
 export default new SfAgentApi();

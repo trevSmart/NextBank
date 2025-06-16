@@ -176,6 +176,10 @@ function cleanup() {
 }
 
 //Event listeners principals
+window.addEventListener('load', () => {
+	document.body.classList.remove('preload');
+});
+
 document.addEventListener('DOMContentLoaded', () => {
 	afClient.newUiInstance(document.getElementById('assistant'));
 	afClient.startSession();
