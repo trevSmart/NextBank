@@ -51,7 +51,7 @@ function initializeResizeHandling() {
 		startX = e.pageX;
 		startWidth = assistantContainer.offsetWidth;
 		//Ensure the current precise width is frozen so the flex/grid layout
-		//doesn’t recalculate it when the drag starts.
+		//doesn't recalculate it when the drag starts.
 		startWidth = assistantContainer.getBoundingClientRect().width;
 		assistantContainer.style.width = `${startWidth}px`;
 		//Also lock the flex-basis so nothing else overrides the width mid‑drag.
@@ -251,6 +251,20 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
 		changeElement.className = `saldo-change ${isPositive ? 'positive' : 'negative'}`;
+	}
+
+	//Agentforce logo click handler
+	const chatPoweredBy = document.querySelector('.chat-powered-by');
+	if (chatPoweredBy) {
+		chatPoweredBy.style.cursor = 'pointer';
+		chatPoweredBy.addEventListener('click', () => {
+			window.open('https://www.salesforce.com/eu/agentforce/', '_blank');
+		});
+		navigationCleanupFunctions.push(() => {
+			chatPoweredBy.removeEventListener('click', () => {
+				window.open('https://www.salesforce.com/eu/agentforce/', '_blank');
+			});
+		});
 	}
 
 	//this.initializeCalendar();

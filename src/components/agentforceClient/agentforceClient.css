@@ -11,6 +11,16 @@
     word-break: break-word;
     line-height: 1.6;
 }
+
+.message-text code {
+    font-family: monospace;
+    font-size: 0.75rem;
+    background-color: #5d5998;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    color: #eeeeeee0;
+}
+
 .ui-container {
     display: flex;
     flex-direction: column;
@@ -108,7 +118,7 @@
 
 }
 
-.message.agent .message-content {
+.message.agent:not(.important) .message-content {
     background: linear-gradient(135deg, rgba(203, 60, 255, 0.5) 20%, rgba(127, 37, 251, 0.5) 68%);
     border-radius: 1.2rem 0 1.2rem 1.2rem;
     color: white;
@@ -400,11 +410,19 @@ body.afclient-is-adding-context .add-context-button i {
     border-radius: 0 1rem 0.6rem 0.6rem;
 }
 
-.message.agent .message-content {
+.message.agent:not(.important) .message-content {
     background: linear-gradient(135deg, rgba(203, 60, 255, 0.5) 20%, rgba(127, 37, 251, 0.5) 68%);
     border-radius: 1rem 0 0.6rem 0.6rem;
     padding: 0.8rem 1rem 0.6rem 1rem;
     color: white;
+}
+
+.message.agent.important .message-content {
+    background-color: #683234;
+	color: var(--text);
+    font-weight: 400;
+    border-radius: 1rem 0 0.6rem 0.6rem;
+    padding: 0.8rem 1rem 0.6rem 1rem;
 }
 
 .message.agent .message-content:has(dotlottie-player) {
@@ -492,6 +510,10 @@ body.afclient-is-adding-context .add-context-button i {
     /* padding: 0.6rem 1.25rem; */
 }
 
+.message.userHidden {
+    display: none;
+}
+
 .afclient-is-adding-context .afclient-context-area {
     position: relative;
     overflow: visible;
@@ -515,6 +537,7 @@ body.afclient-is-adding-context .add-context-button i {
     z-index: 101;
     border-radius: 10px;
     animation: context-area-adding-context-kf 420ms infinite alternate;
+    will-change: background-color;
     /* cursor: url('/src/assets/images/logo.png'), copy !important; */ /* PENDENT: canviar a cursor-pointer */
 
 }
@@ -531,7 +554,6 @@ body .afclient-selected-context {
     background: rgba(145, 27, 255, 0.3);
     overflow: visible;
     border-radius: 10px;
-
 }
 
 body .afclient-selected-context::after {
@@ -554,9 +576,9 @@ body .afclient-selected-context::after {
     position: absolute;
     top: 10px;
     left: calc(50% - 10px);
-    background: var(--primary-gradient-opacity);
+    background: var(--context-gradient);
     padding: 2px 6px;
-    border-radius: 6px;
+    border-radius: 9px;
     font-size: 0.78rem;
     font-weight: 300;
     color: var(--text-secondary);
@@ -566,6 +588,8 @@ body .afclient-selected-context::after {
     text-align: center;
     overflow: hidden;
     animation: context-area-adding-context-kf 500ms infinite alternate;
+    max-width: 90%;
+    min-width: 40px;
 }
 
 .chat-input-context-icon {
@@ -574,9 +598,14 @@ body .afclient-selected-context::after {
 }
 
 .chat-input-context-label {
-    flex-shrink: 0;
+    flex-shrink: 1;
     flex-grow: 0;
     text-align: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    min-width: 0;
+    /* max-width: 120px; */
 }
 
 .chat-input-context-close-button {
@@ -587,6 +616,8 @@ body .afclient-selected-context::after {
     cursor: pointer;
     color: var(--text-secondary);
     margin-left: 0.3em;
+    position: relative;
+    top: 1px;
 }
 
 div.context-selection-backdrop {
@@ -613,13 +644,21 @@ body.afclient-is-adding-context .afclient-context-area {
 
 @keyframes context-area-adding-context-kf {
     from {
-        /* box-shadow: 0 0 2px 2px rgba(145, 27, 255, 0.25); */
-                background-color: rgba(145, 27, 255, 0.15);
+        background-color: rgba(145, 27, 255, 0.1);
 
     }
     to {
-        /* box-shadow: 0 0 4px 4px rgba(145, 27, 255, 0.70); */
-                background-color: rgba(145, 27, 255, 0.28);
+        background-color: rgba(145, 27, 255, 0.2);
+    }
+}
+
+@keyframes context-area-adding-context-kf {
+    from {
+        background-color: rgba(145, 27, 255, 0.1);
+
+    }
+    to {
+        background-color: rgba(145, 27, 255, 0.2);
     }
 }
 

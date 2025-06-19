@@ -1,7 +1,7 @@
 import SfAgentApi from './libs/sfAgentApi.js';
 //eslint-disable-next-line no-unused-vars
 import InputMultiline from './libs/InputMultiline.js';
-import 'https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs';
+// import 'https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs';
 
 class Session {
 	constructor() {
@@ -58,7 +58,9 @@ class UiInstance {
 
 			const buttonStartConextSelection = document.createElement('button');
 			buttonStartConextSelection.className = 'add-context-button';
-			buttonStartConextSelection.innerHTML = '<i class="fas fa-plus"></i>';
+			// buttonStartConextSelection.innerHTML = '<i class="fas fa-plus"></i>';
+			buttonStartConextSelection.innerHTML = '<i class="fas fa-paperclip"></i>';
+			buttonStartConextSelection.title = 'Add context';
 			buttonStartConextSelection.disabled = true;
 
 			const buttonSendMessage = document.createElement('button');
@@ -133,6 +135,10 @@ class UiInstance {
 	}
 
 	sendMessage(text) {
+		if (this.afClient.selectedContext) {
+			text = `itemId: ${this.afClient.selectedContext.dataset.contextId}\n\n${text}`;
+			this.afClient.removeContext();
+		}
 		this.afClient.sendMessage(text);
 		document.getElementById('chatInputInput').value = '';
 		document.getElementById('buttonSendMessage').disabled = true;
@@ -159,7 +165,8 @@ class Message {
 		}
 
 		const messageListItem = document.createElement('li');
-		messageListItem.className = `message ${this.type === 'typing' ? 'agent typing' : this.type} new-message`;
+		const classNameAux = this.type === 'typing' ? 'agent typing' : this.type === 'agentImportant' ? 'agent important' : this.type;
+		messageListItem.className = `message ${classNameAux}`;
 		messageListItem.dataset.id = this.id;
 
 		//Eliminem la classe new-message després de l'animació
@@ -182,10 +189,10 @@ class Message {
 		//}
 
 		const messageTime = document.createElement('div');
-		if (this.type === 'user' || this.type === 'agent' || this.type === 'typing') {
+		if (this.type === 'agent' || this.type === 'agentImportant' || this.type === 'typing' || this.type === 'user') {
 			messageAvatar.className = 'message-avatar';
 			//messageAvatar.draggable = false;
-			if (this.type === 'agent' || this.type === 'typing') {
+			if (this.type === 'agent' || this.type === 'agentImportant' || this.type === 'typing') {
 				const avatarImg = document.createElement('img');
 				avatarImg.src = '/src/assets/images/agent_astro.svg';
 				avatarImg.alt = 'Agent Avatar';
@@ -201,6 +208,7 @@ class Message {
 					messageContent.appendChild(messageName);
 				}
 			} else {
+				// avatar d'usuari
 				const userAvatar = document.createElement('div');
 				userAvatar.className = 'user-avatar';
 				userAvatar.textContent = 'E';
@@ -216,12 +224,21 @@ class Message {
 		if (this.type === 'typing') {
 			messageText.innerHTML = '<dotlottie-player src="/src/assets/animations/typing.json" background="transparent" speed="1" style="width: 53px"; loop autoplay></dotlottie-player>';
 		} else {
-			messageText.innerHTML = this.text.replace(/\n/g, '<br>');
+			// Format the text with HTML tags
+			let formattedText = this.text
+				.replace(/\n/g, '<br>')
+				.replace(/^(itemId:[^<]*?)(<br>|$)/, '<code>$1</code>$2') // First line with itemId: -> bold
+				.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **text** -> <strong>text</strong>
+				.replace(/\*(.*?)\*/g, '<em>$1</em>') // *text* -> <em>text</em>
+				.replace(/`(.*?)`/g, '<code>$1</code>') // `text` -> <code>text</code>
+				.replace(/~~(.*?)~~/g, '<del>$1</del>'); // ~~text~~ -> <del>text</del>
+
+			messageText.innerHTML = formattedText;
 		}
 
 		messageContent.appendChild(messageText);
 		messageListItem.appendChild(messageContent);
-		if (this.type === 'user' || this.type === 'agent' || this.type === 'typing') {
+		if (this.type === 'user' || this.type === 'agent' || this.type === 'agentImportant' || this.type === 'typing') {
 			messageListItem.appendChild(messageAvatar);
 			this.type === 'agent' && messageContent.appendChild(messageSpeak);
 			this.type !== 'typing' && messageContent.appendChild(messageTime);
@@ -243,15 +260,15 @@ class Conversation {
 	}
 
 	async render(nodes) {
-		this.messages.forEach(async message => {
+		this.messages.filter(message => message.type !== 'userHidden').forEach(async message => {
 			await message.render(nodes);
 		});
 	}
 
 	async addMessage(type, text, context = null, id) {
 		const message = new Message(id || ++this.lastMessageId, type, text, context);
-		this.messages.push(message);
-		if (type === 'user') {
+		type !== 'userHidden' && this.messages.push(message);
+		if (type === 'user' || type === 'userHidden') {
 			const chatInputInput = document.getElementById('chatInputInput');
 			const buttonSendMessage = document.getElementById('buttonSendMessage');
 			this.awaitingAgentResponse = true;
@@ -299,7 +316,9 @@ class AfClient {
 		try {
 			const {welcomeMessage} = await this.session.startSession();
 			this.addMessage('system', 'Your AI assistant is ready');
-			this.addMessage('agent', welcomeMessage);
+			//this.addMessage('agent', welcomeMessage);
+			document.querySelector('body').classList.add('alerts-visible');
+			this.addMessage('userHidden', 'Give me the initial important messages');
 
 			document.querySelector('.add-context-button').disabled = false;
 
@@ -350,7 +369,22 @@ class AfClient {
 	}
 
 	async onAgentMessageReceived(message) {
-		await this.addMessage('agent', message);
+		// Check if message contains warning emoji and split it
+		if (message.includes('⚠️')) {
+			const warningIndex = message.indexOf('⚠️');
+			const beforeWarning = message.substring(0, warningIndex).trim();
+			const afterWarning = message.substring(warningIndex).trim();
+
+			if (beforeWarning) {
+				await this.addMessage('agent', beforeWarning);
+			}
+			if (afterWarning) {
+				await this.addMessage('agentImportant', afterWarning);
+			}
+		} else {
+			await this.addMessage('agent', message);
+		}
+
 		if (this.typingTimeoutId) {
 			clearTimeout(this.typingTimeoutId);
 			this.typingTimeoutId = null;
@@ -408,22 +442,34 @@ class AfClient {
 			context.classList.remove('afclient-selected-context');
 		});
 		document.querySelector('body').classList.add('afclient-selected-context');
+
 		this.selectedContext = node;
 		node.classList.add('afclient-selected-context');
+
+		const chatInputInput = document.getElementById('chatInputInput');
+		if (node) {
+			const {contextId, contextLabel} = node.dataset;
+			chatInputInput.setContextItem(contextId, contextLabel);
+
+		}
+
 		document.querySelector('body').classList.remove('afclient-is-adding-context');
 		this.endContextSelection();
 
+		/*
 		const chatInputContextIcon = document.createElement('div');
 		chatInputContextIcon.className = 'chat-input-context-icon';
 		chatInputContextIcon.innerHTML = '<i class="fa-solid fa-paperclip"></i>';
 
 		const chatInputContextLabel = document.createElement('div');
 		chatInputContextLabel.className = 'chat-input-context-label';
+		chatInputContextLabel.title = node.dataset.contextId;
 		chatInputContextLabel.textContent = node.dataset.contextLabel;
 
 		const chatInputContextCloseButton = document.createElement('button');
 		chatInputContextCloseButton.className = 'chat-input-context-close-button';
 		chatInputContextCloseButton.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+		chatInputContextCloseButton.title = 'Remove context';
 		chatInputContextCloseButton.addEventListener('click', () => this.removeContext());
 
 		const chatInputContext = document.createElement('div');
@@ -432,8 +478,9 @@ class AfClient {
 		chatInputContext.appendChild(chatInputContextLabel);
 		chatInputContext.appendChild(chatInputContextCloseButton);
 
-		const inputMultiline = document.querySelector('.chat-input');
-		inputMultiline.appendChild(chatInputContext);
+		const chatInput = document.querySelector('.chat-input');
+		chatInput.appendChild(chatInputContext);
+		*/
 	}
 
 	async removeContext() {
@@ -441,8 +488,7 @@ class AfClient {
 		this.selectedContext = null;
 		document.querySelector('body').classList.remove('afclient-selected-context');
 
-		const chatInputContext = document.querySelectorAll('.chat-input-context');
-		chatInputContext.forEach(context => context.remove());
+		document.getElementById('chatInputInput').clearContext();
 
 		this.endContextSelection();
 	}
