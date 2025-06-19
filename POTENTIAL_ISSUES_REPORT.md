@@ -154,7 +154,7 @@ chatDetached.style.transform = `translate3d(${dragState.xOffset}px, ${dragState.
 **Solució:** Netejar directoris obsolets i establir convenció consistent.
 
 ### 15. Fitxers Temporals i de Backup
-**Ubicació:** 
+**Ubicació:**
 - `src/components/creditCard/temp.html`
 - `src/components/StockView old/`
 - `src/assets/images/old/`
