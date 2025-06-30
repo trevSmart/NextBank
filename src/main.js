@@ -4,7 +4,7 @@ import AfClient from './components/agentforceClient/agentforceClient.js';
 import './components/calendar/calendar.js';
 import LoginComponent from './components/login/login.js';
 
-let afClient = new AfClient({streaming: true, initialMessages: true, devMode: true});
+let afClient = new AfClient({streaming: true, initialMessages: false, devMode: true});
 let resizeCleanupFunctions = [];
 let navigationCleanupFunctions = [];
 let dragState = {xOffset: 0, yOffset: 0};

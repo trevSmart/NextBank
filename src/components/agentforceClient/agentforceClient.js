@@ -147,11 +147,12 @@ class UiInstance {
 }
 
 class Message {
-	constructor(id, type, text, context = null, conversation, status = null) {
+	constructor(id, type, text, context = null, conversation, originEventId = null, status = null) {
 		if (!id || !type || !text && type !== 'typing') {
 			return;
 		}
 		this.id = id;
+		this.originEventId = originEventId;
 		this.type = type;
 		this.text = text;
 		this.context = context;
@@ -195,13 +196,17 @@ class Message {
 			messageAvatar.className = 'message-avatar';
 			//messageAvatar.draggable = false;
 			if (this.type === 'agent' || this.type === 'agentImportant' || this.type === 'typing') {
-				const avatarImg = document.createElement('img');
-				avatarImg.src = '/src/assets/images/agent_astro.svg';
-				avatarImg.alt = 'Agent Avatar';
-				avatarImg.className = 'agent-avatar';
-				avatarImg.title = 'Agentforce';
-				avatarImg.draggable = false;
-				messageAvatar.appendChild(avatarImg);
+				if (this.type === 'agentImportant') {
+					messageAvatar.innerHTML = '<i class="fas fa-exclamation-triangle" style="padding-left: 1px;"></i>';
+				} else {
+					const avatarImg = document.createElement('img');
+					avatarImg.alt = 'Agent Avatar';
+					avatarImg.className = 'agent-avatar';
+					avatarImg.title = 'Agentforce';
+					avatarImg.draggable = false;
+					avatarImg.src = '/src/assets/images/agent_astro.svg';
+					messageAvatar.appendChild(avatarImg);
+				}
 
 				if (this.type === 'agent') {
 					const messageName = document.createElement('div');
@@ -277,8 +282,8 @@ class Conversation {
 		});
 	}
 
-	async addMessage(type, text, context = null, id, status = null) {
-		const message = new Message(id || ++this.lastMessageId, type, text, context, undefined, this, status);
+	async addMessage(type, text, context = null, id, originEventId = null, status = null) {
+		const message = new Message(id || ++this.lastMessageId, type, text, context, this, originEventId, status);
 		type !== 'userHidden' && this.messages.push(message);
 
 		this.afClient.options.devMode && console.log(this.messages);
@@ -384,8 +389,8 @@ class AfClient {
 		return this.uiInstances.find(ui => ui.id === id);
 	}
 
-	async addMessage(type, text, context = null, id, status = null) {
-		const message = await this.conversation.addMessage(type, text, context, id, status);
+	async addMessage(type, text, context = null, id, originEventId = null, status = null) {
+		const message = await this.conversation.addMessage(type, text, context, id, originEventId, status);
 		this.uiInstances.forEach(async ui => await message.render([ui.messageListNode]));
 		this.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
 	}
@@ -410,6 +415,7 @@ class AfClient {
 
 		if (isChunk) {
 
+			let chunkMessage = null;
 			let chunkText = '';
 
 			// Si el chunk és un string multi-línia, busquem la línia "data: ..."
@@ -429,24 +435,27 @@ class AfClient {
 				const dataLine = message.split('\n').find(line => line.startsWith('data: '));
 				if (dataLine) {
 					try {
-						const dataObj = JSON.parse(dataLine.replace('data: ', ''));
-
+						chunkMessage = JSON.parse(dataLine.replace('data: ', '')).message;
+						/*
 						// Només agafem el text si el tipus és TextChunk
 						if (dataObj?.message?.type === 'TextChunk' && typeof dataObj?.message?.message === 'string') {
 							chunkText = dataObj.message.message;
 						}
-
+						*/
 					} catch (e) {
 						console.warn('No s\'ha pogut parsejar el JSON del chunk:', e, dataLine);
 					}
 				}
 
-			} else if (message?.message?.type === 'TextChunk' && typeof message?.message?.message === 'string') {
+			}
+			/*
+			else if (message?.message?.type === 'TextChunk' && typeof message?.message?.message === 'string') {
 				// Cas alternatiu: ja és un objecte i és TextChunk
 				chunkText = message.message.message;
 			}
+			*/
 
-			if (!chunkText) {
+			if (!chunkMessage.message) {
 				console.warn('Estructura de chunk inesperada o sense text:', message);
 				return;
 			}
@@ -455,10 +464,10 @@ class AfClient {
 			let streamingMessage = this.conversation.getMessages().find(m => m.type === 'agent' && m.status === 'streaming');
 			if (!streamingMessage) {
 				// Si no existeix, creem el missatge nou
-				await this.addMessage('agent', chunkText, null, message.id, 'streaming');
+				await this.addMessage('agent', chunkMessage.message, null, chunkMessage.id, chunkMessage.originEventId, 'streaming');
 			} else {
 				// Si ja existeix, només actualitzem el seu text i el renderitzem
-				streamingMessage.text += chunkText;
+				streamingMessage.text += chunkMessage.message;
 				console.log(streamingMessage.id);
 				console.log(streamingMessage.text);
 
@@ -467,34 +476,49 @@ class AfClient {
 			}
 
 		} else {
-			// Check if message contains warning emoji and split it
-			if (message.includes('⚠️')) {
-				const warningIndex = message.indexOf('⚠️');
-				const beforeWarning = message.substring(0, warningIndex).trim();
-				const afterWarning = message.substring(warningIndex).trim();
-
-				if (beforeWarning) {
-					await this.addMessage('agent', beforeWarning);
-				}
-				if (afterWarning) {
-					await this.addMessage('agentImportant', afterWarning);
-				}
-
-				document.querySelector('body').classList.add('alerts-visible');
-			} else {
-				await this.addMessage('agent', message);
-			}
-
-			if (this.typingTimeoutId) {
-				clearTimeout(this.typingTimeoutId);
-				this.typingTimeoutId = null;
-			}
-			const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
-			this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
-			const chatInputInput = document.getElementById('chatInputInput');
-			const buttonSendMessage = document.getElementById('buttonSendMessage');
-			buttonSendMessage.disabled = !chatInputInput.value;
+			await this.addMessage('agent', message.message);
 		}
+
+
+		if (message.includes('⚠️')) {
+			const warningIndex = message.indexOf('⚠️');
+			const beforeWarning = message.substring(0, warningIndex).trim();
+			const afterWarning = message.substring(warningIndex).trim();
+
+			if (beforeWarning) {
+				await this.addMessage('agent', beforeWarning, null, message.id);
+			}
+			if (afterWarning) {
+				await this.addMessage('agentImportant', afterWarning, null, message.id);
+			}
+
+			document.querySelector('body').classList.add('alerts-visible');
+
+			// Scroll any lists with an element with class alert to make it visible
+			const alertElements = document.querySelectorAll('.alert');
+			if (alertElements.length) {
+				const firstAlert = alertElements[0];
+				const container = firstAlert.parentElement;
+				const containerRect = container.getBoundingClientRect();
+				const elementRect = firstAlert.getBoundingClientRect();
+
+				if (!(elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom)) {
+					firstAlert.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+				}
+			}
+		}
+
+		if (this.typingTimeoutId) {
+			clearTimeout(this.typingTimeoutId);
+			this.typingTimeoutId = null;
+		}
+		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
+		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
+
+
+		const chatInputInput = document.getElementById('chatInputInput');
+		const buttonSendMessage = document.getElementById('buttonSendMessage');
+		buttonSendMessage.disabled = !chatInputInput.value;
 	}
 
 	async startContextSelection() {
@@ -506,7 +530,7 @@ class AfClient {
 					card.style.zIndex = 101;
 					card.style.color = 'white';
 				} else {
-					card.style.removeProperty('z-index'); // Netegem si no toca
+					card.style.removeProperty('z-index');
 					card.style.removeProperty('color');
 				}
 			});

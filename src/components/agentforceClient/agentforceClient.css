@@ -10,6 +10,7 @@
     /* font-weight: 200; */
     word-break: break-word;
     line-height: 1.6;
+    white-space: pre-wrap;
 }
 
 .message-text code {
@@ -71,7 +72,7 @@
     padding: 0;
     gap: 0.4rem;
     flex-direction: row-reverse;
-    max-width: 92%;
+    max-width: 95%;
 }
 
 .message.agent {
@@ -81,7 +82,7 @@
     background: transparent;
     padding: 0;
     gap: 0.4rem;
-    max-width: 92%;
+    max-width: 95%;
 }
 
 .message-avatar {
@@ -369,8 +370,8 @@ body.afclient-is-adding-context .add-context-button i {
 .message-avatar {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.03);
     background-color: #154679;
-    width: 2.2rem;
-    height: 2.2rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -381,6 +382,14 @@ body.afclient-is-adding-context .add-context-button i {
     user-select: none;
     position: relative;
     top: -6px;
+}
+
+.message.agent .message-avatar {
+    background: linear-gradient(135deg, rgba(203, 60, 255, 0.4) 20%, rgba(127, 37, 251, 0.5) 68%);
+}
+
+.message.agent.important .message-avatar {
+    background: rgb(104, 50, 52);
 }
 
 .message-avatar .user-avatar {
@@ -395,13 +404,13 @@ body.afclient-is-adding-context .add-context-button i {
 }
 
 .message.user .message-content {
-    background: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(291deg, rgb(67 54 138) 0%, rgb(31 24 64) 100%);
     padding: 0.8rem 1rem 0.6rem 1rem;
     border-radius: 0 1rem 0.6rem 0.6rem;
 }
 
 .message.agent:not(.important) .message-content {
-    background: linear-gradient(135deg, rgba(203, 60, 255, 0.5) 20%, rgba(127, 37, 251, 0.5) 68%);
+    background: linear-gradient(135deg, rgba(203, 60, 255, 0.4) 20%, rgba(127, 37, 251, 0.4) 68%);
     border-radius: 1rem 0 0.6rem 0.6rem;
     padding: 0.8rem 1rem 0.6rem 1rem;
     color: white;
@@ -579,7 +588,7 @@ body .afclient-selected-context::after {
     text-align: center;
     overflow: hidden;
     animation: context-area-adding-context-kf 500ms infinite alternate;
-    max-width: 90%;
+    max-width: 95%;
     min-width: 40px;
 }
 
