@@ -49,11 +49,13 @@ app.post('/proxy', async (req, res) => {
         console.log();
         console.log();
         console.log(url);
-        console.log(JSON.stringify(headers));
-        console.log(JSON.stringify(formattedBody));
+        console.log();
+        console.log(JSON.stringify(headers, null, 4));
+        console.log();
+        console.log(JSON.stringify(formattedBody, null, 4));
         console.log();
         console.log();
-        console.log(JSON.stringify(req.formattedBody));
+        console.log(JSON.stringify(req.formattedBody, null, 4));
         const response = await fetch(url, {
             method,
             headers,
@@ -61,7 +63,7 @@ app.post('/proxy', async (req, res) => {
         });
         console.log();
         console.log();
-        console.log(JSON.stringify(response));
+        console.log(JSON.stringify(response, null, 4));
 
         // Comprova el content-type de la resposta
         const contentType = response.headers.get('content-type') || '';
@@ -71,6 +73,8 @@ app.post('/proxy', async (req, res) => {
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
 
+            console.log('Streaming response');
+            console.log(response.body);
             // Retransmet el flux tal qual
             response.body.pipe(res);
         } else {
@@ -79,7 +83,7 @@ app.post('/proxy', async (req, res) => {
             console.log();
             console.log();
             console.log(response.status + ' ' + response.statusText);
-            console.log(JSON.stringify(data));
+            console.log(JSON.stringify(data, null, 4));
 
             res.status(response.status).json(data);
         }

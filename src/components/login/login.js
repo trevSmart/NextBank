@@ -20,12 +20,12 @@ class LoginComponent {
 
                     <form class="login-form" id="loginForm">
                         <div class="form-group">
-                            <label for="username">Username</label>
+                            <label for="username">Your email address</label>
                             <input
                                 type="text"
                                 id="username"
                                 name="username"
-                                value="elizabeth"
+                                value="elizabeth@mail.com"
                                 required
                             >
                         </div>
@@ -36,13 +36,13 @@ class LoginComponent {
                                 type="password"
                                 id="password"
                                 name="password"
-                                value="elizabeth"
+                                value="xK9mP2$vL8nQ4@jR7"
                                 required
                             >
                         </div>
 
                         <div class="error-message" id="errorMessage">
-                            Username or password incorrect
+                            Email or password incorrect
                         </div>
 
                         <button type="submit" class="login-button" id="loginButton">
@@ -116,7 +116,7 @@ class LoginComponent {
 		//Credenciales de ejemplo para testing
 		//En producción, esto debería conectarse a tu backend
 		const validCredentials = [
-			{username: 'elizabeth', password: 'elizabeth'}
+			{username: 'elizabeth@mail.com', password: 'xK9mP2$vL8nQ4@jR7'}
 		];
 
 		return validCredentials.some(cred =>
@@ -125,13 +125,23 @@ class LoginComponent {
 
 	setLoadingState(isLoading) {
 		const loginButton = document.getElementById('loginButton');
+		if (!loginButton) {return}
 
 		if (isLoading) {
+			//Desa el contingut original si no està desat
+			if (!loginButton.dataset.originalContent) {
+				loginButton.dataset.originalContent = loginButton.innerHTML;
+			}
 			loginButton.disabled = true;
-			loginButton.innerHTML = 'Iniciando sesión...';
+			loginButton.classList.add('loading-spinner');
+			loginButton.innerHTML = '<span class="spinner"></span>';
 		} else {
 			loginButton.disabled = false;
-			loginButton.innerHTML = '<i class="fas fa-arrow-right"></i>';
+			loginButton.classList.remove('loading-spinner');
+			if (loginButton.dataset.originalContent) {
+				loginButton.innerHTML = loginButton.dataset.originalContent;
+				delete loginButton.dataset.originalContent;
+			}
 		}
 	}
 
@@ -149,6 +159,7 @@ class LoginComponent {
 	loginSuccess() {
 		//Ocultar el overlay de login con animación
 		const overlay = document.getElementById('loginOverlay');
+		const usernameValue = document.getElementById('username').value;
 		overlay.classList.add('hidden');
 
 		//Después de la animación, eliminar completamente el componente
@@ -157,16 +168,16 @@ class LoginComponent {
 			this.isVisible = false;
 
 			//Emitir evento de login exitoso
-			this.dispatchLoginEvent();
+			this.dispatchLoginEvent(usernameValue);
 		}, 300);
 	}
 
-	dispatchLoginEvent() {
+	dispatchLoginEvent(username) {
 		//Emitir evento personalizado para que otros componentes sepan que el login fue exitoso
 		const loginEvent = new CustomEvent('loginSuccess', {
 			detail: {
 				timestamp: new Date(),
-				user: document.getElementById('username').value
+				user: username
 			}
 		});
 		document.dispatchEvent(loginEvent);

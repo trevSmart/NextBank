@@ -8,9 +8,8 @@ class ProgressRing extends HTMLElement {
 		const {width, height} = getComputedStyle(this);
 		let widthNum = parseFloat(width);
 		let heightNum = parseFloat(height);
-		if (widthNum === 0 || heightNum === 0) {
-			widthNum = heightNum = 100; //mida per defecte
-		}
+		if (!isFinite(widthNum) || widthNum <= 0) {widthNum = 100}
+		if (!isFinite(heightNum) || heightNum <= 0) {heightNum = 100}
 		const size = Math.min(widthNum, heightNum);
 		this.shadowRoot.host.style.height = `${size}px`;
 

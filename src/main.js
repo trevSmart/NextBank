@@ -2,11 +2,15 @@
 
 import AfClient from './components/agentforceClient/agentforceClient.js';
 import './components/calendar/calendar.js';
+import LoginComponent from './components/login/login.js';
 
-let afClient = new AfClient();
+let afClient = new AfClient({streaming: true, initialMessages: true, devMode: true});
 let resizeCleanupFunctions = [];
 let navigationCleanupFunctions = [];
 let dragState = {xOffset: 0, yOffset: 0};
+
+//DEMO: Si vols saltar-te el login, posa LOGIN_DISABLED a true
+const LOGIN_DISABLED = true;
 
 function initializeResizeHandling() {
 	const assistantContainer = document.querySelector('.assistant-container');
@@ -73,41 +77,6 @@ function initializeResizeHandling() {
 	}
 }
 
-
-function dragStart(event) {
-	console.log('e.button:', event.button, 'e.type:', event.type);
-	if (typeof event.button !== 'undefined' && event.button !== 0
-	|| event.target.closest('.popoutChat')) {
-		return;
-	}
-
-	const assistantDetached = document.querySelector('.assistant-detached');
-	dragState.limits = {
-		minX: -assistantDetached.offsetLeft + 20,
-		maxX: window.innerWidth - (assistantDetached.offsetLeft + assistantDetached.offsetWidth) - 40,
-		minY: -assistantDetached.offsetTop + 20,
-		maxY: window.innerHeight - (assistantDetached.offsetTop + assistantDetached.offsetHeight) - 20
-	};
-
-	dragState.initialX = event.clientX - dragState.xOffset;
-	dragState.initialY = event.clientY - dragState.yOffset;
-
-	const assistantDetachedHeader = assistantDetached.querySelector('.assistant-detached-header');
-	if (assistantDetachedHeader) {
-		requestAnimationFrame(() => {
-			document.body.style.userSelect = 'none';
-			document.addEventListener('mousemove', drag, false);
-			document.addEventListener('mouseup', dragEnd, false);
-			assistantDetached.classList.add('dragging');
-			dragState.isDragging = true;
-			requestAnimationFrame(() => {
-				document.addEventListener('mousedown', dragEnd, false);
-			});
-		});
-	}
-}
-
-
 function drag(event) {
 	if (!dragState.isDragging) {
 		return;
@@ -145,7 +114,7 @@ function drag(event) {
 	}
 }
 
-function dragEnd(event) {
+function dragEnd() {
 	dragState.isDragging = false;
 	if (dragState.animationFrameId) {
 		cancelAnimationFrame(dragState.animationFrameId);
@@ -157,6 +126,39 @@ function dragEnd(event) {
 	document.removeEventListener('mousemove', drag, false);
 	document.removeEventListener('mouseup', dragEnd, false);
 	document.removeEventListener('mousedown', dragStart, false);
+}
+
+function dragStart(event) {
+	console.log('e.button:', event.button, 'e.type:', event.type);
+	if (typeof event.button !== 'undefined' && event.button !== 0
+	|| event.target.closest('.popoutChat')) {
+		return;
+	}
+
+	const assistantDetached = document.querySelector('.assistant-detached');
+	dragState.limits = {
+		minX: -assistantDetached.offsetLeft + 20,
+		maxX: window.innerWidth - (assistantDetached.offsetLeft + assistantDetached.offsetWidth) - 40,
+		minY: -assistantDetached.offsetTop + 20,
+		maxY: window.innerHeight - (assistantDetached.offsetTop + assistantDetached.offsetHeight) - 20
+	};
+
+	dragState.initialX = event.clientX - dragState.xOffset;
+	dragState.initialY = event.clientY - dragState.yOffset;
+
+	const assistantDetachedHeader = assistantDetached.querySelector('.assistant-detached-header');
+	if (assistantDetachedHeader) {
+		requestAnimationFrame(() => {
+			document.body.style.userSelect = 'none';
+			document.addEventListener('mousemove', drag, false);
+			document.addEventListener('mouseup', dragEnd, false);
+			assistantDetached.classList.add('dragging');
+			dragState.isDragging = true;
+			requestAnimationFrame(() => {
+				document.addEventListener('mousedown', dragEnd, false);
+			});
+		});
+	}
 }
 
 function cleanup() {
@@ -181,23 +183,7 @@ window.addEventListener('load', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-	afClient.newUiInstance(document.getElementById('assistant'));
-	afClient.startSession();
-
-	const assistantDetached = document.getElementById('assistant-detached');
-	const assistantDetachedHeader = assistantDetached.querySelector('.assistant-detached-header');
-	assistantDetachedHeader.addEventListener('mousedown', dragStart, false);
-
-	const buttonPopoutChat = document.querySelectorAll('button.popoutChat');
-	buttonPopoutChat.forEach(button => {
-		button.addEventListener('click', () => {
-			if (!afClient.getUiInstance('assistant-detached')) {
-				afClient.newUiInstance(assistantDetached);
-			}
-			document.querySelector('.assistant-container').classList.toggle('visible');
-			assistantDetached.classList.toggle('visible');
-		});
-	});
+	//Inicialització de calendaris, listeners de navegació, etc. (sense assistants)
 
 	const links = document.querySelectorAll('nav a');
 
@@ -272,6 +258,177 @@ document.addEventListener('DOMContentLoaded', () => {
 	initializeResizeHandling();
 
 	window.addEventListener('beforeunload', cleanup);
+
+	if (LOGIN_DISABLED) {
+		//Inicialitza directament els assistants sense login
+		document.dispatchEvent(new CustomEvent('loginSuccess', {
+			detail: {
+				timestamp: new Date(),
+				user: 'demo-user'
+			}
+		}));
+	} else {
+		//Inicialitza el login només si LOGIN_DISABLED és false
+		new LoginComponent();
+	}
+});
+
+//Handler global per a l'event de loginSuccess
+
+document.addEventListener('loginSuccess', event => {
+	console.log('Login exitoso:', event.detail);
+	//Inicialització dels assistants després del login
+	afClient.newUiInstance(document.getElementById('assistant'));
+	afClient.startSession();
+
+	const assistantDetached = document.getElementById('assistant-detached');
+	const assistantDetachedHeader = assistantDetached.querySelector('.assistant-detached-header');
+	assistantDetachedHeader.addEventListener('mousedown', dragStart, false);
+
+	const buttonPopoutChat = document.querySelectorAll('button.popoutChat');
+	buttonPopoutChat.forEach(button => {
+		button.addEventListener('click', () => {
+			if (!afClient.getUiInstance('assistant-detached')) {
+				afClient.newUiInstance(assistantDetached);
+			}
+			//Scroll to bottom abans de mostrar la versió flotant o tornar al xat fixat
+			const willShowDetached = !assistantDetached.classList.contains('visible');
+			const assistantContainer = document.querySelector('.assistant-container');
+			const willShowFixed = assistantDetached.classList.contains('visible') && !assistantContainer.classList.contains('visible');
+
+			if (willShowDetached) {
+				const ui = afClient.getUiInstance('assistant-detached');
+				if (ui) {ui.scrollToBottom(false)}
+			}
+			if (willShowFixed) {
+				const ui = afClient.getUiInstance('assistant');
+				if (ui) {ui.scrollToBottom(false)}
+			}
+			document.querySelector('.assistant-container').classList.toggle('visible');
+			assistantDetached.classList.toggle('visible');
+		});
+	});
+
+	const maximizeButton = assistantDetached.querySelector('.maximizeChat');
+	if (maximizeButton) {
+		maximizeButton.addEventListener('click', () => {
+			//Paràmetres d'animació
+			const duration = 800; //ms
+			const ease = t => 1 - Math.pow(1 - t, 3); //cubic ease-out
+
+			const el = assistantDetached;
+			const isMaximizing = !el.classList.contains('maximized');
+
+			//Estat inicial
+			const rect = el.getBoundingClientRect();
+			const initial = {
+				width: rect.width,
+				height: rect.height,
+				top: rect.top,
+				left: rect.left,
+				transform: window.getComputedStyle(el).transform
+			};
+
+			//Estat final
+			el.classList.toggle('maximized'); //aplica la classe per obtenir l'estat final
+			const finalRect = el.getBoundingClientRect();
+			const final = {
+				width: finalRect.width,
+				height: finalRect.height,
+				top: finalRect.top,
+				left: finalRect.left,
+				transform: window.getComputedStyle(el).transform
+			};
+			el.classList.toggle('maximized'); //torna a l'estat original
+
+			//Desactiva la transició CSS
+			el.style.transition = 'none';
+			el.classList.add('animating');
+
+			//Posa l'estat inicial manualment
+			el.style.width = initial.width + 'px';
+			el.style.height = initial.height + 'px';
+			el.style.top = initial.top + 'px';
+			el.style.left = initial.left + 'px';
+			el.style.transform = initial.transform;
+			el.style.position = 'fixed';
+
+			//Força reflow
+			void el.offsetWidth;
+
+			//Aplica la classe final (maximitzat o no)
+			el.classList.toggle('maximized');
+
+			const start = performance.now();
+			function animate(now) {
+				const t = Math.min((now - start) / duration, 1);
+				const p = ease(t);
+				el.style.width = initial.width + (final.width - initial.width) * p + 'px';
+				el.style.height = initial.height + (final.height - initial.height) * p + 'px';
+				el.style.top = initial.top + (final.top - initial.top) * p + 'px';
+				el.style.left = initial.left + (final.left - initial.left) * p + 'px';
+				//Si vols animar transform, descomenta:
+				//el.style.transform = ...
+				if (t < 1) {
+					requestAnimationFrame(animate);
+				} else {
+					//Neteja: deixa l'estat final i reactiva la transició CSS
+					el.style.transition = '';
+					el.style.width = '';
+					el.style.height = '';
+					el.style.top = '';
+					el.style.left = '';
+					el.style.position = '';
+					el.classList.remove('animating');
+					//Ajusta drag/cursor com abans
+					if (el.classList.contains('maximized')) {
+						el.style.zIndex = 9999;
+						el.style.resize = 'none';
+						assistantDetachedHeader.style.cursor = 'default';
+						assistantDetachedHeader.removeEventListener('mousedown', dragStart, false);
+					} else {
+						el.style.zIndex = '';
+						el.style.resize = '';
+						assistantDetachedHeader.style.cursor = 'move';
+						assistantDetachedHeader.addEventListener('mousedown', dragStart, false);
+						setTimeout(() => {
+							const rect2 = el.getBoundingClientRect();
+							let left = rect2.left, top = rect2.top;
+							let width = rect2.width, height = rect2.height;
+							const margin = 20;
+							const maxLeft = window.innerWidth - width - margin;
+							const maxTop = window.innerHeight - height - margin;
+							let changed = false;
+							if (left < margin) {left = margin; changed = true}
+							if (top < margin) {top = margin; changed = true}
+							if (left > maxLeft) {left = maxLeft; changed = true}
+							if (top > maxTop) {top = maxTop; changed = true}
+							if (width > window.innerWidth - margin * 2) {
+								width = window.innerWidth - margin * 2; changed = true;
+							}
+							if (height > window.innerHeight - margin * 2) {
+								height = window.innerHeight - margin * 2; changed = true;
+							}
+							if (changed) {
+								el.style.left = left + 'px';
+								el.style.top = top + 'px';
+								el.style.width = width + 'px';
+								el.style.height = height + 'px';
+								el.style.transform = '';
+							}
+						}, 260);
+					}
+				}
+			}
+			requestAnimationFrame(animate);
+		});
+		assistantDetachedHeader.style.cursor = assistantDetached.classList.contains('maximized') ? 'default' : 'move';
+	}
+
+	//Aquí pots afegir lògica addicional després del login
+
+	//Afegeix la classe .userLoginSuccess al body
+	document.body.classList.add('userLoginSuccess');
 });
 
 const throttle = (fn, ms) => {

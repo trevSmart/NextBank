@@ -12,7 +12,7 @@ class Session {
 	async startSession() {
 		const response = await SfAgentApi.startSession();
 		//eslint-disable-next-line no-console
-		console.log('Agentforce session started with id:', response.sessionId);
+		console.log('Agentforce session started with id:', response.sessionId ) ;
 		this.sessionId = response.sessionId;
 		return response;
 	}
@@ -33,7 +33,7 @@ class UiInstance {
 		this.node = node;
 		this.options = {
 			scrollOnResponse: true,
-			speak: false
+			speak: false,
 		};
 
 		const createElements = () => {
@@ -50,7 +50,7 @@ class UiInstance {
 			const chatInput = document.createElement('div');
 			chatInput.className = 'chat-input';
 
-			const chatInputInput = document.createElement('input-multiline');
+			const chatInputInput = document.createElement('input-multiline' );
 			chatInputInput.id = 'chatInputInput';
 
 			const chatInputButtons = document.createElement('div');
@@ -125,11 +125,11 @@ class UiInstance {
 		}
 	}
 
-	scrollToBottom() {
+	scrollToBottom(smooth = true) {
 		requestAnimationFrame(() => {
 			const chatMessages = this.node.querySelector('.chat-messages');
 			if (chatMessages) {
-				chatMessages.scrollTo({top: chatMessages.scrollHeight, behavior: 'smooth'});
+				chatMessages.scrollTo({top: chatMessages.scrollHeight, behavior: smooth ? 'smooth' : 'auto'});
 			}
 		});
 	}
@@ -139,14 +139,15 @@ class UiInstance {
 			text = `itemId: ${this.afClient.selectedContext.dataset.contextId}\n\n${text}`;
 			this.afClient.removeContext();
 		}
-		this.afClient.sendMessage(text);
+		this.afClient.sendMessage(text, null);
+
 		document.getElementById('chatInputInput').value = '';
 		document.getElementById('buttonSendMessage').disabled = true;
 	}
 }
 
 class Message {
-	constructor(id, type, text, context = null, ref) {
+	constructor(id, type, text, context = null, conversation, status = null) {
 		if (!id || !type || !text && type !== 'typing') {
 			return;
 		}
@@ -154,8 +155,9 @@ class Message {
 		this.type = type;
 		this.text = text;
 		this.context = context;
-		this.ref = ref;
+		this.conversation = conversation;
 		this.timestamp = new Date();
+		this.status = status; // 'streaming' o 'finished'
 		return this;
 	}
 
@@ -166,7 +168,7 @@ class Message {
 
 		const messageListItem = document.createElement('li');
 		const classNameAux = this.type === 'typing' ? 'agent typing' : this.type === 'agentImportant' ? 'agent important' : this.type;
-		messageListItem.className = `message ${classNameAux}`;
+		messageListItem.className = `message new-message ${classNameAux}`;
 		messageListItem.dataset.id = this.id;
 
 		//Eliminem la classe new-message després de l'animació
@@ -223,7 +225,7 @@ class Message {
 		messageText.className = 'message-text';
 		if (this.type === 'typing') {
 			messageText.innerHTML = '<dotlottie-player src="/src/assets/animations/typing.json" background="transparent" speed="1" style="width: 53px"; loop autoplay></dotlottie-player>';
-		} else {
+		} else if (this.text) {
 			// Format the text with HTML tags
 			let formattedText = this.text
 				.replace(/\n/g, '<br>')
@@ -247,7 +249,17 @@ class Message {
 		nodes.forEach(node => node.appendChild(messageListItem));
 
 		return messageListItem;
+	}
 
+	async update() {
+		this.conversation.afClient.uiInstances.forEach(async ui => {
+			const messageListItem = ui.messageListNode.querySelector(`li[data-id="${this.id}"]`);
+			if (messageListItem) {
+				messageListItem.querySelector('.message-text').innerHTML = this.text;
+			}
+		});
+
+		this.conversation.afClient.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
 	}
 }
 
@@ -265,22 +277,35 @@ class Conversation {
 		});
 	}
 
-	async addMessage(type, text, context = null, id) {
-		const message = new Message(id || ++this.lastMessageId, type, text, context);
+	async addMessage(type, text, context = null, id, status = null) {
+		const message = new Message(id || ++this.lastMessageId, type, text, context, undefined, this, status);
 		type !== 'userHidden' && this.messages.push(message);
+
+		this.afClient.options.devMode && console.log(this.messages);
+
 		if (type === 'user' || type === 'userHidden') {
 			const chatInputInput = document.getElementById('chatInputInput');
 			const buttonSendMessage = document.getElementById('buttonSendMessage');
 			this.awaitingAgentResponse = true;
 			buttonSendMessage.disabled = true;
-			//Llancem la crida asíncrona sense esperar-la per no bloquejar el retorn
-			SfAgentApi.sendMessageSynchronous(text)
-			.then(response => this.afClient.onAgentMessageReceived(response))
-			.catch(error => {throw error})
-			.finally(() => {
-				this.awaitingAgentResponse = false;
-				buttonSendMessage.disabled = chatInputInput.value.length === 0;
-			});
+
+			if (this.afClient.options.streaming) {
+				SfAgentApi.sendMessageStreaming(text, (chunk) => this.afClient.onAgentMessageReceived(chunk, true))
+				.catch(error => {throw error})
+				.finally(() => {
+					this.afClient.awaitingAgentResponse = false;
+					buttonSendMessage.disabled = chatInputInput.value.length === 0;
+				});
+
+			} else {
+				SfAgentApi.sendMessageSynchronous(text)
+				.then(response => this.afClient.onAgentMessageReceived(response))
+				.catch(error => {throw error})
+				.finally(() => {
+					this.awaitingAgentResponse = false;
+					buttonSendMessage.disabled = chatInputInput.value.length === 0;
+				});
+			}
 		}
 		return message;
 	}
@@ -304,21 +329,28 @@ class Conversation {
 }
 
 class AfClient {
-	constructor() {
+	constructor(options = {}) {
 		this.uiInstances = [];
 		this.session = new Session();
 		this.conversation = new Conversation(this);
 		this.typingTimeoutId = null;
 		this.contextAreaHandlers = new Map();
+		this.options = {
+			streaming: false,
+			initialMessages: true,
+			devMode: false,
+			...options
+		};
 	}
 
 	async startSession() {
 		try {
 			const {welcomeMessage} = await this.session.startSession();
 			this.addMessage('system', 'Your AI assistant is ready');
-			//this.addMessage('agent', welcomeMessage);
-			document.querySelector('body').classList.add('alerts-visible');
-			this.addMessage('userHidden', 'Give me the initial important messages');
+			// this.addMessage('agent', welcomeMessage);
+			if (this.options.initialMessages) {
+				this.addMessage('userHidden', 'My name is Elizabeth, give me the initial important messages');
+			}
 
 			document.querySelector('.add-context-button').disabled = false;
 
@@ -352,8 +384,8 @@ class AfClient {
 		return this.uiInstances.find(ui => ui.id === id);
 	}
 
-	async addMessage(type, text, context = null, id) {
-		const message = await this.conversation.addMessage(type, text, context, id);
+	async addMessage(type, text, context = null, id, status = null) {
+		const message = await this.conversation.addMessage(type, text, context, id, status);
 		this.uiInstances.forEach(async ui => await message.render([ui.messageListNode]));
 		this.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
 	}
@@ -364,36 +396,105 @@ class AfClient {
 			if (this.typingTimeoutId) {
 				clearTimeout(this.typingTimeoutId);
 			}
-			this.typingTimeoutId = setTimeout(() => this.addMessage('typing', null, null), 1100);
+
+			if (!this.options.streaming) {
+				this.typingTimeoutId = setTimeout(() => this.addMessage('typing', null, null), 1100);
+			}
 		}
 	}
 
-	async onAgentMessageReceived(message) {
-		// Check if message contains warning emoji and split it
-		if (message.includes('⚠️')) {
-			const warningIndex = message.indexOf('⚠️');
-			const beforeWarning = message.substring(0, warningIndex).trim();
-			const afterWarning = message.substring(warningIndex).trim();
+	async onAgentMessageReceived(message, isChunk = false) {
 
-			if (beforeWarning) {
-				await this.addMessage('agent', beforeWarning);
+		console.log('onAgentMessageReceived');
+		console.log(this.conversation.getMessages());
+
+		if (isChunk) {
+
+			let chunkText = '';
+
+			// Si el chunk és un string multi-línia, busquem la línia "data: ..."
+			if (typeof message === 'string') {
+				const eventLine = message.split('\n').find(line => line.startsWith('event: '));
+				if (eventLine && /(INFORM|END_OF_TURN)/.test(eventLine)) {
+					// Si és END_OF_TURN, marquem el missatge com a finished
+					if (eventLine.includes('END_OF_TURN')) {
+						const lastMessage = this.conversation.getMessages().slice(-1)[0];
+						if (lastMessage && lastMessage.type === 'agent' && lastMessage.status === 'streaming') {
+							lastMessage.status = 'finished';
+						}
+					}
+					return;
+				}
+
+				const dataLine = message.split('\n').find(line => line.startsWith('data: '));
+				if (dataLine) {
+					try {
+						const dataObj = JSON.parse(dataLine.replace('data: ', ''));
+
+						// Només agafem el text si el tipus és TextChunk
+						if (dataObj?.message?.type === 'TextChunk' && typeof dataObj?.message?.message === 'string') {
+							chunkText = dataObj.message.message;
+						}
+
+					} catch (e) {
+						console.warn('No s\'ha pogut parsejar el JSON del chunk:', e, dataLine);
+					}
+				}
+
+			} else if (message?.message?.type === 'TextChunk' && typeof message?.message?.message === 'string') {
+				// Cas alternatiu: ja és un objecte i és TextChunk
+				chunkText = message.message.message;
 			}
-			if (afterWarning) {
-				await this.addMessage('agentImportant', afterWarning);
+
+			if (!chunkText) {
+				console.warn('Estructura de chunk inesperada o sense text:', message);
+				return;
 			}
+
+			// Busquem si ja existeix un missatge d'agent amb status 'streaming'
+			let streamingMessage = this.conversation.getMessages().find(m => m.type === 'agent' && m.status === 'streaming');
+			if (!streamingMessage) {
+				// Si no existeix, creem el missatge nou
+				await this.addMessage('agent', chunkText, null, message.id, 'streaming');
+			} else {
+				// Si ja existeix, només actualitzem el seu text i el renderitzem
+				streamingMessage.text += chunkText;
+				console.log(streamingMessage.id);
+				console.log(streamingMessage.text);
+
+				await streamingMessage.update();
+				// this.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
+			}
+
 		} else {
-			await this.addMessage('agent', message);
-		}
+			// Check if message contains warning emoji and split it
+			if (message.includes('⚠️')) {
+				const warningIndex = message.indexOf('⚠️');
+				const beforeWarning = message.substring(0, warningIndex).trim();
+				const afterWarning = message.substring(warningIndex).trim();
 
-		if (this.typingTimeoutId) {
-			clearTimeout(this.typingTimeoutId);
-			this.typingTimeoutId = null;
+				if (beforeWarning) {
+					await this.addMessage('agent', beforeWarning);
+				}
+				if (afterWarning) {
+					await this.addMessage('agentImportant', afterWarning);
+				}
+
+				document.querySelector('body').classList.add('alerts-visible');
+			} else {
+				await this.addMessage('agent', message);
+			}
+
+			if (this.typingTimeoutId) {
+				clearTimeout(this.typingTimeoutId);
+				this.typingTimeoutId = null;
+			}
+			const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
+			this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
+			const chatInputInput = document.getElementById('chatInputInput');
+			const buttonSendMessage = document.getElementById('buttonSendMessage');
+			buttonSendMessage.disabled = !chatInputInput.value;
 		}
-		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
-		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
-		const chatInputInput = document.getElementById('chatInputInput');
-		const buttonSendMessage = document.getElementById('buttonSendMessage');
-		buttonSendMessage.disabled = !chatInputInput.value;
 	}
 
 	async startContextSelection() {
