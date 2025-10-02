@@ -114,7 +114,7 @@ class SfAgentApi {
 
             return {
                 sessionId: data.sessionId,
-                welcomeMessage: data.messages[0].message
+                welcomeMessage: data.messages?.[0]?.message || 'Welcome to the chat'
             };
         } catch (error) {
             console.error('Error starting session:', error);
@@ -156,7 +156,7 @@ class SfAgentApi {
             }
 
             const data = await response.json();
-            return data.messages[0].message;
+            return data.messages?.[0]?.message || 'No response from agent';
         } catch (error) {
             console.error('Error sending message:', error);
             throw error;

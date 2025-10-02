@@ -233,7 +233,10 @@ const ChatWidget = {
 		this.elements.chatButton = document.querySelector('.pop-out-icon');
 		if (this.elements.chatButton) {
 			const chatButtonOnclick = async (e) => {
-				document.querySelector('.support-popover').classList.remove('visible');
+				const supportPopover = document.querySelector('.support-popover');
+				if (supportPopover) {
+					supportPopover.classList.remove('visible');
+				}
 				e.preventDefault();
 				e.stopPropagation();
 				this.toggle();
