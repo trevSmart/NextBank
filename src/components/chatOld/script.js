@@ -446,7 +446,7 @@ const ChatWidget = {
 			this.updateSendButtonState();
 
 			this.addUserMessage(message, false);
-			input.value = '';
+			this.elements.input.value = '';
 			this.updateSendButtonState();
 
 			// Esperem 1 segon abans de mostrar l'indicador de typing
@@ -534,7 +534,7 @@ const ChatWidget = {
 	},
 
 	addTypingIndicator() {
-		this.addMessage({ type: 'typing', name: 'Agentforce'});
+		const message = this.messageStore.addMessage({ type: 'typing', name: 'Agentforce'});
 		this.renderMessages();
 		return {
 			remove: () => {

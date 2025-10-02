@@ -452,7 +452,7 @@ const ChatWidget = {
 			this.updateSendButtonState();
 
 			this.addUserMessage(message, false);
-			input.value = '';
+			this.elements.input.value = '';
 			this.updateSendButtonState();
 
 			// Esperem 1 segon abans de mostrar l'indicador de typing
