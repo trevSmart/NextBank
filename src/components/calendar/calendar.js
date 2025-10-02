@@ -16,7 +16,7 @@ class Calendar extends HTMLElement {
             :host {
                 display: block;
 				font-family: "Poppins", sans-serif;
-                font-size: 12px;
+                font-size: 11px;
             }
 
             .container {

@@ -5,24 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="dark light">
-    <link rel="icon" type="image/png" href="../public/favicon.webp">
+    <link rel="icon" type="image/png" href="favicon.webp">
     <title>NextBank</title>
 
     <!-- Estils -->
-    <link rel="stylesheet" href="../src/pages/styles.css" type="text/css">
-    <link rel="stylesheet" href="../src/components/agentforceClient/style.css">
-    <link rel="stylesheet" href="../src/components/toggle/toggle.css" type="text/css">
-    <link rel="stylesheet" href="../src/components/tooltip/tooltip.css" type="text/css">
-    <link rel="stylesheet" href="../src/components/creditCard/creditCard.css" type="text/css">
-    <link rel="stylesheet" href="../src/assets/fonts/fontawesome/all.min.css" type="text/css">
-    <script type="module" src="../src/components/InputMultiline/InputMultiline.js"></script>
-    <script type="module" src="../src/components/StockView/StockView.js"></script>
+    <link rel="stylesheet" href="../src/pages/styles.css">
+    <link rel="stylesheet" href="../src/components/toggle/toggle.css">
+    <link rel="stylesheet" href="../src/components/tooltip/tooltip.css">
+    <link rel="stylesheet" href="../src/components/creditCard/creditCard.css">
+    <link rel="stylesheet" href="../src/components/login/login.css">
+    <link rel="stylesheet" href="../src/assets/fonts/fontawesome/all.min.css">
+    <script type="module" src="../src/components/ProgressRing/ProgressRing.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script src="/src/assets/libs/chartjs-chart-financial.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.js"></script>
+    <script type="module" src="../src/components/StockView/StockViewComponent.js"></script>
 </head>
 
-<body>
-    <div class="background-logo">
-        <img src="../src/assets/images/logo.webp" alt="Background Logo">
-    </div>
+<body class="preload">
+    <div class="background-logo"></div>
+
     <header>
         <div class="header-content">
             <div class="logo">
@@ -31,17 +35,24 @@
                     <span>NextBank</span>
                 </a>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="#" class="active" draggable="false">Summary</a></li>
-                    <li><a href="#" draggable="false">My accounts</a></li>
-                    <li><a href="#" draggable="false">Cards</a></li>
-                    <li><a href="#" draggable="false">Transfers</a></li>
-                </ul>
-            </nav>
+
+            <div class="nav-container">
+                <!-- <div class="header-toast-message">
+                    bla bla bla
+                </div> -->
+                <nav>
+                    <ul>
+                        <li><a href="#" class="active" draggable="false">Dashboard</a></li>
+                        <li><a href="#" draggable="false">Accounts &amp; cards</a></li>
+                        <li><a href="#" draggable="false">Invest</a></li>
+                        <li><a href="#" draggable="false">Plan</a></li>
+                        <li><a href="#" draggable="false">Discover</a></li>
+                    </ul>
+                </nav>
+            </div>
 
             <div class="header-actions">
-                <button class="support-button">
+                <button type="button" class="support-button">
                     <i class="fas fa-question-circle"></i>
                     <span>Need help?</span>
                 </button>
@@ -52,10 +63,9 @@
 
     <main>
         <div class="main-areas">
-
             <!-- Dashboard -->
             <div class="dashboard-grid">
-                <!-- Total balance -->
+                <!-- Summary -->
                 <section class="dashboard-card salutation">
                     <h2>
                         Summary
@@ -92,64 +102,66 @@
                 <!-- Accounts -->
                 <section class="dashboard-card accounts">
                     <h2>My accounts</h2>
-                    <div class="compte-item">
-                        <div class="compte-info">
-                            <h3>Checking</h3>
-                            <span class="compte-numero">
-                                <span class="compte-numero-mask">
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
+                    <div class="compte-list">
+                        <div class="compte-item afclient-context-area">
+                            <div class="compte-info">
+                                <h3>Checking</h3>
+                                <span class="compte-numero">
+                                    <span class="compte-numero-mask">
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                    </span>
+                                    <span class="compte-numero-last">
+                                        4589
+                                    </span>
                                 </span>
-                                <span class="compte-numero-last">
-                                    4589
-                                </span>
-                            </span>
+                            </div>
+                            <div class="compte-amount">
+                                <div class="compte-saldo">15.678,45</div>
+                                <div class="compte-change positive">+ 1,45%</div>
+                            </div>
                         </div>
-                        <div class="compte-amount">
-                            <div class="compte-saldo">15.678,45</div>
-                            <div class="compte-change negative">-82,45%</div>
-                        </div>
-                    </div>
-                    <div class="compte-item">
-                        <div class="compte-info">
-                            <h3>Savings</h3>
-                            <span class="compte-numero">
-                                <span class="compte-numero-mask">
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
+                        <div class="compte-item afclient-context-area">
+                            <div class="compte-info">
+                                <h3>Savings</h3>
+                                <span class="compte-numero">
+                                    <span class="compte-numero-mask">
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                    </span>
+                                    <span class="compte-numero-last">
+                                        7823
+                                    </span>
                                 </span>
-                                <span class="compte-numero-last">
-                                    7823
-                                </span>
-                            </span>
+                            </div>
+                            <div class="compte-amount">
+                                <div class="compte-saldo">8.889,44</div>
+                                <div class="compte-change positive">+ 2,3%</div>
+                            </div>
                         </div>
-                        <div class="compte-amount">
-                            <div class="compte-saldo">8.889,44</div>
-                            <div class="compte-change positive">+2,3%</div>
-                        </div>
-                    </div>
-                    <div class="compte-item">
-                        <div class="compte-info">
-                            <h3>Shared household</h3>
-                            <span class="compte-numero">
-                                <span class="compte-numero-mask">
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
-                                    <i class="fa-solid fa-circle"></i>
+                        <div class="compte-item afclient-context-area">
+                            <div class="compte-info">
+                                <h3>Shared household</h3>
+                                <span class="compte-numero">
+                                    <span class="compte-numero-mask">
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                        <i class="fa-solid fa-circle"></i>
+                                    </span>
+                                    <span class="compte-numero-last">
+                                        3879
+                                    </span>
                                 </span>
-                                <span class="compte-numero-last">
-                                    3879
-                                </span>
-                            </span>
-                        </div>
-                        <div class="compte-amount">
-                            <div class="compte-saldo">898,01</div>
-                            <div class="compte-change positive">+2,3%</div>
+                            </div>
+                            <div class="compte-amount">
+                                <div class="compte-saldo">898,01</div>
+                                <div class="compte-change negative">- 1,3%</div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -157,59 +169,131 @@
                 <!-- Recent tansactions -->
                 <section class="dashboard-card transactions">
                     <h2>Recent transactions</h2>
-                    <div class="moviment-item">
-                        <div class="moviment-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="moviment-info">
-                            <h3>
-                                <img src="../src/assets/images/under_age.webp" alt="Under age" class="card-under-age">
-                                Whole Foods Market
-                            </h3>
-                            <span class="moviment-data">Today, 14:30</span>
-                        </div>
-                        <div class="moviment-amount despesa">-82,45</div>
-                    </div>
-                    <div class="moviment-item">
-                        <div class="moviment-icon">
-                            <i class="fas fa-building"></i>
-                        </div>
-                        <div class="moviment-info">
-                            <h3>Salary Payment</h3>
-                            <span class="moviment-data">03/01/2024</span>
-                        </div>
-                        <div class="moviment-amount ingrés">+2.450,00</div>
-                    </div>
-                    <div class="moviment-item">
-                        <div class="moviment-icon">
-                            <i class="fas fa-home"></i>
-                        </div>
-                        <div class="moviment-info">
-                            <h3>Rent Payment</h3>
-                            <span class="moviment-data">03/01/2024</span>
-                        </div>
-                        <div class="moviment-amount despesa">-950,00</div>
-                    </div>
-                    <div class="moviment-item">
-                        <div class="moviment-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="moviment-info">
-                            <h3>Whole Foods Market</h3>
-                            <span class="moviment-data">Today, 14:30</span>
-                        </div>
-                        <div class="moviment-amount despesa">-82,45</div>
-                    </div>
-                    <div class="moviment-item">
-                        <div class="moviment-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="moviment-info">
-                            <h3>Whole Foods Market</h3>
-                            <span class="moviment-data">Today, 14:30</span>
-                        </div>
-                        <div class="moviment-amount despesa">-82,45</div>
-                    </div>
+                    <ol class="moviments-list">
+                        <li class="moviment-item afclient-context-area" data-context-label="Whole Foods Market">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Whole Foods Market</h3>
+                                    <span class="moviment-data-date">Today, 14:30</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-82,45</div>
+                        </li>
+                        <li class="moviment-item alert afclient-context-area" data-context-label="Whole Foods Market" data-context-id="mov202412">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>
+                                        <img src="../src/assets/images/under_age.webp" alt="Under age" class="card-under-age">
+                                        Whole Foods Market
+                                    </h3>
+                                    <span class="moviment-data-date">Today, 10:12</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-82,45</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Starbucks" data-context-id="mov2025130">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-coffee"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Starbucks</h3>
+                                    <span class="moviment-data-date">Sunday 4, Jan 2025</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-4,50</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Transfer Received">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Transfer Received</h3>
+                                    <span class="moviment-data-date">Sunday 4, Jan 2025</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount ingrés">+300,00</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Ikea" data-context-id="mov2025120">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Ikea</h3>
+                                    <span class="moviment-data-date">Saturday 3, Jan 2025</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-133,75</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Electricity Bill" data-context-id="mov2025140">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Electricity Bill</h3>
+                                    <span class="moviment-data-date">Thursday 2, Jan 2025</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-65,20</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Amazon" data-context-id="mov2025150">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Amazon</h3>
+                                    <span class="moviment-data-date">Wednesday 1, Jan 2025</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-120,99</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Gym Membership">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-dumbbell"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Gym Membership</h3>
+                                    <span class="moviment-data-date">Wednesday 1, Jan 2025</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-45,00</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Salary Payment">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Salary Payment</h3>
+                                    <span class="moviment-data-date">Wednesday 3, Jan 2024</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount ingrés">+2.450,00</div>
+                        </li>
+                        <li class="moviment-item afclient-context-area" data-context-label="Rent Payment">
+                            <div class="moviment-info">
+                                <div class="moviment-icon">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <span class="moviment-data">
+                                    <h3>Rent Payment</h3>
+                                    <span class="moviment-data-date">Wednesday 3, Jan 2024</span>
+                                </span>
+                            </div>
+                            <div class="moviment-amount despesa">-950,00</div>
+                        </li>
+                    </ol>
                 </section>
 
                 <!-- My cards -->
@@ -222,10 +306,10 @@
                                     Mastercard Gold
                                 </div>
                                 <div class="targeta-title-switch">
-                                    <input type="checkbox" class="toggle" checked id="toggle-mastercard">
+                                    <input type="checkbox" class="toggle" id="toggle-mastercard">
                                 </div>
                             </div>
-                            <div class="targeta mastercard">
+                            <div class="targeta mastercard alert afclient-context-area">
                                 <div class="targeta-front">
                                     <div class="targeta-chip">
                                         <img src="../src/assets/images/chip.webp" alt="chip">
@@ -255,11 +339,11 @@
                                     Visa Debit
                                 </div>
                                 <div class="targeta-title-switch">
-                                    <input type="checkbox" class="toggle" id="toggle-visa">
+                                    <input type="checkbox" class="toggle" checked id="toggle-visa">
                                 </div>
                             </div>
                             <!-- <div class="targeta visa alert"> -->
-                            <div class="targeta visa">
+                            <div class="targeta visa afclient-context-area">
                                 <div class="targeta-front">
                                     <div class="targeta-chip">
                                         <img src="../src/assets/images/chip.webp" alt="chip">
@@ -319,25 +403,56 @@
 
                 <section class="dashboard-card stocks">
                     <h2>Held stocks</h2>
-                    <stock-chart-card></stock-chart-card>
+                    <!-- <stock-chart-card></stock-chart-card> -->
+                    <stock-chart></stock-chart>
+                </section>
+
+                <!-- Goals -->
+                <section class="dashboard-card goals">
+                    <h2>Goals and milestones</h2>
+                    <div class="goals-list">
+                        <div class="goal-item afclient-context-area">
+                            <progress-ring class="goal-item-progress" percent="80" color="#4db39f" bgcolor="#27817715"></progress-ring>
+                            <div class="goal-item-info">
+                                <span class="goal-item-info-type">Custom goal</span>
+                                <span class="goal-item-info-name">Saving goal</span>
+                                <span class="goal-item-info-details">bb</span>
+                            </div>
+                        </div>
+                        <!-- <div class="goal-item afclient-context-area">
+                            <progress-ring class="goal-item-progress" percent="33" color="#f8def8" bgcolor="#f8def815"></progress-ring>
+                            <div class="goal-item-info">
+                                <span class="goal-item-info-type">Goal</span>
+                                <span class="goal-item-info-name">Saving goal</span>
+                                <span class="goal-item-info-details">1000 €</span>
+                            </div>
+                        </div> -->
+                        <div class="goal-item afclient-context-area">
+                            <progress-ring class="goal-item-progress" percent="47" color="#fbc08b" bgcolor="#fbc08b15"></progress-ring>
+                            <div class="goal-item-info">
+                                <span class="goal-item-info-type">Milestone</span>
+                                <span class="goal-item-info-name">Debt pay off</span>
+                                <span class="goal-item-info-details">yy</span>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <div class="grid-footer-spacer"></div>
             </div>
 
             <!-- Assistant -->
-            <div class="assistant-container">
-                <section class="dashboard-card assistant">
+            <div class="assistant-container visible">
+                <section id="assistant" class="dashboard-card assistant">
                     <div class="resize-handle"></div>
                     <h2>
                         <div class="chat-title-wrapper">
                             <div class="chat-title-main">
-                                <h2>
-                                    <button class="popoutChat">
+                                <!-- <h2> -->
+                                    <button type="button" class="popoutChat">
                                         <img src="../src/assets/icons/popout.webp" alt="Pop out" class="popoutChatIcon" draggable="false">
                                     </button>
-                                    Assistant
-                                </h2>
+                                Assistant
                                 <!--
                                 <div class="chat-title-switch">
                                     <input type="checkbox" class="toggle" id="toggle-assistant">
@@ -345,40 +460,26 @@
                             </div>
                             <div class="chat-powered-by">
                                 <span>powered by</span>
-                                <div class="agentforce-logo-container">
-                                    <img src="../src/assets/images/salesforce_logo.webp" alt="Salesforce logo" class="salesforce-logo" draggable="false">
-                                    <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
-                                </div>
+                                <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
                             </div>
                         </div>
                     </h2>
-                    <div class="chat-messages">
-                        <ul class="messages-list">
-                        </ul>
-                    </div>
-                    <div class="chat-input">
-                        <input-multiline class="chat-input-input" placeholder="Chat with your assistant..."></input-multiline>
-                        <button class="send-button" disabled>
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-
                 </section>
             </div>
-        </div>
 
+        </div>
     </main>
 
     <footer>
         <div class="footer-text">
             <div class="legal-text">
-                <img src="/src/assets/images/ibm_logo.webp" alt="IBM Logo" class="footer-logo" style="width: 65px;" draggable="false">
+                <img src="/src/assets/images/ibm_logo.webp" alt="IBM Logo" class="footer-logo" draggable="false">
                 <span>© 2025</span>
                 <span>International Business Machines, S.A.</span>
                 <span>All rights reserved.</span>
             </div>
             <div>
-                <button class="language-switcher" aria-label="Change language">
+                <button type="button" class="language-switcher" aria-label="Change language">
                     English
                     <i class="fas fa-globe"></i>
                 </button>
@@ -387,6 +488,27 @@
     </footer>
     <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 
+    <!-- Chat Detached -->
+    <section id="assistant-detached" class="assistant assistant-detached">
+        <h2 class="assistant-detached-header">
+            <div class="chat-title-wrapper">
+                <div class="chat-title-main">
+                    <button type="button" class="popoutChat">
+                        <img src="../src/assets/icons/popout.webp" alt="Pop out" class="popoutChatIcon" draggable="false">
+                    </button>
+                    <button type="button" class="maximizeChat" title="Maximize">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                    Assistant
+                </div>
+                <div class="chat-powered-by">
+                    <span>powered by</span>
+                    <img src="../src/assets/images/agentforce_logo.webp" alt="Agentforce logo" class="agentforce-logo" draggable="false">
+                </div>
+            </div>
+        </h2>
+    </section>
+    <div class="assistant-backdrop"></div>
 
     <!-- Support Popover -->
     <div class="support-popover">
@@ -414,10 +536,9 @@
     </div>
 
     <!-- Scripts -->
-    <!-- <script src="../src/components/agentforceClient/script.js" type="module"></script> -->
     <script src="../src/main.js" type="module"></script>
     <script type="module" src="../src/components/calendar/calendar.js"></script>
-    <!-- <script type="module" src="../src/components/agentforceClient/script.js"></script> -->
+    <script type="module" src="../src/components/login/login.js"></script>
 </body>
 
 </html>

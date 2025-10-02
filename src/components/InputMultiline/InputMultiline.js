@@ -46,7 +46,9 @@ class InputMultiline extends HTMLElement {
 			.editable:focus, .editable:focus-visible,
 			.editable:focus:focus-visible {
 				background: rgba(255, 255, 255, 0.09);
-				outline: solid 1px #6d2ea4;
+				outline: solid 1px orange;
+				border-color: green;
+
 			}
 
 			.editable::-webkit-scrollbar {

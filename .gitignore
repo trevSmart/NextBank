@@ -1,5 +1,6 @@
-/.DS_Store
+**/.DS_Store
 /.pmdCache
 /.vscode
-/http-server.json
+/.cursor
 /package-lock.json
+/node_modules/

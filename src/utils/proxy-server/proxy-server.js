@@ -46,15 +46,49 @@ app.post('/proxy', async (req, res) => {
                 ? JSON.stringify(body)
                 : body;
 
+        console.log();
+        console.log();
+        console.log(url);
+        console.log();
+        console.log(JSON.stringify(headers, null, 4));
+        console.log();
+        console.log(JSON.stringify(formattedBody, null, 4));
+        console.log();
+        console.log();
+        console.log(JSON.stringify(req.formattedBody, null, 4));
         const response = await fetch(url, {
             method,
             headers,
             body: formattedBody
         });
+        console.log();
+        console.log();
+        console.log(JSON.stringify(response, null, 4));
 
-        const data = await response.json();
-        res.status(response.status).json(data);
+        // Comprova el content-type de la resposta
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.startsWith('text/event-stream')) {
+            // Configura els headers per SSE
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+
+            console.log('Streaming response');
+            console.log(response.body);
+            // Retransmet el flux tal qual
+            response.body.pipe(res);
+        } else {
+            // Per la resta de casos, processa com a JSON
+            const data = await response.json();
+            console.log();
+            console.log();
+            console.log(response.status + ' ' + response.statusText);
+            console.log(JSON.stringify(data, null, 4));
+
+            res.status(response.status).json(data);
+        }
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: error.message });
     }
 });

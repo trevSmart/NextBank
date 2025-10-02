@@ -1,4 +1,6 @@
 .tooltip-wrapper {
+	--background-color: rgb(15, 0, 40);
+
 	display: inline-flex;
 	justify-content: center;
 	position: relative;
@@ -6,28 +8,33 @@
 }
 
 .tooltip-wrapper .tooltip {
-	background-color: var(--text-secondary);
-	border-radius: 4px;
+	display: flex;
+	background-color: var(--background-color);
+	border-radius: 10px;
 	bottom: calc(100% + 0.6em + 2px);
 	box-shadow: 0px 2px 4px #07172258;
-	color: #fff;
-	display: none;
+	color: var(--text-color-weak);
 	font-size: 0.8rem;
+	font-weight: 200;
     text-shadow: none;
 	justify-content: center;
 	line-height: 1.35em;
-	padding: 0.6em 0.8em;
+	padding: 0.71em 1em;
 	position: absolute;
 	text-align: center;
-	width: 7rem;
-	z-index: 1;
+	width: max-content;
+	z-index: 200;
     cursor: default;
+	visibility: hidden;
+	opacity: 0;
+	transform: translateY(5px);
+	transition: opacity 100ms ease-in-out, visibility 100ms ease-in-out, transform 100ms ease-in-out;
 }
 
 .tooltip-wrapper .tooltip::before {
 	border-width: 0.6em 0.8em 0;
 	border-color: transparent;
-	border-top-color: var(--text-secondary);
+	border-top-color: var(--background-color);
 	content: "";
 	display: block;
 	border-style: solid;
@@ -36,20 +43,24 @@
 }
 
 .tooltip-wrapper:hover .tooltip {
-	display: flex;
+	visibility: visible;
+	opacity: 1;
+	transform: translateY(-4px);
 }
 
-
+.tooltip-wrapper:hover .help-point {
+	background-color: var(--background-color);
+}
 
 .tooltip-wrapper .help-point {
-	align-items: center;
-	background-color: #333;
-	border-radius: 50%;
-	color: #fff;
+	color: #515151;
 	display: flex;
-	font-size: 0.75rem;
+	font-size: 1.06rem;
 	font-weight: bold;
-	height: 1rem;
 	justify-content: center;
 	width: 1rem;
+}
+
+.tooltip-wrapper .help-point:hover {
+	color: #6e6e6e;
 }

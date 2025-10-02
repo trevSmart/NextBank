@@ -343,7 +343,7 @@ const ChatWidget = {
 		this.elements.dashboardGrid = document.querySelector('.dashboard-grid');
 		this.elements.widget = document.getElementById('chatWidget');
 		this.elements.messages = document.querySelector('.chat-messages');
-		this.elements.input = document.querySelector('.chat-input-input');
+		this.elements.input = document.getElementById('chatInput');
 		this.elements.sendButton = document.querySelector('.send-button');
 		this.updateSendButtonState();
 	},
@@ -452,7 +452,7 @@ const ChatWidget = {
 			this.updateSendButtonState();
 
 			this.addUserMessage(message, false);
-			input.value = '';
+			this.elements.input.value = '';
 			this.updateSendButtonState();
 
 			// Esperem 1 segon abans de mostrar l'indicador de typing

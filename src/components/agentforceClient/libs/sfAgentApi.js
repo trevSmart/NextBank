@@ -1,0 +1,270 @@
+import uuid4 from '../../../assets/libs/uuid4.mjs';
+import {createParser} from '../../../assets/libs/eventsource-parser.mjs';
+
+const salesforceParameters = {
+	urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
+	connectedAppClientId: '3MVG9rZjd7MXFdLhSKI7aMVDTapUmHhDlg4uv8l._iSgHKmMrYP0ND3kjdVo3bkwCXrzQAHq6V5qGSsftVEH6',
+	connectedAppClientSecret: '49799F9C19F97B8CE413894C5387F5C8AA34E9B0FAB35C051F88FB1F810B71E4',
+	agentId: '0XxgK000000D2KDSA0',
+	accessToken: null
+};
+
+export default class SfAgentApi extends EventTarget {
+	constructor(options = {}) {
+		super();
+		this.session = {id: null, sequenceId: 0};
+		this.streaming = false;
+		this.options = {
+			useProxy: false,
+			...options
+		};
+	}
+
+	async _fetch(url, options) {
+		if (this.options.useProxy) {
+			return fetch('http://localhost:3000/proxy', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({url, ...options})
+			});
+		} else {
+			return fetch(url, options);
+		}
+	}
+
+	async login() {
+		const url = `${salesforceParameters.urlMyDomain}/services/oauth2/token`;
+		const options = {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: new URLSearchParams({
+				'grant_type': 'client_credentials',
+				'client_id': salesforceParameters.connectedAppClientId,
+				'client_secret': salesforceParameters.connectedAppClientSecret
+			}).toString()
+		};
+		const response = await this._fetch(url, options);
+
+		if (!response.ok) {
+			const responseText = await response.text();
+			const errorText = JSON.parse(responseText);
+			if (errorText.error) {
+				throw new Error(`Error starting session: ${errorText.error}`);
+			} else {
+				throw new Error(`Error starting session: ${errorText}`);
+			}
+		}
+
+		const data = await response.json();
+
+		localStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
+		salesforceParameters.accessToken = data.access_token;
+		return response;
+	}
+
+	async startSession(streaming = false) {
+		if (this.session.id) {
+			return;
+		}
+
+		this.streaming = streaming;
+
+		if (!salesforceParameters.accessToken) {
+			try {
+				await this.login();
+			} catch (loginError) {
+				throw new Error('No s\'ha pogut iniciar sessió amb Salesforce: ' + loginError.message);
+			}
+		}
+
+		const url = `https://api.salesforce.com/einstein/ai-agent/v1/agents/${salesforceParameters.agentId}/sessions`;
+		const options = {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				externalSessionKey: uuid4(),
+				instanceConfig: {
+					endpoint: salesforceParameters.urlMyDomain
+				},
+				tz: 'America/Los_Angeles',
+				variables: [
+					{
+						name: '$Context.EndUserLanguage',
+						type: 'Text',
+						value: 'en_US'
+					}
+				],
+				featureSupport: 'Streaming',
+				streamingCapabilities: {chunkTypes: ['Text']},
+				bypassUser: true
+			})
+		};
+		const response = await this._fetch(url, options);
+
+		if (!response.ok) {
+			if (response.error === 'Invalid token.') {
+				salesforceParameters.accessToken = null;
+				await this.login();
+				return await this.startSession();
+			}
+			throw new Error(`Error starting session: ${response.error}`);
+		}
+
+		const data = await response.json();
+		this.session.id = data.sessionId;
+		this.session.sequenceId = 0;
+
+		return {
+			sessionId: data.sessionId,
+			welcomeMessage: data.messages[0].message
+		};
+	}
+
+
+	async sendMessage(text) {
+		if (this.streaming) {
+			return this._sendMessageStreaming(text);
+		} else {
+			return this._sendMessageSynchronous(text);
+		}
+	}
+
+	async _sendMessageSynchronous(text) {
+		try {
+			if (!this.session.id) {
+				throw new Error('No active session');
+			}
+			const url = `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages`;
+			const options = {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					message: {
+						sequenceId: ++this.session.sequenceId,
+						type: 'Text',
+						text
+					},
+					variables: []
+				})
+			};
+			const response = await this._fetch(url, options);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error('Error al enviar el missatge: ' + errorText);
+			}
+
+			const data = await response.json();
+			return data.messages[0].message;
+		} catch (error) {
+			console.error('Error sending message:', error);
+			throw error;
+		}
+	}
+
+	async _sendMessageStreaming(text) {
+		try {
+			if (!this.session.id) {
+				throw new Error('No active session');
+			}
+			const url = `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages/stream`;
+			const options = {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+					'Content-Type': 'application/json',
+					'Accept': 'text/event-stream'
+				},
+				body: JSON.stringify({
+					message: {
+						sequenceId: ++this.session.sequenceId,
+						type: 'Text',
+						text
+					},
+					variables: []
+				})
+			};
+			const response = await this._fetch(url, options);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error('Error al enviar el missatge: ' + errorText);
+			}
+
+			const decoder = new TextDecoder('utf-8');
+			let lastInformMessage = null;
+			let endOfTurnReached = false;
+
+			const parser = createParser({
+				onEvent: event => {
+					console.log('onEvent');
+					console.log(JSON.stringify(event));
+					console.log(event.detail);
+
+					const parsed = JSON.parse(event.data);
+					console.log('event', parsed.type);
+					this.dispatchEvent(new CustomEvent('chunk', {detail: {
+						eventType: event.event || event.type,
+						data: parsed.message
+					}}));
+					if (event.event === 'INFORM') {
+						lastInformMessage = parsed.message.message;
+
+					} else if (event.event === 'END_OF_TURN') {
+						if (!lastInformMessage) {
+							throw new Error('Error: Incomplete message received');
+						}
+						endOfTurnReached = true;
+					} else if (event.event === 'ERROR') {
+						throw new Error('Error: ' + parsed.message.message);
+					}
+				}
+			});
+
+			for await (const chunk of response.body) {
+				parser.feed(decoder.decode(chunk, {stream: true}));
+				if (endOfTurnReached) {
+					return lastInformMessage;
+				}
+			}
+
+		} catch (error) {
+			console.error('Error sending message:', error);
+			throw error;
+		}
+	}
+
+	async endSession() {
+		if (!this.session.id) {return}
+
+		try {
+			const url = `${salesforceParameters.urlMyDomain}/services/data/v59.0/einstein/copilot/agent/sessions/${this.session.id}`;
+			const options = {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${salesforceParameters.accessToken}`
+				},
+				keepalive: true
+			};
+			const response = await this._fetch(url, options);
+
+			if (!response.ok) {
+				throw new Error('Error ending session');
+			}
+
+			this.session.id = null;
+			this.session.sequenceId = 0;
+		} catch (error) {
+			console.error('Error ending session:', error);
+			throw error;
+		}
+	}
+}
