@@ -1,284 +1,270 @@
 import uuid4 from '../../../assets/libs/uuid4.mjs';
-// import { EventSource } from 'eventsource';
+import {createParser} from '../../../assets/libs/eventsource-parser.mjs';
 
 const salesforceParameters = {
-    urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
-    connectedAppClientId: '3MVG9rZjd7MXFdLhSKI7aMVDTapUmHhDlg4uv8l._iSgHKmMrYP0ND3kjdVo3bkwCXrzQAHq6V5qGSsftVEH6',
-    connectedAppClientSecret: '49799F9C19F97B8CE413894C5387F5C8AA34E9B0FAB35C051F88FB1F810B71E4',
-    agentId: '0XxgK000000D2KDSA0',
-    accessToken: null
+	urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
+	connectedAppClientId: '3MVG9rZjd7MXFdLhSKI7aMVDTapUmHhDlg4uv8l._iSgHKmMrYP0ND3kjdVo3bkwCXrzQAHq6V5qGSsftVEH6',
+	connectedAppClientSecret: '49799F9C19F97B8CE413894C5387F5C8AA34E9B0FAB35C051F88FB1F810B71E4',
+	agentId: '0XxgK000000D2KDSA0',
+	accessToken: null
 };
 
-class SfAgentApi {
+export default class SfAgentApi extends EventTarget {
+	constructor(options = {}) {
+		super();
+		this.session = {id: null, sequenceId: 0};
+		this.streaming = false;
+		this.options = {
+			useProxy: false,
+			...options
+		};
+	}
 
-    constructor() {
-        this.session = {id: null, sequenceId: 0};
-    }
+	async _fetch(url, options) {
+		if (this.options.useProxy) {
+			return fetch('http://localhost:3000/proxy', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({url, ...options})
+			});
+		} else {
+			return fetch(url, options);
+		}
+	}
 
-    async login() {
-        try {
-            const body = JSON.stringify({
-                url: `${salesforceParameters.urlMyDomain}/services/oauth2/token`,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    grant_type: 'client_credentials',
-                    client_id: salesforceParameters.connectedAppClientId,
-                    client_secret: salesforceParameters.connectedAppClientSecret
-                }).toString()
-            });
+	async login() {
+		const url = `${salesforceParameters.urlMyDomain}/services/oauth2/token`;
+		const options = {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: new URLSearchParams({
+				'grant_type': 'client_credentials',
+				'client_id': salesforceParameters.connectedAppClientId,
+				'client_secret': salesforceParameters.connectedAppClientSecret
+			}).toString()
+		};
+		const response = await this._fetch(url, options);
 
-            const response = await fetch('http://localhost:3000/proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body
-            });
+		if (!response.ok) {
+			const responseText = await response.text();
+			const errorText = JSON.parse(responseText);
+			if (errorText.error) {
+				throw new Error(`Error starting session: ${errorText.error}`);
+			} else {
+				throw new Error(`Error starting session: ${errorText}`);
+			}
+		}
 
-            if (!response.ok) {
-                const responseText = await response.text();
-                const errorText = JSON.parse(responseText)?.error;
-                throw new Error(`Error starting session: ${errorText}`);
-            }
+		const data = await response.json();
 
-            const data = await response.json();
+		localStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
+		salesforceParameters.accessToken = data.access_token;
+		return response;
+	}
 
-            localStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
-            salesforceParameters.accessToken = data.access_token;
-            return response;
-        } catch (error) {
-            throw error;
-        }
-    }
+	async startSession(streaming = false) {
+		if (this.session.id) {
+			return;
+		}
 
-    async startSession() {
-        try {
-            if (this.session.id) {
-                return;
-            }
-            if (!salesforceParameters.accessToken) {
-                try {
-                    await this.login();
-                } catch (loginError) {
-                    throw new Error('No s\'ha pogut iniciar sessió amb Salesforce. Si us plau, torneu-ho a provar més tard.');
-                }
-            }
+		this.streaming = streaming;
 
-            const response = await fetch('http://localhost:3000/proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: `https://api.salesforce.com/einstein/ai-agent/v1/agents/${salesforceParameters.agentId}/sessions`,
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${salesforceParameters.accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: {
-                        externalSessionKey: uuid4(),
-                        instanceConfig: {
-                            endpoint: salesforceParameters.urlMyDomain
-                        },
-                        tz: 'America/Los_Angeles',
-                        variables: [
-                            {
-                                name: '$Context.EndUserLanguage',
-                                type: 'Text',
-                                value: 'en_US'
-                            }
-                        ],
-                        featureSupport: 'Streaming',
-                        streamingCapabilities: { chunkTypes: ['Text'] },
-                        bypassUser: true
-                    }
-                })
-            });
+		if (!salesforceParameters.accessToken) {
+			try {
+				await this.login();
+			} catch (loginError) {
+				throw new Error('No s\'ha pogut iniciar sessió amb Salesforce: ' + loginError.message);
+			}
+		}
 
-            if (!response.ok) {
-                const responseText = await response.text();
-                const errorText = JSON.parse(responseText)?.error;
-                if (errorText === 'Invalid token.') {
-                    salesforceParameters.accessToken = null;
-                    await this.login();
-                    return await this.startSession();
-                }
-                throw new Error(errorText ? `Error starting session: ${errorText}` : 'Unknown error starting session');
-            }
+		const url = `https://api.salesforce.com/einstein/ai-agent/v1/agents/${salesforceParameters.agentId}/sessions`;
+		const options = {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				externalSessionKey: uuid4(),
+				instanceConfig: {
+					endpoint: salesforceParameters.urlMyDomain
+				},
+				tz: 'America/Los_Angeles',
+				variables: [
+					{
+						name: '$Context.EndUserLanguage',
+						type: 'Text',
+						value: 'en_US'
+					}
+				],
+				featureSupport: 'Streaming',
+				streamingCapabilities: {chunkTypes: ['Text']},
+				bypassUser: true
+			})
+		};
+		const response = await this._fetch(url, options);
 
-            const data = await response.json();
-            this.session.id = data.sessionId;
-            this.session.sequenceId = 0;
+		if (!response.ok) {
+			if (response.error === 'Invalid token.') {
+				salesforceParameters.accessToken = null;
+				await this.login();
+				return await this.startSession();
+			}
+			throw new Error(`Error starting session: ${response.error}`);
+		}
 
-            return {
-                sessionId: data.sessionId,
-                welcomeMessage: data.messages[0].message
-            };
-        } catch (error) {
-            throw error;
-        }
-    }
+		const data = await response.json();
+		this.session.id = data.sessionId;
+		this.session.sequenceId = 0;
 
-    async sendMessageSynchronous(message) {
-        try {
-            if (!this.session.id) {
-                throw new Error('No active session');
-            }
-            const response = await fetch('http://localhost:3000/proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages`,
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${salesforceParameters.accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: {
-                        message: {
-                            sequenceId: ++this.session.sequenceId,
-                            type: 'Text',
-                            text: message
-                        },
-                        variables: []
-                    }
-                })
-            });
+		return {
+			sessionId: data.sessionId,
+			welcomeMessage: data.messages[0].message
+		};
+	}
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error('Error al enviar el missatge: ' + errorText);
-            }
 
-            const data = await response.json();
-            return data.messages[0].message;
-        } catch (error) {
-            console.error('Error sending message:', error);
-            throw error;
-        }
-    }
+	async sendMessage(text) {
+		if (this.streaming) {
+			return this._sendMessageStreaming(text);
+		} else {
+			return this._sendMessageSynchronous(text);
+		}
+	}
 
-    async sendMessageStreaming(message, onChunk) {
-        try {
-            if (!this.session.id) {
-                throw new Error('No active session');
-            }
-            const response = await fetch('http://localhost:3000/proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    url: `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages/stream`,
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${salesforceParameters.accessToken}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'text/event-stream'
-                    },
-                    body: {
-                        message: {
-                            sequenceId: ++this.session.sequenceId,
-                            type: 'Text',
-                            text: message
-                        },
-                        variables: []
-                    }
-                })
-            });
+	async _sendMessageSynchronous(text) {
+		try {
+			if (!this.session.id) {
+				throw new Error('No active session');
+			}
+			const url = `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages`;
+			const options = {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					message: {
+						sequenceId: ++this.session.sequenceId,
+						type: 'Text',
+						text
+					},
+					variables: []
+				})
+			};
+			const response = await this._fetch(url, options);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error('Error al enviar el missatge: ' + errorText);
-            }
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error('Error al enviar el missatge: ' + errorText);
+			}
 
-            // Llegeix el flux per chunks
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            let done = false;
-            while (!done) {
-                const { value, done: doneReading } = await reader.read();
-                done = doneReading;
-                if (value) {
-                    const chunk = decoder.decode(value, { stream: true });
-                    if (onChunk) onChunk(chunk); // Callback per cada chunk rebut
-                }
-            }
-        } catch (error) {
-            console.error('Error sending message:', error);
-            throw error;
-        }
-    }
+			const data = await response.json();
+			return data.messages[0].message;
+		} catch (error) {
+			console.error('Error sending message:', error);
+			throw error;
+		}
+	}
 
-    /*
-    sendMessageStreamingOk(
-        sessionId,
-        text,
-        variables = [],
-        onMessage,
-        onDisconnect = null
-    ) {
-        try {
-            const sequenceId = new Date().getTime();
-            const body = JSON.stringify({
-                message: {
-                    sequenceId,
-                    type: 'Text',
-                    text
-                },
-                variables
-            });
+	async _sendMessageStreaming(text) {
+		try {
+			if (!this.session.id) {
+				throw new Error('No active session');
+			}
+			const url = `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages/stream`;
+			const options = {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${salesforceParameters.accessToken}`,
+					'Content-Type': 'application/json',
+					'Accept': 'text/event-stream'
+				},
+				body: JSON.stringify({
+					message: {
+						sequenceId: ++this.session.sequenceId,
+						type: 'Text',
+						text
+					},
+					variables: []
+				})
+			};
+			const response = await this._fetch(url, options);
 
-            const es = new EventSource('/api/events');
-            es.onmessage = (event) => {
-                console.log(event.data);
-            };
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error('Error al enviar el missatge: ' + errorText);
+			}
 
-            return es;
-        } catch (error) {
-            throw new Error('Failed to send Agent API streaming message', {
-                cause: error
-            });
-        }
-    }
-    */
+			const decoder = new TextDecoder('utf-8');
+			let lastInformMessage = null;
+			let endOfTurnReached = false;
 
-    async endSession() {
-        if (!this.session.id) return;
+			const parser = createParser({
+				onEvent: event => {
+					console.log('onEvent');
+					console.log(JSON.stringify(event));
+					console.log(event.detail);
 
-        try {
-            const response = await fetch('http://localhost:3000/proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: `${salesforceParameters.urlMyDomain}/services/data/v59.0/einstein/copilot/agent/sessions/${this.session.id}`,
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${salesforceParameters.accessToken}`
-                    }
-                }),
-                keepalive: true
-            });
+					const parsed = JSON.parse(event.data);
+					console.log('event', parsed.type);
+					this.dispatchEvent(new CustomEvent('chunk', {detail: {
+						eventType: event.event || event.type,
+						data: parsed.message
+					}}));
+					if (event.event === 'INFORM') {
+						lastInformMessage = parsed.message.message;
 
-            if (!response.ok) {
-                throw new Error('Error ending session');
-            }
+					} else if (event.event === 'END_OF_TURN') {
+						if (!lastInformMessage) {
+							throw new Error('Error: Incomplete message received');
+						}
+						endOfTurnReached = true;
+					} else if (event.event === 'ERROR') {
+						throw new Error('Error: ' + parsed.message.message);
+					}
+				}
+			});
 
-            this.session.id = null;
-            this.session.sequenceId = 0;
-        } catch (error) {
-            console.error('Error ending session:', error);
-            throw error;
-        }
-    }
+			for await (const chunk of response.body) {
+				parser.feed(decoder.decode(chunk, {stream: true}));
+				if (endOfTurnReached) {
+					return lastInformMessage;
+				}
+			}
+
+		} catch (error) {
+			console.error('Error sending message:', error);
+			throw error;
+		}
+	}
+
+	async endSession() {
+		if (!this.session.id) {return}
+
+		try {
+			const url = `${salesforceParameters.urlMyDomain}/services/data/v59.0/einstein/copilot/agent/sessions/${this.session.id}`;
+			const options = {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${salesforceParameters.accessToken}`
+				},
+				keepalive: true
+			};
+			const response = await this._fetch(url, options);
+
+			if (!response.ok) {
+				throw new Error('Error ending session');
+			}
+
+			this.session.id = null;
+			this.session.sequenceId = 0;
+		} catch (error) {
+			console.error('Error ending session:', error);
+			throw error;
+		}
+	}
 }
-
-export default new SfAgentApi();

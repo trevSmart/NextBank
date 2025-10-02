@@ -53,7 +53,7 @@
 
 .message.error {
     align-self: center;
-    background-color: #683234;
+    background-color: #783b3d;
 	color: var(--text);
     font-weight: 100;
     font-size: 0.75rem;
@@ -72,7 +72,7 @@
     padding: 0;
     gap: 0.4rem;
     flex-direction: row-reverse;
-    max-width: 95%;
+    max-width: 97%;
 }
 
 .message.agent {
@@ -82,7 +82,7 @@
     background: transparent;
     padding: 0;
     gap: 0.4rem;
-    max-width: 95%;
+    max-width: 97%;
 }
 
 .message-avatar {
@@ -112,7 +112,10 @@
 .message.user .message-content {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 0 1.2rem 1.2rem 1.2rem;
+}
 
+.message.agent .message-content {
+    flex-grow: 1;
 }
 
 .message.agent:not(.important) .message-content {
@@ -153,7 +156,7 @@
     /* right: 9px; */
     background: rgba(127, 37, 251, 0.4);
     border: none;
-    color: white;
+    color: #dddddd;
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 50%;
@@ -163,7 +166,7 @@
     cursor: pointer;
     transform-origin: center;
     font-size: 0.9rem;
-    /* transition: all 0.2s ease; */
+    transition: all 150ms ease;
 }
 
 .add-context-button i {
@@ -325,10 +328,11 @@ body.afclient-is-adding-context .add-context-button i {
     padding: 0.7rem 0.6rem;
     overflow-y: auto;
     margin-top: 0.7rem;
-    background: rgba(255, 255, 255, 0.03);
+    /* background: rgba(255, 255, 255, 0.03); */
+    background: linear-gradient(135deg, #2948d503 20%, #6b33c533 68%);
     border-radius: var(--border-radius-small);
     position: relative;
-	border: 1px solid rgba(255, 255, 255, 0.04);
+	/* border: 1px solid rgba(255, 255, 255, 0.04); */
 }
 
 .messages-list {
@@ -381,7 +385,7 @@ body.afclient-is-adding-context .add-context-button i {
     opacity: 0.8;
     user-select: none;
     position: relative;
-    top: -6px;
+    top: -2px;
 }
 
 .message.agent .message-avatar {
@@ -389,7 +393,7 @@ body.afclient-is-adding-context .add-context-button i {
 }
 
 .message.agent.important .message-avatar {
-    background: rgb(104, 50, 52);
+    background: #783b3d;
 }
 
 .message-avatar .user-avatar {
@@ -417,7 +421,7 @@ body.afclient-is-adding-context .add-context-button i {
 }
 
 .message.agent.important .message-content {
-    background-color: #683234;
+    background-color: #783b3d;
 	color: var(--text);
     font-weight: 300;
     border-radius: 1rem 0 0.6rem 0.6rem;
@@ -452,7 +456,7 @@ body.afclient-is-adding-context .add-context-button i {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 3px;
 }
 
@@ -500,7 +504,7 @@ body.afclient-is-adding-context .add-context-button i {
 .message.system {
     align-self: center;
     background-color: #267e78;
-    color: var(--text-secondary);
+    color: #ffffffd0;
     font-size: 0.75rem;
     text-align: center;
     width: 100%;
@@ -588,7 +592,7 @@ body .afclient-selected-context::after {
     text-align: center;
     overflow: hidden;
     animation: context-area-adding-context-kf 500ms infinite alternate;
-    max-width: 95%;
+    max-width: 97%;
     min-width: 40px;
 }
 

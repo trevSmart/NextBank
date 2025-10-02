@@ -4,7 +4,13 @@ import AfClient from './components/agentforceClient/agentforceClient.js';
 import './components/calendar/calendar.js';
 import LoginComponent from './components/login/login.js';
 
-let afClient = new AfClient({streaming: true, initialMessages: false, devMode: true});
+let afClient = new AfClient({
+	streaming: false,
+	initialMessages: true,
+	devMode: true,
+	debug: true
+});
+
 let resizeCleanupFunctions = [];
 let navigationCleanupFunctions = [];
 let dragState = {xOffset: 0, yOffset: 0};
@@ -276,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
 //Handler global per a l'event de loginSuccess
 
 document.addEventListener('loginSuccess', event => {
-	console.log('Login exitoso:', event.detail);
 	//Inicialització dels assistants després del login
 	afClient.newUiInstance(document.getElementById('assistant'));
 	afClient.startSession();

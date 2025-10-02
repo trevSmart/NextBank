@@ -84,11 +84,10 @@ export default class InputMultiline extends HTMLElement {
 			.context-item {
 				background: rgba(109, 46, 164, 0.8);
 				color: white;
-				padding: 0.4rem 3.5rem 0.4rem 0.9rem;
+				padding: 0.2rem 3.5rem 0.2rem 0.6rem;
 				border-radius: 0.3rem 0.3rem 0 0;
-				font-size: 0.7rem;
-				font-weight: 300;
-				cursor: pointer;
+				font-size: 0.73rem;
+				font-weight: 200;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
@@ -97,7 +96,7 @@ export default class InputMultiline extends HTMLElement {
 			}
 
 			.context-item i {
-				margin-right: 6px;
+				margin-right: 7px;
 				font-weight: 600;
 			}
 
@@ -106,7 +105,7 @@ export default class InputMultiline extends HTMLElement {
 				border-top-right-radius: 0;
 				min-height: 81px;
 				max-height: 60px;
-				outline: solid 1px #6d2ea4;
+				outline: solid 1px #602395;
 			}
 
 			.context-item:hover {

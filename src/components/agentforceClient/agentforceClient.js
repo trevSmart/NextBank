@@ -1,16 +1,16 @@
 import SfAgentApi from './libs/sfAgentApi.js';
 //eslint-disable-next-line no-unused-vars
 import InputMultiline from './libs/InputMultiline.js';
-// import 'https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs';
 
 class Session {
-	constructor() {
+	constructor(afClient) {
+		this.afClient = afClient;
 		this.sessionId = null;
 		this.sequenceId = 0;
 	}
 
 	async startSession() {
-		const response = await SfAgentApi.startSession();
+		const response = await this.afClient.sfAgentApi.startSession(this.afClient.options.streaming);
 		//eslint-disable-next-line no-console
 		console.log('Agentforce session started with id:', response.sessionId ) ;
 		this.sessionId = response.sessionId;
@@ -19,7 +19,7 @@ class Session {
 
 	async endSession() {
 		if (this.sessionId) {
-			await SfAgentApi.endSession();
+			await this.afClient.sfAgentApi.endSession();
 			this.sessionId = null;
 			this.sequenceId = 0;
 		}
@@ -96,11 +96,9 @@ class UiInstance {
 			});
 
 			chatInputInput.addEventListener('input', () => {
-				const disabled = !this.afClient.session.sessionId
-					|| !chatInputInput.value.trim()
-					|| this.afClient.conversation.awaitingAgentResponse;
-				buttonStartConextSelection.disabled = disabled;
-				buttonSendMessage.disabled = disabled;
+				buttonSendMessage.disabled = !this.afClient.isConnected()
+				|| !chatInputInput.value.trim()
+				|| this.afClient.conversation.awaitingAgentResponse;
 			});
 
 			buttonStartConextSelection.addEventListener('click', () => this.afClient.startContextSelection());
@@ -148,7 +146,7 @@ class UiInstance {
 
 class Message {
 	constructor(id, type, text, context = null, conversation, originEventId = null, status = null) {
-		if (!id || !type || !text && type !== 'typing') {
+		if (!id || !type) {
 			return;
 		}
 		this.id = id;
@@ -158,7 +156,7 @@ class Message {
 		this.context = context;
 		this.conversation = conversation;
 		this.timestamp = new Date();
-		this.status = status; // 'streaming' o 'finished'
+		this.status = status; // 'Streaming' o 'Completed'
 		return this;
 	}
 
@@ -197,7 +195,7 @@ class Message {
 			//messageAvatar.draggable = false;
 			if (this.type === 'agent' || this.type === 'agentImportant' || this.type === 'typing') {
 				if (this.type === 'agentImportant') {
-					messageAvatar.innerHTML = '<i class="fas fa-exclamation-triangle" style="padding-left: 1px;"></i>';
+					messageAvatar.innerHTML = '<i class="fas fa-exclamation-triangle" style="position: relative; top: -1px;"></i>';
 				} else {
 					const avatarImg = document.createElement('img');
 					avatarImg.alt = 'Agent Avatar';
@@ -256,14 +254,20 @@ class Message {
 		return messageListItem;
 	}
 
-	async update() {
+	async update(partialText) {
+		const textToShow = typeof partialText === 'string' ? partialText : this.text;
 		this.conversation.afClient.uiInstances.forEach(async ui => {
 			const messageListItem = ui.messageListNode.querySelector(`li[data-id="${this.id}"]`);
 			if (messageListItem) {
-				messageListItem.querySelector('.message-text').innerHTML = this.text;
+				messageListItem.querySelector('.message-text').innerHTML = textToShow
+					.replace(/\n/g, '<br>')
+					.replace(/^(itemId:[^<]*?)(<br>|$)/, '<code>$1</code>$2')
+					.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+					.replace(/\*(.*?)\*/g, '<em>$1</em>')
+					.replace(/`(.*?)`/g, '<code>$1</code>')
+					.replace(/~~(.*?)~~/g, '<del>$1</del>');
 			}
 		});
-
 		this.conversation.afClient.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
 	}
 }
@@ -282,7 +286,7 @@ class Conversation {
 		});
 	}
 
-	async addMessage(type, text, context = null, id, originEventId = null, status = null) {
+	async addMessage(type, text, context = null, id, originEventId = null, status = 'Completed') {
 		const message = new Message(id || ++this.lastMessageId, type, text, context, this, originEventId, status);
 		type !== 'userHidden' && this.messages.push(message);
 
@@ -295,22 +299,23 @@ class Conversation {
 			buttonSendMessage.disabled = true;
 
 			if (this.afClient.options.streaming) {
-				SfAgentApi.sendMessageStreaming(text, (chunk) => this.afClient.onAgentMessageReceived(chunk, true))
-				.catch(error => {throw error})
-				.finally(() => {
-					this.afClient.awaitingAgentResponse = false;
-					buttonSendMessage.disabled = chatInputInput.value.length === 0;
-				});
+				const afClient = this.afClient;
+				afClient.sfAgentApi.addEventListener('chunk', ({detail: chunk}) => {
+					if (chunk.eventType === 'PROGRESS_INDICATOR') {
+						afClient.addMessage('typing', null, null)
 
-			} else {
-				SfAgentApi.sendMessageSynchronous(text)
-				.then(response => this.afClient.onAgentMessageReceived(response))
-				.catch(error => {throw error})
-				.finally(() => {
-					this.awaitingAgentResponse = false;
-					buttonSendMessage.disabled = chatInputInput.value.length === 0;
+					} else if (chunk.eventType === 'TEXT_CHUNK') {
+						console.log(JSON.stringify(chunk));
+						const chunkData = chunk.data;
+						afClient.addMessage('agent', chunkData.message, null, chunkData.id, chunkData.originEventId, 'Streaming');
+					}
 				});
 			}
+
+			const responseMessage = await this.afClient.sfAgentApi.sendMessage(text)
+			await this.afClient.onAgentMessageReceived(responseMessage);
+			this.awaitingAgentResponse = false;
+			buttonSendMessage.disabled = chatInputInput.value.length === 0;
 		}
 		return message;
 	}
@@ -333,10 +338,10 @@ class Conversation {
 	}
 }
 
-class AfClient {
+export default class AfClient {
 	constructor(options = {}) {
 		this.uiInstances = [];
-		this.session = new Session();
+		this.session = new Session(this);
 		this.conversation = new Conversation(this);
 		this.typingTimeoutId = null;
 		this.contextAreaHandlers = new Map();
@@ -346,6 +351,14 @@ class AfClient {
 			devMode: false,
 			...options
 		};
+		// Control d'animació incremental per missatge (id -> {timeout, targetText, currentText})
+		this.streamingAnimations = new Map();
+
+		this.sfAgentApi = new SfAgentApi({useProxy: true});
+	}
+
+	isConnected() {
+		return this.session.sessionId !== null;
 	}
 
 	async startSession() {
@@ -391,8 +404,9 @@ class AfClient {
 
 	async addMessage(type, text, context = null, id, originEventId = null, status = null) {
 		const message = await this.conversation.addMessage(type, text, context, id, originEventId, status);
-		this.uiInstances.forEach(async ui => await message.render([ui.messageListNode]));
-		this.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
+		await Promise.all(this.uiInstances.map(async ui => await message.render([ui.messageListNode])));
+		await Promise.all(this.uiInstances.filter(ui => ui.options.scrollOnResponse).map(async ui => await ui.scrollToBottom()));
+		return message;
 	}
 
 	async sendMessage(text, context = null) {
@@ -408,76 +422,13 @@ class AfClient {
 		}
 	}
 
-	async onAgentMessageReceived(message, isChunk = false) {
-
-		console.log('onAgentMessageReceived');
-		console.log(this.conversation.getMessages());
-
-		if (isChunk) {
-
-			let chunkMessage = null;
-			let chunkText = '';
-
-			// Si el chunk és un string multi-línia, busquem la línia "data: ..."
-			if (typeof message === 'string') {
-				const eventLine = message.split('\n').find(line => line.startsWith('event: '));
-				if (eventLine && /(INFORM|END_OF_TURN)/.test(eventLine)) {
-					// Si és END_OF_TURN, marquem el missatge com a finished
-					if (eventLine.includes('END_OF_TURN')) {
-						const lastMessage = this.conversation.getMessages().slice(-1)[0];
-						if (lastMessage && lastMessage.type === 'agent' && lastMessage.status === 'streaming') {
-							lastMessage.status = 'finished';
-						}
-					}
-					return;
-				}
-
-				const dataLine = message.split('\n').find(line => line.startsWith('data: '));
-				if (dataLine) {
-					try {
-						chunkMessage = JSON.parse(dataLine.replace('data: ', '')).message;
-						/*
-						// Només agafem el text si el tipus és TextChunk
-						if (dataObj?.message?.type === 'TextChunk' && typeof dataObj?.message?.message === 'string') {
-							chunkText = dataObj.message.message;
-						}
-						*/
-					} catch (e) {
-						console.warn('No s\'ha pogut parsejar el JSON del chunk:', e, dataLine);
-					}
-				}
-
-			}
-			/*
-			else if (message?.message?.type === 'TextChunk' && typeof message?.message?.message === 'string') {
-				// Cas alternatiu: ja és un objecte i és TextChunk
-				chunkText = message.message.message;
-			}
-			*/
-
-			if (!chunkMessage.message) {
-				console.warn('Estructura de chunk inesperada o sense text:', message);
-				return;
-			}
-
-			// Busquem si ja existeix un missatge d'agent amb status 'streaming'
-			let streamingMessage = this.conversation.getMessages().find(m => m.type === 'agent' && m.status === 'streaming');
-			if (!streamingMessage) {
-				// Si no existeix, creem el missatge nou
-				await this.addMessage('agent', chunkMessage.message, null, chunkMessage.id, chunkMessage.originEventId, 'streaming');
-			} else {
-				// Si ja existeix, només actualitzem el seu text i el renderitzem
-				streamingMessage.text += chunkMessage.message;
-				console.log(streamingMessage.id);
-				console.log(streamingMessage.text);
-
-				await streamingMessage.update();
-				// this.uiInstances.filter(ui => ui.options.scrollOnResponse).forEach(ui => ui.scrollToBottom());
-			}
-
-		} else {
-			await this.addMessage('agent', message.message);
+	async onAgentMessageReceived(message) {
+		console.log('onAgentMessageReceived', message);
+		if (typeof message !== 'string') {
+			console.error('Message is not a string: ' + message);
+			return;
 		}
+
 
 
 		if (message.includes('⚠️')) {
@@ -486,14 +437,12 @@ class AfClient {
 			const afterWarning = message.substring(warningIndex).trim();
 
 			if (beforeWarning) {
-				await this.addMessage('agent', beforeWarning, null, message.id);
+				await this.addMessage('agent', beforeWarning, null, undefined);
 			}
 			if (afterWarning) {
-				await this.addMessage('agentImportant', afterWarning, null, message.id);
+				await this.addMessage('agentImportant', afterWarning, null, undefined);
 			}
-
 			document.querySelector('body').classList.add('alerts-visible');
-
 			// Scroll any lists with an element with class alert to make it visible
 			const alertElements = document.querySelectorAll('.alert');
 			if (alertElements.length) {
@@ -506,6 +455,9 @@ class AfClient {
 					firstAlert.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 				}
 			}
+
+		} else {
+			await this.addMessage('agent', message);
 		}
 
 		if (this.typingTimeoutId) {
@@ -514,7 +466,6 @@ class AfClient {
 		}
 		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
 		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
-
 
 		const chatInputInput = document.getElementById('chatInputInput');
 		const buttonSendMessage = document.getElementById('buttonSendMessage');
@@ -580,32 +531,6 @@ class AfClient {
 
 		document.querySelector('body').classList.remove('afclient-is-adding-context');
 		this.endContextSelection();
-
-		/*
-		const chatInputContextIcon = document.createElement('div');
-		chatInputContextIcon.className = 'chat-input-context-icon';
-		chatInputContextIcon.innerHTML = '<i class="fa-solid fa-paperclip"></i>';
-
-		const chatInputContextLabel = document.createElement('div');
-		chatInputContextLabel.className = 'chat-input-context-label';
-		chatInputContextLabel.title = node.dataset.contextId;
-		chatInputContextLabel.textContent = node.dataset.contextLabel;
-
-		const chatInputContextCloseButton = document.createElement('button');
-		chatInputContextCloseButton.className = 'chat-input-context-close-button';
-		chatInputContextCloseButton.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-		chatInputContextCloseButton.title = 'Remove context';
-		chatInputContextCloseButton.addEventListener('click', () => this.removeContext());
-
-		const chatInputContext = document.createElement('div');
-		chatInputContext.className = 'chat-input-context';
-		chatInputContext.appendChild(chatInputContextIcon);
-		chatInputContext.appendChild(chatInputContextLabel);
-		chatInputContext.appendChild(chatInputContextCloseButton);
-
-		const chatInput = document.querySelector('.chat-input');
-		chatInput.appendChild(chatInputContext);
-		*/
 	}
 
 	async removeContext() {
@@ -618,8 +543,6 @@ class AfClient {
 		this.endContextSelection();
 	}
 }
-
-export default AfClient;
 
 document.addEventListener('DOMContentLoaded', () => {
 	const chatContainer = document.createElement('div');

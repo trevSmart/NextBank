@@ -26,6 +26,7 @@ class LoginComponent {
                                 id="username"
                                 name="username"
                                 value="elizabeth@mail.com"
+								autocomplete="email"
                                 required
                             >
                         </div>
@@ -37,6 +38,7 @@ class LoginComponent {
                                 id="password"
                                 name="password"
                                 value="xK9mP2$vL8nQ4@jR7"
+                                autocomplete="current-password"
                                 required
                             >
                         </div>
