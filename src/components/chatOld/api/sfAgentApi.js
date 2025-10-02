@@ -14,7 +14,6 @@ class SfAgentApi {
     }
 
     async login() {
-        console.log('login');
         try {
             const body = JSON.stringify({
                 url: `${salesforceParameters.urlMyDomain}/services/oauth2/token`,
@@ -54,7 +53,6 @@ class SfAgentApi {
     }
 
     async startSession() {
-        console.log('startSession');
         try {
             if (this.session.id) {
                 return;

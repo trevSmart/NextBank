@@ -85,7 +85,7 @@ const ChatWidget = {
 	// Funcions de renderització
 	renderMessage(message) {
 		if (!message || !message.type) {
-			console.warn('Invalid message format:', message);
+			console.error('Invalid message format:', message);
 			return null;
 		}
 
@@ -191,7 +191,6 @@ const ChatWidget = {
 	},
 
 	async init() {
-		console.log('init');
 		this.elements.chatContainer = document.getElementById('chatContainer');
 		this.elements.dashboardAssistant = document.querySelector('.dashboard-card.assistant');
 
