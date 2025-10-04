@@ -82,9 +82,10 @@ const ChatWidget = {
 	},
 
 	// Funcions de renderització
+	// Funcions de renderització
 	renderMessage(message) {
 		if (!message || !message.type) {
-			console.warn('Invalid message format:', message);
+			console.error('Invalid message format:', message);
 			return null;
 		}
 
@@ -196,7 +197,6 @@ const ChatWidget = {
 	},
 
 	async init() {
-		console.log('init');
 		this.elements.chatContainer = document.getElementById('chatContainer');
 		this.elements.dashboardAssistant = document.querySelector('.dashboard-card.assistant');
 
@@ -233,7 +233,10 @@ const ChatWidget = {
 		this.elements.chatButton = document.querySelector('.pop-out-icon');
 		if (this.elements.chatButton) {
 			const chatButtonOnclick = async (e) => {
-				document.querySelector('.support-popover').classList.remove('visible');
+				const supportPopover = document.querySelector('.support-popover');
+				if (supportPopover) {
+					supportPopover.classList.remove('visible');
+				}
 				e.preventDefault();
 				e.stopPropagation();
 				this.toggle();
@@ -452,7 +455,7 @@ const ChatWidget = {
 			this.updateSendButtonState();
 
 			this.addUserMessage(message, false);
-			input.value = '';
+			this.elements.input.value = '';
 			this.updateSendButtonState();
 
 			// Esperem 1 segon abans de mostrar l'indicador de typing
