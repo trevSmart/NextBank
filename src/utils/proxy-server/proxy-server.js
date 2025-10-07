@@ -216,7 +216,10 @@ app.post('/proxy', async (req, res) => {
         }
 
         // Validar protocol segur (HTTPS) excepte per endpoints de login de Salesforce
-        const isSalesforceLogin = parsedDestinationUrl.hostname.includes('salesforce.com') && 
+        const salesforceAllowed =
+            parsedDestinationUrl.hostname === 'salesforce.com' ||
+            parsedDestinationUrl.hostname.endsWith('.salesforce.com');
+        const isSalesforceLogin = salesforceAllowed &&
                                    parsedDestinationUrl.pathname.includes('/services/oauth2/token');
         if (!['https:'].includes(parsedDestinationUrl.protocol) && !isSalesforceLogin) {
             // Permetre HTTP només per login de Salesforce
