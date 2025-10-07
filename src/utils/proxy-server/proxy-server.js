@@ -100,25 +100,39 @@ function isValidUrl(urlString) {
     }
 }
 
+// Defineix una allow-list de destins vàlids pel proxy
+// Clau: nom lògic per l'usuari; Valor: URL base a la qual es permet el proxy
+const ALLOWED_TARGETS = {
+    'serviceA': 'https://api.service-a.example.com',
+    'serviceB': 'https://api.service-b.example.com',
+    // Afegeix més serveis segons sigui necessari
+};
+
 app.post('/proxy', async (req, res) => {
     try {
-        const { url, method = 'POST', headers = {}, body } = req.body;
+        const { target, path = '', method = 'POST', headers = {}, body } = req.body;
 
-        // Validacions bàsiques d'entrada
-        if (!url) {
-            return res.status(400).json({ error: 'Falta el camp "url" al body' });
+        // Validació bàsica de l'entrada
+        if (!target || typeof target !== 'string') {
+            return res.status(400).json({ error: 'Falta el camp "target" o no és una cadena de text.' });
+        }
+        // Busca l'URL base segura segons el target
+        const baseUrl = ALLOWED_TARGETS[target];
+        if (!baseUrl) {
+            return res.status(403).json({ error: 'Target no permès.' });
         }
 
-        if (typeof url !== 'string') {
-            return res.status(400).json({ error: 'El camp "url" ha de ser una cadena de text' });
+        // Assegura que el path és relatiu i prevé directory traversal
+        let safePath = '';
+        if (path) {
+            if (typeof path !== 'string' || path.includes('..') || path.startsWith('http')) {
+                return res.status(400).json({ error: 'El path indicat no és vàlid.' });
+            }
+            // Neteja el path: elimina doble barra, etc.
+            safePath = path.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/^\//, '');
         }
-
-        // Validar que la URL sigui segura per evitar SSRF
-        if (!isValidUrl(url)) {
-            return res.status(403).json({
-                error: 'URL no permesa. Només es permeten URLs de dominis autoritzats.'
-            });
-        }
+        // Construeix la URL destinatària segura
+        const destinationUrl = safePath ? `${baseUrl.replace(/\/$/, '')}/${safePath}` : baseUrl;
 
         // Validar mètodes HTTP permesos
         const allowedMethods = ['GET', 'POST', 'DELETE'];
@@ -147,7 +161,7 @@ app.post('/proxy', async (req, res) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segons timeout
 
-        const response = await fetch(url, {
+        const response = await fetch(destinationUrl, {
             method,
             headers: sanitizedHeaders,
             body: formattedBody,
