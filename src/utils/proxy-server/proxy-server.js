@@ -177,6 +177,25 @@ app.post('/proxy', async (req, res) => {
             }
         }
 
+        // SSRF Mitigation: Allow-list hostnames
+        const ALLOWED_HOSTS = [
+            'api.example.com',
+            'data.example.net'
+            // Add further allowed hostnames as needed
+        ];
+        let parsedUrl;
+        try {
+            parsedUrl = new URL(url);
+        } catch (e) {
+            return res.status(400).json({ error: 'URL invàlida' });
+        }
+        if (!ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
+            return res.status(403).json({ error: 'Host no autoritzat' });
+        }
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+            return res.status(400).json({ error: 'Protocol no suportat' });
+        }
+
         // Serialize body only if Content-Type is application/json and body is not a string
         const formattedBody =
             sanitizedHeaders['Content-Type'] === 'application/json' && typeof body !== 'string'
