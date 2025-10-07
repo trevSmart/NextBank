@@ -57,49 +57,72 @@ const ALLOWED_TARGETS = {
     'twelvedata-api': 'https://api.twelvedata.com'
 };
 
+// Defineix endpoints predefinits per evitar construcció dinàmica d'URLs
+// Seguint la recomanació de CodeQL: usar input d'usuari per seleccionar de strings fixos
+const PREDEFINED_ENDPOINTS = {
+    // Salesforce endpoints
+    'salesforce-oauth': 'https://api.salesforce.com/services/oauth2/token',
+    'salesforce-agent-sessions': 'https://api.salesforce.com/einstein/ai-agent/v1/agents',
+    'salesforce-agent-messages': 'https://api.salesforce.com/einstein/ai-agent/v1/sessions',
+    'salesforce-login': 'https://login.salesforce.com/services/oauth2/token',
+
+    // TwelveData endpoints
+    'twelvedata-quote': 'https://api.twelvedata.com/quote',
+    'twelvedata-time-series': 'https://api.twelvedata.com/time_series',
+    'twelvedata-symbol-search': 'https://api.twelvedata.com/symbol_search'
+};
+
+// Funció per construir URLs segures amb paràmetres dinàmics validats
+function buildSecureUrl(endpointKey, dynamicParams = {}) {
+    const baseUrl = PREDEFINED_ENDPOINTS[endpointKey];
+    if (!baseUrl) {
+        throw new Error(`Endpoint no permès: ${endpointKey}`);
+    }
+
+    // Construcció segura d'URLs amb paràmetres dinàmics
+    switch (endpointKey) {
+        case 'salesforce-agent-sessions':
+            if (!dynamicParams.agentId || typeof dynamicParams.agentId !== 'string') {
+                throw new Error('agentId és requerit per salesforce-agent-sessions');
+            }
+            // Validar que agentId sigui un ID vàlid de Salesforce (format: 0Xx...)
+            if (!/^0Xx[A-Za-z0-9]{15}$/.test(dynamicParams.agentId)) {
+                throw new Error('agentId no té un format vàlid');
+            }
+            return `${baseUrl}/${dynamicParams.agentId}/sessions`;
+
+        case 'salesforce-agent-messages':
+            if (!dynamicParams.sessionId || typeof dynamicParams.sessionId !== 'string') {
+                throw new Error('sessionId és requerit per salesforce-agent-messages');
+            }
+            // Validar que sessionId sigui un ID vàlid
+            if (!/^[A-Za-z0-9_-]+$/.test(dynamicParams.sessionId)) {
+                throw new Error('sessionId no té un format vàlid');
+            }
+            return `${baseUrl}/${dynamicParams.sessionId}/messages`;
+
+        default:
+            return baseUrl;
+    }
+}
+
 app.post('/proxy', async (req, res) => {
     try {
-        const { target, path = '', method = 'POST', headers = {}, body, url } = req.body;
+        const { endpoint, method = 'POST', headers = {}, body, url } = req.body;
 
         let destinationUrl;
 
-        // Suport per la nova API segura (target + path)
-        if (target && typeof target === 'string') {
-            // Busca l'URL base segura segons el target - només URLs predefinides
-            const baseUrl = ALLOWED_TARGETS[target];
-            if (!baseUrl) {
-                return res.status(403).json({ error: 'Target no permès. Targets vàlids: ' + Object.keys(ALLOWED_TARGETS).join(', ') });
+        // Nova API segura: usar endpoint predefinit (recomanació exacta de CodeQL)
+        if (endpoint && typeof endpoint === 'string') {
+            try {
+                // Seguint la recomanació de CodeQL: usar input d'usuari per seleccionar de strings fixos
+                const dynamicParams = req.body.dynamicParams || {};
+                destinationUrl = buildSecureUrl(endpoint, dynamicParams);
+            } catch (error) {
+                return res.status(400).json({
+                    error: error.message + '. Endpoints vàlids: ' + Object.keys(PREDEFINED_ENDPOINTS).join(', ')
+                });
             }
-
-            // Assegura que el path és relatiu i prevé directory traversal
-            let safePath = '';
-            if (path) {
-                if (typeof path !== 'string' || path.includes('..') || path.startsWith('http') || path.startsWith('/')) {
-                    return res.status(400).json({ error: 'El path indicat no és vàlid. Ha de ser un path relatiu sense ".." o "/".' });
-                }
-                // Neteja el path: elimina doble barra, caràcters sospitosos, etc.
-                safePath = path.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/^\//, '');
-                
-                // Validació addicional per evitar caràcters perillosos
-                const dangerousPatterns = [
-                    /\.\./,  // Path traversal
-                    /%2e%2e/i,  // URL encoded path traversal
-                    /%2f/i,  // URL encoded slash
-                    /<script/i,  // XSS attempts
-                    /javascript:/i,  // JavaScript protocol
-                    /data:/i,  // Data URLs
-                    /file:/i   // File protocol
-                ];
-                
-                for (const pattern of dangerousPatterns) {
-                    if (pattern.test(safePath)) {
-                        return res.status(400).json({ error: 'El path conté caràcters o patrons perillosos.' });
-                    }
-                }
-            }
-
-            // Construeix la URL destinatària segura - només amb URLs predefinides
-            destinationUrl = safePath ? `${baseUrl.replace(/\/$/, '')}/${safePath}` : baseUrl;
         }
         // Suport per l'API antiga (url directa) - DEPRECATED però mantingut per compatibilitat
         else if (url && typeof url === 'string') {
@@ -110,17 +133,17 @@ app.post('/proxy', async (req, res) => {
                     const allowedObj = new URL(allowedUrl);
                     return urlObj.hostname === allowedObj.hostname;
                 });
-                
+
                 if (!isValidDomain) {
                     return res.status(403).json({ error: 'URL no permès. Només es permeten URLs dels dominis: ' + Object.values(ALLOWED_TARGETS).map(u => new URL(u).hostname).join(', ') });
                 }
-                
+
                 destinationUrl = url;
             } catch (error) {
                 return res.status(400).json({ error: 'URL invàlida.' });
             }
         } else {
-            return res.status(400).json({ error: 'Falta el camp "target" o "url" al body.' });
+            return res.status(400).json({ error: 'Falta el camp "endpoint" o "url" al body.' });
         }
 
         // Validar mètodes HTTP permesos
