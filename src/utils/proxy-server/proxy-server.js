@@ -59,48 +59,69 @@ const ALLOWED_TARGETS = {
 
 app.post('/proxy', async (req, res) => {
     try {
-        const { target, path = '', method = 'POST', headers = {}, body } = req.body;
+        const { target, path = '', method = 'POST', headers = {}, body, url } = req.body;
 
-        // Validació bàsica de l'entrada
-        if (!target || typeof target !== 'string') {
-            return res.status(400).json({ error: 'Falta el camp "target" o no és una cadena de text.' });
-        }
+        let destinationUrl;
 
-        // Busca l'URL base segura segons el target - només URLs predefinides
-        const baseUrl = ALLOWED_TARGETS[target];
-        if (!baseUrl) {
-            return res.status(403).json({ error: 'Target no permès. Targets vàlids: ' + Object.keys(ALLOWED_TARGETS).join(', ') });
-        }
-
-        // Assegura que el path és relatiu i prevé directory traversal
-        let safePath = '';
-        if (path) {
-            if (typeof path !== 'string' || path.includes('..') || path.startsWith('http') || path.startsWith('/')) {
-                return res.status(400).json({ error: 'El path indicat no és vàlid. Ha de ser un path relatiu sense ".." o "/".' });
+        // Suport per la nova API segura (target + path)
+        if (target && typeof target === 'string') {
+            // Busca l'URL base segura segons el target - només URLs predefinides
+            const baseUrl = ALLOWED_TARGETS[target];
+            if (!baseUrl) {
+                return res.status(403).json({ error: 'Target no permès. Targets vàlids: ' + Object.keys(ALLOWED_TARGETS).join(', ') });
             }
-            // Neteja el path: elimina doble barra, caràcters sospitosos, etc.
-            safePath = path.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/^\//, '');
-            
-            // Validació addicional per evitar caràcters perillosos
-            const dangerousPatterns = [
-                /\.\./,  // Path traversal
-                /%2e%2e/i,  // URL encoded path traversal
-                /%2f/i,  // URL encoded slash
-                /<script/i,  // XSS attempts
-                /javascript:/i,  // JavaScript protocol
-                /data:/i,  // Data URLs
-                /file:/i   // File protocol
-            ];
-            
-            for (const pattern of dangerousPatterns) {
-                if (pattern.test(safePath)) {
-                    return res.status(400).json({ error: 'El path conté caràcters o patrons perillosos.' });
+
+            // Assegura que el path és relatiu i prevé directory traversal
+            let safePath = '';
+            if (path) {
+                if (typeof path !== 'string' || path.includes('..') || path.startsWith('http') || path.startsWith('/')) {
+                    return res.status(400).json({ error: 'El path indicat no és vàlid. Ha de ser un path relatiu sense ".." o "/".' });
+                }
+                // Neteja el path: elimina doble barra, caràcters sospitosos, etc.
+                safePath = path.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/^\//, '');
+                
+                // Validació addicional per evitar caràcters perillosos
+                const dangerousPatterns = [
+                    /\.\./,  // Path traversal
+                    /%2e%2e/i,  // URL encoded path traversal
+                    /%2f/i,  // URL encoded slash
+                    /<script/i,  // XSS attempts
+                    /javascript:/i,  // JavaScript protocol
+                    /data:/i,  // Data URLs
+                    /file:/i   // File protocol
+                ];
+                
+                for (const pattern of dangerousPatterns) {
+                    if (pattern.test(safePath)) {
+                        return res.status(400).json({ error: 'El path conté caràcters o patrons perillosos.' });
+                    }
                 }
             }
-        }
 
-        // Construeix la URL destinatària segura - només amb URLs predefinides
-        const destinationUrl = safePath ? `${baseUrl.replace(/\/$/, '')}/${safePath}` : baseUrl;
+            // Construeix la URL destinatària segura - només amb URLs predefinides
+            destinationUrl = safePath ? `${baseUrl.replace(/\/$/, '')}/${safePath}` : baseUrl;
+        }
+        // Suport per l'API antiga (url directa) - DEPRECATED però mantingut per compatibilitat
+        else if (url && typeof url === 'string') {
+            // Validar que la URL sigui d'un domini permès
+            try {
+                const urlObj = new URL(url);
+                const isValidDomain = Object.values(ALLOWED_TARGETS).some(allowedUrl => {
+                    const allowedObj = new URL(allowedUrl);
+                    return urlObj.hostname === allowedObj.hostname;
+                });
+                
+                if (!isValidDomain) {
+                    return res.status(403).json({ error: 'URL no permès. Només es permeten URLs dels dominis: ' + Object.values(ALLOWED_TARGETS).map(u => new URL(u).hostname).join(', ') });
+                }
+                
+                destinationUrl = url;
+            } catch (error) {
+                return res.status(400).json({ error: 'URL invàlida.' });
+            }
+        } else {
+            return res.status(400).json({ error: 'Falta el camp "target" o "url" al body.' });
+        }
 
         // Validar mètodes HTTP permesos
         const allowedMethods = ['GET', 'POST', 'DELETE'];
