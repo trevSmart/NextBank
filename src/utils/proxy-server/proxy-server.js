@@ -32,12 +32,43 @@ app.use(express.static(path.join(__dirname, '..', 'src')));
 //     res.sendFile(path.join(__dirname, '..', 'src', 'index.html'));
 // });
 
+// Llista blanca de dominis permesos per evitar SSRF
+const ALLOWED_DOMAINS = [
+    'api.salesforce.com',
+    'api.twelvedata.com',
+    'login.salesforce.com'
+];
+
+// Funció per validar si una URL és segura
+function isValidUrl(urlString) {
+    try {
+        const url = new URL(urlString);
+
+        // Verificar que sigui HTTPS (excepte per Salesforce login que pot ser HTTP)
+        if (url.protocol !== 'https:' && !url.hostname.includes('salesforce.com')) {
+            return false;
+        }
+
+        // Verificar que el domini estigui a la llista blanca
+        return ALLOWED_DOMAINS.includes(url.hostname);
+    } catch (error) {
+        return false;
+    }
+}
+
 app.post('/proxy', async (req, res) => {
     try {
         const { url, method = 'POST', headers = {}, body } = req.body;
 
         if (!url) {
             return res.status(400).json({ error: 'Falta el camp "url" al body' });
+        }
+
+        // Validar que la URL sigui segura per evitar SSRF
+        if (!isValidUrl(url)) {
+            return res.status(403).json({
+                error: 'URL no permesa. Només es permeten URLs de dominis autoritzats.'
+            });
         }
 
         // Serialize body only if Content-Type is application/json and body is not a string

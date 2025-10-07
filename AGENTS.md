@@ -27,6 +27,7 @@ NextBank integrates AI-powered conversational agents through Salesforce Einstein
   - CORS-enabled proxy for Salesforce API communication
   - Handles authentication token management
   - Express.js server running on port 3000
+  - Implements SSRF protection with domain allowlist
 
 ## Agent Configuration
 
@@ -266,6 +267,9 @@ Els resultats JSON es generen a `test-results/results.json` per integració amb 
 • **CORS Protection**: Proxy server handles cross-origin requests securely
 • **Credential Security**: Client credentials should be environment variables in production
 • **Session Isolation**: Each chat session uses unique external session keys
+• **SSRF Protection**: Proxy server implements domain allowlist to prevent Server-Side Request Forgery attacks
+• **URL Validation**: Only authorized domains (Salesforce, TwelveData) are permitted for proxy requests
+• **HTTPS Enforcement**: All external requests must use HTTPS protocol (except Salesforce login endpoints)
 
 ## Future Enhancements
 
