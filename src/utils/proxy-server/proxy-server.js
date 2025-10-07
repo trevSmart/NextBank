@@ -49,63 +49,12 @@ app.use(express.static(path.join(__dirname, '..', 'src')));
 //     res.sendFile(path.join(__dirname, '..', 'src', 'index.html'));
 // });
 
-// Llista blanca de dominis permesos per evitar SSRF
-const ALLOWED_DOMAINS = [
-    'api.salesforce.com',
-    'api.twelvedata.com',
-    'login.salesforce.com'
-];
-
-// Funció per validar si una URL és segura amb verificació estricta
-function isValidUrl(urlString) {
-    try {
-        const url = new URL(urlString);
-
-        // Verificar que el protocol sigui HTTPS (excepte per Salesforce login que pot ser HTTP)
-        const isHttps = url.protocol === 'https:';
-        const isSalesforceLogin = url.hostname === 'login.salesforce.com';
-
-        if (!isHttps && !isSalesforceLogin) {
-            return false;
-        }
-
-        // Verificació estricta del hostname - exacte match amb la llista blanca
-        // Això evita bypass com "evil-salesforce.com" o "salesforce.com.evil.com"
-        const isValidHostname = ALLOWED_DOMAINS.includes(url.hostname);
-
-        if (!isValidHostname) {
-            return false;
-        }
-
-        // Verificació addicional per evitar path traversal i altres atacs
-        // Rebutjar URLs amb caràcters sospitosos al path
-        const suspiciousPatterns = [
-            /\.\./,  // Path traversal
-            /%2e%2e/i,  // URL encoded path traversal
-            /%2f/i,  // URL encoded slash
-            /<script/i,  // XSS attempts
-            /javascript:/i  // JavaScript protocol
-        ];
-
-        const fullUrl = url.toString();
-        for (const pattern of suspiciousPatterns) {
-            if (pattern.test(fullUrl)) {
-                return false;
-            }
-        }
-
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
 // Defineix una allow-list de destins vàlids pel proxy
 // Clau: nom lògic per l'usuari; Valor: URL base a la qual es permet el proxy
 const ALLOWED_TARGETS = {
-    'serviceA': 'https://api.service-a.example.com',
-    'serviceB': 'https://api.service-b.example.com',
-    // Afegeix més serveis segons sigui necessari
+    'salesforce-api': 'https://api.salesforce.com',
+    'salesforce-login': 'https://login.salesforce.com',
+    'twelvedata-api': 'https://api.twelvedata.com'
 };
 
 app.post('/proxy', async (req, res) => {
@@ -116,22 +65,41 @@ app.post('/proxy', async (req, res) => {
         if (!target || typeof target !== 'string') {
             return res.status(400).json({ error: 'Falta el camp "target" o no és una cadena de text.' });
         }
-        // Busca l'URL base segura segons el target
+
+        // Busca l'URL base segura segons el target - només URLs predefinides
         const baseUrl = ALLOWED_TARGETS[target];
         if (!baseUrl) {
-            return res.status(403).json({ error: 'Target no permès.' });
+            return res.status(403).json({ error: 'Target no permès. Targets vàlids: ' + Object.keys(ALLOWED_TARGETS).join(', ') });
         }
 
         // Assegura que el path és relatiu i prevé directory traversal
         let safePath = '';
         if (path) {
-            if (typeof path !== 'string' || path.includes('..') || path.startsWith('http')) {
-                return res.status(400).json({ error: 'El path indicat no és vàlid.' });
+            if (typeof path !== 'string' || path.includes('..') || path.startsWith('http') || path.startsWith('/')) {
+                return res.status(400).json({ error: 'El path indicat no és vàlid. Ha de ser un path relatiu sense ".." o "/".' });
             }
-            // Neteja el path: elimina doble barra, etc.
+            // Neteja el path: elimina doble barra, caràcters sospitosos, etc.
             safePath = path.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/^\//, '');
+            
+            // Validació addicional per evitar caràcters perillosos
+            const dangerousPatterns = [
+                /\.\./,  // Path traversal
+                /%2e%2e/i,  // URL encoded path traversal
+                /%2f/i,  // URL encoded slash
+                /<script/i,  // XSS attempts
+                /javascript:/i,  // JavaScript protocol
+                /data:/i,  // Data URLs
+                /file:/i   // File protocol
+            ];
+            
+            for (const pattern of dangerousPatterns) {
+                if (pattern.test(safePath)) {
+                    return res.status(400).json({ error: 'El path conté caràcters o patrons perillosos.' });
+                }
+            }
         }
-        // Construeix la URL destinatària segura
+
+        // Construeix la URL destinatària segura - només amb URLs predefinides
         const destinationUrl = safePath ? `${baseUrl.replace(/\/$/, '')}/${safePath}` : baseUrl;
 
         // Validar mètodes HTTP permesos
