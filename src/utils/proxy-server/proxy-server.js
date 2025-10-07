@@ -143,13 +143,18 @@ app.post('/proxy', async (req, res) => {
             // Validar que la URL sigui d'un domini permès
             try {
                 const urlObj = new URL(url);
-                const isValidDomain = Object.values(ALLOWED_TARGETS).some(allowedUrl => {
-                    const allowedObj = new URL(allowedUrl);
-                    return urlObj.hostname === allowedObj.hostname;
-                });
+                // Forbid userinfo (username:password) in the URL
+                if (urlObj.username || urlObj.password) {
+                    throw new Error('La URL no pot incloure credencials d\'usuari');
+                }
+                // Accept only exact origin matches (scheme://hostname:port if present)
+                const allowedOrigins = Object.values(ALLOWED_TARGETS).map(u => new URL(u).origin);
+                const isValidOrigin = allowedOrigins.includes(urlObj.origin);
 
-                if (!isValidDomain) {
-                    return res.status(403).json({ error: 'URL no permès. Només es permeten URLs dels dominis: ' + Object.values(ALLOWED_TARGETS).map(u => new URL(u).hostname).join(', ') });
+                if (!isValidOrigin) {
+                    return res.status(403).json({
+                        error: 'URL no permesa. Només es permeten URLs d\'origen: ' + Object.values(ALLOWED_TARGETS).map(u => new URL(u).origin).join(', ')
+                    });
                 }
 
                 destinationUrl = url;
