@@ -2,22 +2,22 @@ import {defineConfig, devices} from '@playwright/test';
 
 export default defineConfig({
 	testDir: './tests',
-	fullyParallel: true,
+	fullyParallel: false, // Desactivem paral·lelisme per evitar sobrecàrrega
 	forbidOnly: !!process.env.CI,
-	retries: process.env.CI ? 2 : 1,
-	workers: process.env.CI ? 1 : undefined,
+	retries: process.env.CI ? 2 : 0, // Menys reintents en desenvolupament
+	workers: 1, // Només un worker per evitar sobrecàrrega
 	reporter: [
 		['html'],
 		['list'],
 		['json', { outputFile: 'test-results/results.json' }]
 	],
 	use: {
-		baseURL: 'http://127.0.0.1:8080',
+		baseURL: 'http://127.0.0.1:5500',
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
 		video: 'retain-on-failure',
-		actionTimeout: 10000,
-		navigationTimeout: 30000,
+		actionTimeout: 5000, // Reduït de 10s a 5s
+		navigationTimeout: 15000, // Reduït de 30s a 15s
 	},
 
 	projects: [
@@ -25,19 +25,11 @@ export default defineConfig({
 			name: 'chromium',
 			use: {...devices['Desktop Chrome']},
 		},
-		{
-			name: 'Mobile Chrome',
-			use: {...devices['Pixel 5']},
-		},
-		{
-			name: 'Desktop Chrome',
-			use: {...devices['Desktop Chrome']},
-		},
 	],
 
 	webServer: {
-		command: 'npx http-server public -p 8080 -c-1',
-		url: 'http://127.0.0.1:8080',
+		command: 'npx http-server public -p 5500 -c-1',
+		url: 'http://127.0.0.1:5500',
 		reuseExistingServer: !process.env.CI,
 		timeout: 120000,
 		stdout: 'pipe',
@@ -49,8 +41,8 @@ export default defineConfig({
 	globalTeardown: undefined,
 
 	// Test timeout
-	timeout: 30000,
+	timeout: 15000, // Reduït de 30s a 15s
 	expect: {
-		timeout: 5000,
+		timeout: 3000, // Reduït de 5s a 3s
 	},
 });

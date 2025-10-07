@@ -15,8 +15,11 @@ class SfAgentApi {
 
     async login() {
         try {
+            // Netegem qualsevol token anterior que pugui estar caducat
+            localStorage.removeItem('futureBankSalesforceAccessToken');
+            salesforceParameters.accessToken = null;
             const body = JSON.stringify({
-                endpoint: 'salesforce-login',
+                endpoint: 'salesforce-org-oauth',
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'

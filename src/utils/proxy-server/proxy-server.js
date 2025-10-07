@@ -17,8 +17,10 @@ const PORT = process.env.PORT || 3000;
 // Configuració CORS més restrictiva per evitar CSRF
 const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:5500',
     'http://localhost:8080',
     'http://127.0.0.1:3000',
+    'http://127.0.0.1:5500',
     'http://127.0.0.1:8080'
 ];
 
@@ -65,8 +67,9 @@ const PREDEFINED_ENDPOINTS = {
     'salesforce-agent-sessions': 'https://api.salesforce.com/einstein/ai-agent/v1/agents',
     'salesforce-agent-messages': 'https://api.salesforce.com/einstein/ai-agent/v1/sessions',
     'salesforce-login': 'https://login.salesforce.com/services/oauth2/token',
+    'salesforce-org-oauth': 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com/services/oauth2/token',
     'salesforce-domain-services': 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com/services/data/v59.0/einstein/copilot/agent/sessions',
-    
+
     // TwelveData endpoints
     'twelvedata-quote': 'https://api.twelvedata.com/quote',
     'twelvedata-time-series': 'https://api.twelvedata.com/time_series',
@@ -101,7 +104,7 @@ function buildSecureUrl(endpointKey, dynamicParams = {}) {
                 throw new Error('sessionId no té un format vàlid');
             }
             return `${baseUrl}/${dynamicParams.sessionId}/messages`;
-            
+
         case 'salesforce-domain-services':
             if (!dynamicParams.sessionId || typeof dynamicParams.sessionId !== 'string') {
                 throw new Error('sessionId és requerit per salesforce-domain-services');
@@ -111,7 +114,7 @@ function buildSecureUrl(endpointKey, dynamicParams = {}) {
                 throw new Error('sessionId no té un format vàlid');
             }
             return `${baseUrl}/${dynamicParams.sessionId}`;
-            
+
         default:
             return baseUrl;
     }

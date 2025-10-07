@@ -221,7 +221,7 @@ const ChatWidget = {
 
 		// Inicialitzem el xat del dashboard si existeix
 		if (this.elements.dashboardAssistant) {
-			// await this.initDashboardChat();
+			await this.initDashboardChat();
 		}
 
 		// Carreguem el xat flotant si existeix el contenidor
