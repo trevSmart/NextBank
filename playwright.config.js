@@ -5,7 +5,7 @@ export default defineConfig({
 	fullyParallel: false, // Desactivem paral·lelisme per evitar sobrecàrrega
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0, // Menys reintents en desenvolupament
-	workers: 1, // Només un worker per evitar sobrecàrrega
+	workers: 2, // Només un worker per evitar sobrecàrrega
 	reporter: [
 		['html'],
 		['list'],
