@@ -177,23 +177,52 @@ app.post('/proxy', async (req, res) => {
             }
         }
 
-        // SSRF Mitigation: Allow-list hostnames
-        const ALLOWED_HOSTS = [
-            'api.example.com',
-            'data.example.net'
-            // Add further allowed hostnames as needed
-        ];
-        let parsedUrl;
+        // SSRF Mitigation: Validate final destinationUrl against allowed hostnames
+        let parsedDestinationUrl;
         try {
-            parsedUrl = new URL(url);
+            parsedDestinationUrl = new URL(destinationUrl);
         } catch (e) {
-            return res.status(400).json({ error: 'URL invàlida' });
+            return res.status(400).json({ error: 'URL de destí invàlida' });
         }
-        if (!ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
-            return res.status(403).json({ error: 'Host no autoritzat' });
+
+        // Extraure tots els hostnames permesos de ALLOWED_TARGETS i PREDEFINED_ENDPOINTS
+        const allowedHostnames = new Set();
+        
+        // Afegir hostnames de ALLOWED_TARGETS
+        Object.values(ALLOWED_TARGETS).forEach(targetUrl => {
+            try {
+                const targetUrlObj = new URL(targetUrl);
+                allowedHostnames.add(targetUrlObj.hostname);
+            } catch (e) {
+                // Ignorar URLs invàlides en la configuració
+            }
+        });
+        
+        // Afegir hostnames de PREDEFINED_ENDPOINTS
+        Object.values(PREDEFINED_ENDPOINTS).forEach(endpointUrl => {
+            try {
+                const endpointUrlObj = new URL(endpointUrl);
+                allowedHostnames.add(endpointUrlObj.hostname);
+            } catch (e) {
+                // Ignorar URLs invàlides en la configuració
+            }
+        });
+
+        // Validar que el hostname de destí estigui a la allow-list
+        if (!allowedHostnames.has(parsedDestinationUrl.hostname)) {
+            return res.status(403).json({ 
+                error: 'Host no autoritzat. Només es permeten: ' + Array.from(allowedHostnames).join(', ')
+            });
         }
-        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-            return res.status(400).json({ error: 'Protocol no suportat' });
+
+        // Validar protocol segur (HTTPS) excepte per endpoints de login de Salesforce
+        const isSalesforceLogin = parsedDestinationUrl.hostname.includes('salesforce.com') && 
+                                   parsedDestinationUrl.pathname.includes('/services/oauth2/token');
+        if (!['https:'].includes(parsedDestinationUrl.protocol) && !isSalesforceLogin) {
+            // Permetre HTTP només per login de Salesforce
+            if (parsedDestinationUrl.protocol !== 'http:' || !isSalesforceLogin) {
+                return res.status(400).json({ error: 'Protocol no segur. Només es permet HTTPS' });
+            }
         }
 
         // Serialize body only if Content-Type is application/json and body is not a string
