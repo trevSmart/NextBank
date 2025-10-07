@@ -16,7 +16,7 @@ class SfAgentApi {
     async login() {
         try {
             const body = JSON.stringify({
-                url: `${salesforceParameters.urlMyDomain}/services/oauth2/token`,
+                endpoint: 'salesforce-login',
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -71,7 +71,10 @@ class SfAgentApi {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    url: `https://api.salesforce.com/einstein/ai-agent/v1/agents/${salesforceParameters.agentId}/sessions`,
+                    endpoint: 'salesforce-agent-sessions',
+                    dynamicParams: {
+                        agentId: salesforceParameters.agentId
+                    },
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${salesforceParameters.accessToken}`,
@@ -133,7 +136,10 @@ class SfAgentApi {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    url: `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${this.session.id}/messages`,
+                    endpoint: 'salesforce-agent-messages',
+                    dynamicParams: {
+                        sessionId: this.session.id
+                    },
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${salesforceParameters.accessToken}`,
@@ -173,7 +179,10 @@ class SfAgentApi {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    url: `${salesforceParameters.urlMyDomain}/services/data/v59.0/einstein/copilot/agent/sessions/${this.session.id}`,
+                    endpoint: 'salesforce-domain-services',
+                    dynamicParams: {
+                        sessionId: this.session.id
+                    },
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${salesforceParameters.accessToken}`
