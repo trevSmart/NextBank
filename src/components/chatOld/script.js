@@ -153,7 +153,17 @@ const ChatWidget = {
 			const floatingMessagesList = floatingMessages.querySelector('.messages-list');
 			if (floatingMessagesList) {
 				const currentMessageIds = Array.from(floatingMessagesList.children).map(el => parseInt(el.dataset.messageId));
+				const storeMessageIds = this.messageStore.getMessages().map(m => m.id);
 
+				// Remove messages that are no longer in the store
+				Array.from(floatingMessagesList.children).forEach(el => {
+					const messageId = parseInt(el.dataset.messageId);
+					if (!storeMessageIds.includes(messageId)) {
+						el.remove();
+					}
+				});
+
+				// Add new messages
 				this.messageStore.getMessages().forEach(message => {
 					if (!currentMessageIds.includes(message.id)) {
 						const messageElement = this.renderMessage(message);
@@ -174,7 +184,17 @@ const ChatWidget = {
 			const dashboardMessagesList = dashboardMessages.querySelector('.messages-list');
 			if (dashboardMessagesList) {
 				const currentMessageIds = Array.from(dashboardMessagesList.children).map(el => parseInt(el.dataset.messageId));
+				const storeMessageIds = this.messageStore.getMessages().map(m => m.id);
 
+				// Remove messages that are no longer in the store
+				Array.from(dashboardMessagesList.children).forEach(el => {
+					const messageId = parseInt(el.dataset.messageId);
+					if (!storeMessageIds.includes(messageId)) {
+						el.remove();
+					}
+				});
+
+				// Add new messages
 				this.messageStore.getMessages().forEach(message => {
 					if (!currentMessageIds.includes(message.id)) {
 						const messageElement = this.renderMessage(message);
