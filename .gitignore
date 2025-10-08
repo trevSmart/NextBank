@@ -4,3 +4,9 @@
 /.cursor
 /package-lock.json
 /node_modules/
+.sfdx
+.sf
+sfdx-project.json
+tmp
+test-results/
+playwright-report
