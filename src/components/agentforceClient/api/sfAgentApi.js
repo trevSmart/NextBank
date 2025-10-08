@@ -151,7 +151,7 @@ class SfAgentApi {
             }
             
             const sequenceId = ++this.session.sequenceId;
-            console.log('[Agentforce] Outgoing message to agent (sequence:', sequenceId + '):', message);
+            console.log(`[Agentforce] Outgoing message to agent (sequence: ${sequenceId}):`, message);
             
             const response = await fetch('http://localhost:3000/proxy', {
                 method: 'POST',
