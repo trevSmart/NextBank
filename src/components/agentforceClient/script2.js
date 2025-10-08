@@ -23,7 +23,7 @@ class AgentforceSession {
 			}
 			console.log('[AgentforceSession] Session initialized successfully');
 		} catch (e) {
-			console.error('[AgentforceSession] Error iniciant sessió:', e);
+			console.error('[AgentforceSession] Error starting session:', e);
 		}
 	}
 
