@@ -3,6 +3,9 @@
 import ChatWidget from '../src/components/agentforceClient/script.js';
 import './components/calendar/calendar.js';
 
+// Expose ChatWidget to window for testing purposes
+window.ChatWidget = ChatWidget;
+
 //Variables globals
 let resizeCleanupFunctions = [];
 let cardsCleanupFunctions = [];
