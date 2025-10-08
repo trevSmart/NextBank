@@ -16,7 +16,7 @@ let navigationCleanupFunctions = [];
 let dragState = {xOffset: 0, yOffset: 0};
 
 //DEMO: Si vols saltar-te el login, posa LOGIN_DISABLED a true
-const LOGIN_DISABLED = true;
+const LOGIN_DISABLED = false;
 
 function initializeResizeHandling() {
 	const assistantContainer = document.querySelector('.assistant-container');

@@ -59,15 +59,14 @@ class LoginComponent {
 		document.body.insertAdjacentHTML('beforeend', loginHTML);
 	}
 
-	bindEvents() {
-		const form = document.getElementById('loginForm');
-		const usernameInput = document.getElementById('username');
-		const passwordInput = document.getElementById('password');
-		const errorMessage = document.getElementById('errorMessage');
+        bindEvents() {
+                const form = document.getElementById('loginForm');
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
 
-		//Manejar envío del formulario
-		form.addEventListener('submit', e => {
-			e.preventDefault();
+                //Manejar envío del formulario
+                form.addEventListener('submit', e => {
+                        e.preventDefault();
 			this.handleLogin();
 		});
 
@@ -88,42 +87,17 @@ class LoginComponent {
 		});
 	}
 
-	handleLogin() {
-		const username = document.getElementById('username').value.trim();
-		const password = document.getElementById('password').value.trim();
-		const loginButton = document.getElementById('loginButton');
+        handleLogin() {
+                //Per la demo, ocultem qualsevol missatge d'error i mostrem
+                //un petit estat de càrrega abans d'entrar
+                this.hideError();
+                this.setLoadingState(true);
 
-		//Validación básica
-		if (!username || !password) {
-			this.showError('Por favor, completa todos los campos');
-			return;
-		}
-
-		//Simular proceso de login
-		this.setLoadingState(true);
-
-		//Simular delay de autenticación
-		setTimeout(() => {
-			//Aquí puedes agregar tu lógica de autenticación real
-			if (this.validateCredentials(username, password)) {
-				this.loginSuccess();
-			} else {
-				this.showError('Usuario o contraseña incorrectos');
-				this.setLoadingState(false);
-			}
-		}, 1000);
-	}
-
-	validateCredentials(username, password) {
-		//Credenciales de ejemplo para testing
-		//En producción, esto debería conectarse a tu backend
-		const validCredentials = [
-			{username: 'elizabeth@mail.com', password: 'xK9mP2$vL8nQ4@jR7'}
-		];
-
-		return validCredentials.some(cred =>
-			cred.username === username && cred.password === password);
-	}
+                //Simular delay de autenticación
+                setTimeout(() => {
+                        this.loginSuccess();
+                }, 800);
+        }
 
 	setLoadingState(isLoading) {
 		const loginButton = document.getElementById('loginButton');
