@@ -354,8 +354,53 @@ const ChatWidget = {
 		addMessage(message) {
 			message.id = ++this.lastId;
 			message.timestamp = new Date();
+			// Process basic formatting if it's a text message
+			if (message.text && typeof message.text === 'string') {
+				message.formattedText = this.formatMessage(message.text);
+			}
 			this.messages.push(message);
 			return message;
+		},
+
+		// Basic message formatting (lists, bold, italic only)
+		formatMessage(text) {
+			if (!text || typeof text !== 'string') return text;
+
+			let formatted = text;
+
+			// 1. Bold text (**text** or __text__)
+			formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+			formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+			// 2. Italic text (*text* or _text_)
+			formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+			formatted = formatted.replace(/_(.*?)_/g, '<em>$1</em>');
+
+			// 3. Lists (- item or * item) - Process before line breaks
+			formatted = formatted.replace(/^[\s]*[-*]\s+(.+)$/gm, '<li>$1</li>');
+			// Wrap consecutive list items in ul
+			formatted = formatted.replace(/(<li>.*<\/li>)(\s*<li>.*<\/li>)*/g, (match) => {
+				return '<ul>' + match + '</ul>';
+			});
+
+			// 4. Numbered lists (1. item) - Process before line breaks
+			formatted = formatted.replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li>$1</li>');
+			// Wrap numbered list items in ol
+			formatted = formatted.replace(/(<li>\d+\.\s+.*<\/li>)(\s*<li>\d+\.\s+.*<\/li>)*/g, (match) => {
+				return '<ol>' + match.replace(/\d+\.\s+/g, '') + '</ol>';
+			});
+
+			// 5. Line breaks - Process after lists, but avoid adding breaks inside lists
+			formatted = formatted.replace(/\n/g, '<br>');
+			// Remove breaks inside list elements
+			formatted = formatted.replace(/(<ul>.*?<\/ul>)/gs, (match) => {
+				return match.replace(/<br>/g, '');
+			});
+			formatted = formatted.replace(/(<ol>.*?<\/ol>)/gs, (match) => {
+				return match.replace(/<br>/g, '');
+			});
+
+			return formatted;
 		},
 
 		addUserMessage(text) {
@@ -427,7 +472,9 @@ const ChatWidget = {
 		});
 
 		if (message.type === 'system' || message.type === 'error') {
-			messageItem.innerHTML = message.text.replace(/\n/g, '<br>');
+			// Use formatted text if available, otherwise use plain text with line breaks
+			const textToRender = message.formattedText || message.text.replace(/\n/g, '<br>');
+			messageItem.innerHTML = textToRender;
 			return messageItem;
 		}
 
@@ -466,7 +513,9 @@ const ChatWidget = {
 		if (message.type === 'typing') {
 			messageText.innerHTML = '<dotlottie-player src="/src/assets/animations/typing.json" background="transparent" speed="1" style="width: 53px"; loop autoplay></dotlottie-player>';
 		} else {
-			messageText.innerHTML = message.text.replace(/\n/g, '<br>');
+			// Use formatted text if available, otherwise use plain text
+			const textToRender = message.formattedText || message.text;
+			messageText.innerHTML = textToRender;
 		}
 
 		const messageTime = document.createElement('div');

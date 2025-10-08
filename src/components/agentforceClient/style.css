@@ -247,7 +247,7 @@
 }
 
 .message.agentImportant .message-content {
-    background: lightcoral;
+    background:     ;
     border: 1px solid #ff9800;
     box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
     animation: subtle-pulse 3s infinite;
@@ -829,4 +829,30 @@
 .input-form input:disabled {
     background-color: #f5f5f5;
     cursor: not-allowed;
+}
+
+/* Estils per llistes dins dels missatges */
+.message-text ul,
+.message-text ol {
+    margin: 8px 0;
+    padding-left: 8px; /* Menys espai per els bullets */
+    list-style-position: inside; /* Bullets dins del contenidor */
+}
+
+.message-text li {
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+/* Estils específics per missatges importants */
+.message.agentImportant .message-text ul,
+.message.agentImportant .message-text ol {
+    margin: 8px 0;
+    padding-left: 8px; /* Menys espai per els bullets */
+    list-style-position: inside;
+}
+
+.message.agentImportant .message-text li {
+    margin: 4px 0;
+    line-height: 1.4;
 }
