@@ -78,14 +78,20 @@ app.post('/proxy', async (req, res) => {
             // Retransmet el flux tal qual
             response.body.pipe(res);
         } else {
-            // Per la resta de casos, processa com a JSON
-            const data = await response.json();
+            // Per la resta de casos, primer llegim el text i després intentem parsejar com JSON
+            const textData = await response.text();
             console.log();
             console.log();
             console.log(response.status + ' ' + response.statusText);
-            console.log(JSON.stringify(data, null, 4));
+            console.log('Response text:', textData);
 
-            res.status(response.status).json(data);
+            try {
+                const data = JSON.parse(textData);
+                res.status(response.status).json(data);
+            } catch (jsonError) {
+                // Si no és JSON vàlid, retorna el text
+                res.status(response.status).send(textData);
+            }
         }
     } catch (error) {
         console.log(error);

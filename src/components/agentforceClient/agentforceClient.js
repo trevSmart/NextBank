@@ -312,10 +312,20 @@ class Conversation {
 				});
 			}
 
-			const responseMessage = await this.afClient.sfAgentApi.sendMessage(text)
-			await this.afClient.onAgentMessageReceived(responseMessage);
-			this.awaitingAgentResponse = false;
-			buttonSendMessage.disabled = chatInputInput.value.length === 0;
+			const sendMessageToAgent = async () => {
+				try {
+					const responseMessage = await this.afClient.sfAgentApi.sendMessage(text);
+					await this.afClient.onAgentMessageReceived(responseMessage);
+				} catch (error) {
+					console.error('Error sending message to agent:', error);
+					await this.afClient.addMessage('error', 'Error sending message: ' + error.message);
+				} finally {
+					this.awaitingAgentResponse = false;
+					buttonSendMessage.disabled = chatInputInput.value.length === 0;
+				}
+			};
+
+			sendMessageToAgent();
 		}
 		return message;
 	}
