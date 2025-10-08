@@ -1,0 +1,7 @@
+{
+    "injectBody": true,
+    "injectCss": true,
+    "highlight": false,
+    "remoteLogs": "magenta"
+
+}
