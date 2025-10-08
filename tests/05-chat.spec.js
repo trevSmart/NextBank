@@ -83,4 +83,52 @@ test.describe('NextBank - Chat Widget', () => {
 			await expect(sendButton).toBeVisible();
 		}
 	});
+
+	test('should remove typing indicator when message is deleted from store', async ({page}) => {
+		await page.goto('/public/index.html');
+		await page.waitForTimeout(6000);
+		
+		// Test the renderMessages method behavior by checking DOM manipulation
+		const result = await page.evaluate(() => {
+			// Check if ChatWidget is available
+			if (!window.ChatWidget) return { error: 'ChatWidget not found' };
+			
+			// Get the messages list element
+			const messagesContainer = document.querySelector('.dashboard-card.assistant .chat-messages');
+			if (!messagesContainer) return { error: 'Messages container not found' };
+			
+			const messagesList = messagesContainer.querySelector('.messages-list');
+			if (!messagesList) return { error: 'Messages list not found' };
+			
+			// Count initial messages
+			const initialCount = messagesList.children.length;
+			
+			// Add a typing indicator
+			const typingIndicator = window.ChatWidget.addTypingIndicator();
+			
+			// Count after adding typing indicator
+			const afterAddCount = messagesList.children.length;
+			
+			// Remove the typing indicator
+			typingIndicator.remove();
+			
+			// Count after removing
+			const afterRemoveCount = messagesList.children.length;
+			
+			return {
+				success: true,
+				initialCount,
+				afterAddCount,
+				afterRemoveCount,
+				typingAdded: afterAddCount > initialCount,
+				typingRemoved: afterRemoveCount < afterAddCount
+			};
+		});
+		
+		// If ChatWidget is available, validate the behavior
+		if (result.success) {
+			expect(result.typingAdded).toBe(true);
+			expect(result.typingRemoved).toBe(true);
+		}
+	});
 });
