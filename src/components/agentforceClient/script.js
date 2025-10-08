@@ -509,7 +509,7 @@ const ChatWidget = {
 		if (!this.elements.dashboardSendButton) return;
 
 		const isDisabled = !this.session.id ||
-			!this.elements.input.value.trim() ||
+			!this.elements.input?.value.trim() ||
 			this.elements.isWaitingResponse;
 
 		this.elements.dashboardSendButton.disabled = isDisabled;
