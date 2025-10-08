@@ -9,9 +9,11 @@ class AgentforceSession {
 
 	async startSession() {
 		if (this.sessionId) {
+			console.log('[AgentforceSession] Session already active');
 			return;
 		}
 
+		console.log('[AgentforceSession] Initializing session...');
 		try {
 			const welcome = await SfAgentApi.startSession();
 			this.sessionId = true;
@@ -19,20 +21,23 @@ class AgentforceSession {
 				this.messages.push({from: 'agent', text: welcome});
 				this.notify();
 			}
+			console.log('[AgentforceSession] Session initialized successfully');
 		} catch (e) {
-			console.error('Error iniciant sessió:', e);
+			console.error('[AgentforceSession] Error starting session:', e);
 		}
 	}
 
 	async sendMessage(msg) {
+		console.log('[AgentforceSession] Sending user message:', msg);
 		this.messages.push({from: 'user', text: msg});
 		this.notify();
 		try {
 			const response = await SfAgentApi.sendMessageSynchronous(this.sessionId, msg);
+			console.log('[AgentforceSession] Received agent response');
 			this.messages.push({from: 'agent', text: response});
 			this.notify();
 		} catch (e) {
-			console.error('Error enviant missatge:', e);
+			console.error('[AgentforceSession] Error sending message:', e);
 		}
 	}
 
@@ -49,8 +54,10 @@ class AgentforceSession {
 	}
 
 	async endSession() {
+		console.log('[AgentforceSession] Ending session...');
 		await SfAgentApi.endSession(this.sessionId);
 		this.sessionId = false;
+		console.log('[AgentforceSession] Session ended');
 	}
 }
 

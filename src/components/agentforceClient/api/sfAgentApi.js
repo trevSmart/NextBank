@@ -15,6 +15,7 @@ class SfAgentApi {
 
     async login() {
         try {
+            console.log('[Agentforce] Authentication started - Requesting access token');
             // Netegem qualsevol token anterior que pugui estar caducat
             localStorage.removeItem('futureBankSalesforceAccessToken');
             salesforceParameters.accessToken = null;
@@ -42,15 +43,17 @@ class SfAgentApi {
             if (!response.ok) {
                 const responseText = await response.text();
                 const errorText = JSON.parse(responseText)?.error;
+                console.error('[Agentforce] Authentication failed:', errorText);
                 throw new Error(`Error starting session: ${errorText}`);
             }
 
             const data = await response.json();
             localStorage.setItem('futureBankSalesforceAccessToken', data.access_token);
             salesforceParameters.accessToken = data.access_token;
+            console.log('[Agentforce] Authentication successful - Access token obtained');
             return response;
         } catch (error) {
-            console.error('Error getting access token:', error);
+            console.error('[Agentforce] Authentication error:', error);
             throw error;
         }
     }
@@ -58,8 +61,11 @@ class SfAgentApi {
     async startSession() {
         try {
             if (this.session.id) {
+                console.log('[Agentforce] Session already exists:', this.session.id);
                 return;
             }
+            console.log('[Agentforce] Starting new session...');
+            
             if (!salesforceParameters.accessToken) {
                 try {
                     await this.login();
@@ -67,6 +73,9 @@ class SfAgentApi {
                     throw new Error('No s\'ha pogut iniciar sessió amb Salesforce. Si us plau, torneu-ho a provar més tard.');
                 }
             }
+
+            const externalSessionKey = uuid4();
+            console.log('[Agentforce] Creating session with external key:', externalSessionKey);
 
             const response = await fetch('http://localhost:3000/proxy', {
                 method: 'POST',
@@ -84,7 +93,7 @@ class SfAgentApi {
                         'Content-Type': 'application/json'
                     },
                     body: {
-                        externalSessionKey: uuid4(),
+                        externalSessionKey: externalSessionKey,
                         instanceConfig: {
                             endpoint: salesforceParameters.urlMyDomain
                         },
@@ -107,10 +116,12 @@ class SfAgentApi {
                 const responseText = await response.text();
                 const errorText = JSON.parse(responseText)?.error;
                 if (errorText === 'Invalid token.') {
+                    console.warn('[Agentforce] Token expired, re-authenticating...');
                     salesforceParameters.accessToken = null;
                     await this.login();
                     return await this.startSession();
                 }
+                console.error('[Agentforce] Session creation failed:', errorText);
                 throw new Error(errorText ? `Error starting session: ${errorText}` : 'Unknown error starting session');
             }
 
@@ -118,12 +129,17 @@ class SfAgentApi {
             this.session.id = data.sessionId;
             this.session.sequenceId = 0;
 
+            const welcomeMessage = data.messages?.[0]?.message || 'Welcome to the chat';
+            console.log('[Agentforce] Session started successfully');
+            console.log('[Agentforce] Session ID:', this.session.id);
+            console.log('[Agentforce] Incoming message from agent:', welcomeMessage);
+
             return {
                 sessionId: data.sessionId,
-                welcomeMessage: data.messages?.[0]?.message || 'Welcome to the chat'
+                welcomeMessage: welcomeMessage
             };
         } catch (error) {
-            console.error('Error starting session:', error);
+            console.error('[Agentforce] Error starting session:', error);
             throw error;
         }
     }
@@ -133,6 +149,10 @@ class SfAgentApi {
             if (!this.session.id) {
                 throw new Error('No active session');
             }
+            
+            const sequenceId = ++this.session.sequenceId;
+            console.log(`[Agentforce] Outgoing message to agent (sequence: ${sequenceId}):`, message);
+            
             const response = await fetch('http://localhost:3000/proxy', {
                 method: 'POST',
                 headers: {
@@ -150,7 +170,7 @@ class SfAgentApi {
                     },
                     body: {
                         message: {
-                            sequenceId: ++this.session.sequenceId,
+                            sequenceId: sequenceId,
                             type: 'Text',
                             text: message
                         },
@@ -161,13 +181,16 @@ class SfAgentApi {
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('[Agentforce] Failed to send message:', errorText);
                 throw new Error('Error al enviar el missatge: ' + errorText);
             }
 
             const data = await response.json();
-            return data.messages?.[0]?.message || 'No response from agent';
+            const agentResponse = data.messages?.[0]?.message || 'No response from agent';
+            console.log('[Agentforce] Incoming message from agent:', agentResponse);
+            return agentResponse;
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('[Agentforce] Error sending message:', error);
             throw error;
         }
     }
@@ -175,6 +198,8 @@ class SfAgentApi {
     async endSession() {
         if (!this.session.id) return;
 
+        console.log('[Agentforce] Ending session:', this.session.id);
+        
         try {
             const response = await fetch('http://localhost:3000/proxy', {
                 method: 'POST',
@@ -195,13 +220,15 @@ class SfAgentApi {
             });
 
             if (!response.ok) {
+                console.error('[Agentforce] Failed to end session');
                 throw new Error('Error ending session');
             }
 
+            console.log('[Agentforce] Session ended successfully');
             this.session.id = null;
             this.session.sequenceId = 0;
         } catch (error) {
-            console.error('Error ending session:', error);
+            console.error('[Agentforce] Error ending session:', error);
             throw error;
         }
     }
