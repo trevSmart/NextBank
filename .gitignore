@@ -7,3 +7,6 @@
 /test-results
 /playwright-report
 /playwright/.cache
+.sfdx
+.sf
+sfdx-project.json
