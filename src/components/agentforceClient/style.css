@@ -236,6 +236,32 @@
     gap: 0.4rem;
 }
 
+/* Estils per missatges importants de l'agent */
+.message.agentImportant {
+    align-self: flex-end;
+    display: flex;
+    gap: 0.1rem;
+    background: transparent;
+    padding: 0;
+    gap: 0.4rem;
+}
+
+.message.agentImportant .message-content {
+    background: linear-gradient(135deg, #ffa726, #ffb74d);
+    border: 1px solid #ff9800;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+    animation: subtle-pulse 3s infinite;
+}
+
+@keyframes subtle-pulse {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 3px 12px rgba(255, 152, 0, 0.3);
+    }
+}
+
 .message-avatar {
 	width: 1.8rem;
 	height: 2rem;
@@ -580,12 +606,20 @@
     padding: 0;
 }
 
-.dashboard-card.assistant .message.agent {
+/* Estils per missatges importants al dashboard */
+.dashboard-card.assistant .message.agentImportant {
     align-self: flex-end;
     display: flex;
     gap: 0.4rem;
     background: transparent;
     padding: 0;
+}
+
+.dashboard-card.assistant .message.agentImportant .message-content {
+    background: linear-gradient(135deg, #ffa726, #ffb74d);
+    border: 1px solid #ff9800;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+    animation: subtle-pulse 3s infinite;
 }
 
 .dashboard-card.assistant .message-avatar {

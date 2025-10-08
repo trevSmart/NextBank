@@ -43,6 +43,310 @@ const ChatWidget = {
 		sequenceId: 0
 	},
 
+	options: {
+		initialMessages: true,
+		devMode: false
+	},
+
+	// Debug utilities
+	debug: {
+		logLevel: 'info', // 'debug', 'info', 'warn', 'error'
+		showDebugPanel: false,
+		debugPanel: null,
+
+		log(level, message, data = null) {
+			if (!ChatWidget.options.devMode) return;
+
+			const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+			if (levels[level] < levels[this.logLevel]) return;
+
+			const timestamp = new Date().toLocaleTimeString();
+			const prefix = `[Agentforce Debug ${level.toUpperCase()}] ${timestamp}`;
+
+			if (data) {
+				console.log(prefix, message, data);
+			} else {
+				console.log(prefix, message);
+			}
+
+			// Update debug panel if visible
+			if (this.showDebugPanel && this.debugPanel) {
+				this.updateDebugPanel(level, message, data);
+			}
+		},
+
+		createDebugPanel() {
+			if (this.debugPanel) return;
+
+			this.debugPanel = document.createElement('div');
+			this.debugPanel.id = 'agentforce-debug-panel';
+			this.debugPanel.innerHTML = `
+				<div class="debug-header">
+					<h3>Agentforce Debug Panel</h3>
+					<button id="debug-toggle">Hide</button>
+					<button id="debug-clear">Clear</button>
+				</div>
+				<div class="debug-controls">
+					<label>Log Level:
+						<select id="debug-log-level">
+							<option value="debug">Debug</option>
+							<option value="info" selected>Info</option>
+							<option value="warn">Warn</option>
+							<option value="error">Error</option>
+						</select>
+					</label>
+					<button id="debug-export">Export Logs</button>
+				</div>
+				<div class="debug-info">
+					<div class="debug-session-info">
+						<h4>Session Info</h4>
+						<div id="debug-session-details"></div>
+					</div>
+					<div class="debug-messages-info">
+						<h4>Messages</h4>
+						<div id="debug-messages-count">0 messages</div>
+					</div>
+				</div>
+				<div class="debug-logs">
+					<h4>Debug Logs</h4>
+					<div id="debug-log-container"></div>
+				</div>
+			`;
+
+			// Add styles
+			const style = document.createElement('style');
+			style.textContent = `
+				#agentforce-debug-panel {
+					position: fixed;
+					top: 20px;
+					right: 20px;
+					width: 400px;
+					max-height: 600px;
+					background: #1a1a1a;
+					color: #fff;
+					border: 2px solid #333;
+					border-radius: 8px;
+					font-family: 'Courier New', monospace;
+					font-size: 12px;
+					z-index: 10000;
+					overflow: hidden;
+					box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+				}
+
+				.debug-header {
+					background: #333;
+					padding: 10px;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+				}
+
+				.debug-header h3 {
+					margin: 0;
+					font-size: 14px;
+				}
+
+				.debug-header button {
+					background: #555;
+					color: #fff;
+					border: none;
+					padding: 4px 8px;
+					border-radius: 4px;
+					cursor: pointer;
+					font-size: 10px;
+				}
+
+				.debug-header button:hover {
+					background: #666;
+				}
+
+				.debug-controls {
+					padding: 10px;
+					border-bottom: 1px solid #333;
+					display: flex;
+					gap: 10px;
+					align-items: center;
+				}
+
+				.debug-controls label {
+					font-size: 11px;
+				}
+
+				.debug-controls select {
+					background: #333;
+					color: #fff;
+					border: 1px solid #555;
+					padding: 2px 4px;
+					font-size: 10px;
+				}
+
+				.debug-controls button {
+					background: #444;
+					color: #fff;
+					border: none;
+					padding: 4px 8px;
+					border-radius: 4px;
+					cursor: pointer;
+					font-size: 10px;
+				}
+
+				.debug-info {
+					padding: 10px;
+					border-bottom: 1px solid #333;
+				}
+
+				.debug-info h4 {
+					margin: 0 0 5px 0;
+					font-size: 12px;
+					color: #4CAF50;
+				}
+
+				.debug-session-info, .debug-messages-info {
+					margin-bottom: 10px;
+				}
+
+				.debug-logs {
+					padding: 10px;
+					max-height: 300px;
+					overflow-y: auto;
+				}
+
+				.debug-logs h4 {
+					margin: 0 0 10px 0;
+					font-size: 12px;
+					color: #4CAF50;
+				}
+
+				.debug-log-entry {
+					margin-bottom: 5px;
+					padding: 4px;
+					border-radius: 3px;
+					font-size: 10px;
+					word-break: break-all;
+				}
+
+				.debug-log-entry.debug { background: #2a2a2a; }
+				.debug-log-entry.info { background: #1a3a1a; }
+				.debug-log-entry.warn { background: #3a2a1a; }
+				.debug-log-entry.error { background: #3a1a1a; }
+			`;
+			document.head.appendChild(style);
+
+			// Add event listeners
+			this.debugPanel.querySelector('#debug-toggle').addEventListener('click', () => {
+				this.toggleDebugPanel();
+			});
+
+			this.debugPanel.querySelector('#debug-clear').addEventListener('click', () => {
+				this.clearDebugLogs();
+			});
+
+			this.debugPanel.querySelector('#debug-log-level').addEventListener('change', (e) => {
+				this.logLevel = e.target.value;
+			});
+
+			this.debugPanel.querySelector('#debug-export').addEventListener('click', () => {
+				this.exportDebugLogs();
+			});
+
+			document.body.appendChild(this.debugPanel);
+		},
+
+		showDebugPanel() {
+			if (!this.debugPanel) {
+				this.createDebugPanel();
+			}
+			this.showDebugPanel = true;
+			this.debugPanel.style.display = 'block';
+			this.updateSessionInfo();
+		},
+
+		hideDebugPanel() {
+			this.showDebugPanel = false;
+			if (this.debugPanel) {
+				this.debugPanel.style.display = 'none';
+			}
+		},
+
+		toggleDebugPanel() {
+			if (this.showDebugPanel) {
+				this.hideDebugPanel();
+			} else {
+				this.showDebugPanel();
+			}
+		},
+
+		updateDebugPanel(level, message, data) {
+			if (!this.debugPanel) return;
+
+			const logContainer = this.debugPanel.querySelector('#debug-log-container');
+			const logEntry = document.createElement('div');
+			logEntry.className = `debug-log-entry ${level}`;
+
+			const timestamp = new Date().toLocaleTimeString();
+			let logText = `[${timestamp}] ${message}`;
+			if (data) {
+				logText += ` | Data: ${JSON.stringify(data)}`;
+			}
+
+			logEntry.textContent = logText;
+			logContainer.appendChild(logEntry);
+
+			// Keep only last 50 entries
+			while (logContainer.children.length > 50) {
+				logContainer.removeChild(logContainer.firstChild);
+			}
+
+			// Auto-scroll to bottom
+			logContainer.scrollTop = logContainer.scrollHeight;
+		},
+
+		updateSessionInfo() {
+			if (!this.debugPanel) return;
+
+			const sessionDetails = this.debugPanel.querySelector('#debug-session-details');
+			const messagesCount = this.debugPanel.querySelector('#debug-messages-count');
+
+			sessionDetails.innerHTML = `
+				<div>Session ID: ${ChatWidget.session.id || 'None'}</div>
+				<div>Sequence: ${ChatWidget.session.sequenceId}</div>
+				<div>Widget Open: ${ChatWidget.elements.isOpen}</div>
+				<div>Waiting Response: ${ChatWidget.elements.isWaitingResponse}</div>
+			`;
+
+			const messageCount = ChatWidget.messageStore.getMessages().length;
+			messagesCount.textContent = `${messageCount} messages`;
+		},
+
+		clearDebugLogs() {
+			if (!this.debugPanel) return;
+			const logContainer = this.debugPanel.querySelector('#debug-log-container');
+			logContainer.innerHTML = '';
+		},
+
+		exportDebugLogs() {
+			if (!this.debugPanel) return;
+
+			const logContainer = this.debugPanel.querySelector('#debug-log-container');
+			const logs = Array.from(logContainer.children).map(entry => entry.textContent);
+
+			const exportData = {
+				timestamp: new Date().toISOString(),
+				sessionId: ChatWidget.session.id,
+				logs: logs,
+				messageCount: ChatWidget.messageStore.getMessages().length
+			};
+
+			const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `agentforce-debug-${Date.now()}.json`;
+			a.click();
+			URL.revokeObjectURL(url);
+		}
+	},
+
 	messageStore: {
 		messages: [],
 		lastId: 0,
@@ -58,8 +362,20 @@ const ChatWidget = {
 			return this.addMessage({ type: 'user', text });
 		},
 
+		addUserHiddenMessage(text) {
+			return this.addMessage({ type: 'userHidden', text });
+		},
+
 		addAgentMessage(text) {
+			// Detectem si el missatge conté l'emoji ⚠️ per marcar-lo com a important
+			if (text.includes('⚠️')) {
+				return this.addAgentImportantMessage(text);
+			}
 			return this.addMessage({ type: 'agent', text, name: 'Agentforce'});
+		},
+
+		addAgentImportantMessage(text) {
+			return this.addMessage({ type: 'agentImportant', text, name: 'Agentforce'});
 		},
 
 		addSystemMessage(text) {
@@ -82,6 +398,31 @@ const ChatWidget = {
 		}
 	},
 
+	// Public methods for devMode control
+	setDevMode(enabled) {
+		this.options.devMode = enabled;
+		this.debug.log('info', `DevMode ${enabled ? 'enabled' : 'disabled'}`);
+
+		if (enabled) {
+			this.debug.showDebugPanel();
+		} else {
+			this.debug.hideDebugPanel();
+		}
+	},
+
+	toggleDevMode() {
+		this.setDevMode(!this.options.devMode);
+	},
+
+	isDevModeEnabled() {
+		return this.options.devMode;
+	},
+
+	// Method to add debug logs from external code
+	addDebugLog(level, message, data = null) {
+		this.debug.log(level, message, data);
+	},
+
 	// Funcions de renderització
 	// Funcions de renderització
 	renderMessage(message) {
@@ -90,8 +431,20 @@ const ChatWidget = {
 			return null;
 		}
 
+		// No renderitzem missatges d'usuari ocults
+		if (message.type === 'userHidden') {
+			return null;
+		}
+
 		const messageItem = document.createElement('li');
-		messageItem.className = `message ${message.type === 'typing' ? 'agent' : message.type} new-message`;
+		let messageClass = message.type === 'typing' ? 'agent' : message.type;
+
+		// Afegim classe especial per missatges importants
+		if (message.type === 'agentImportant') {
+			messageClass += ' important';
+		}
+
+		messageItem.className = `message ${messageClass} new-message`;
 
 		// Eliminem la classe new-message després de l'animació
 		messageItem.addEventListener('animationend', () => {
@@ -170,9 +523,9 @@ const ChatWidget = {
 					}
 				});
 
-				// Add new messages
+				// Add new messages (excluding hidden messages)
 				this.messageStore.getMessages().forEach(message => {
-					if (!currentMessageIds.includes(message.id)) {
+					if (!currentMessageIds.includes(message.id) && message.type !== 'userHidden') {
 						const messageElement = this.renderMessage(message);
 						if (messageElement) {
 							messageElement.dataset.messageId = message.id;
@@ -201,9 +554,9 @@ const ChatWidget = {
 					}
 				});
 
-				// Add new messages
+				// Add new messages (excluding hidden messages)
 				this.messageStore.getMessages().forEach(message => {
-					if (!currentMessageIds.includes(message.id)) {
+					if (!currentMessageIds.includes(message.id) && message.type !== 'userHidden') {
 						const messageElement = this.renderMessage(message);
 						if (messageElement) {
 							messageElement.dataset.messageId = message.id;
@@ -218,27 +571,54 @@ const ChatWidget = {
 	},
 
 	async init() {
+		this.debug.log('info', 'Initializing ChatWidget');
+
 		this.elements.chatContainer = document.getElementById('chatContainer');
 		this.elements.dashboardAssistant = document.querySelector('.dashboard-card.assistant');
 
 		// Si no tenim cap dels dos contenidors, sortim
 		if (!this.elements.chatContainer && !this.elements.dashboardAssistant) {
+			this.debug.log('warn', 'No chat containers found');
 			return;
 		}
+
+		this.debug.log('debug', 'Chat containers found', {
+			chatContainer: !!this.elements.chatContainer,
+			dashboardAssistant: !!this.elements.dashboardAssistant
+		});
 
 		// Iniciem la sessió primer
 		try {
 			if (!this.session.id) {
+				this.debug.log('info', 'Starting new session');
 				const sessionData = await SfAgentApi.startSession();
 				this.session.id = sessionData.sessionId;
 				this.messageStore.addSystemMessage('Your AI assistant is ready.');
-				this.messageStore.addAgentMessage(sessionData.welcomeMessage);
+
+				this.debug.log('info', 'Session started', { sessionId: this.session.id });
+
+				// Enviem prompt inicial invisible si està habilitat
+				if (this.options.initialMessages) {
+					this.debug.log('debug', 'Sending initial hidden message');
+					const hiddenMessage = await this.addUserHiddenMessage('My name is Elizabeth, give me the initial important messages');
+					await this.sendMessageToAgent(hiddenMessage);
+				} else {
+					this.debug.log('debug', 'Initial messages disabled, using welcome message');
+					// Només mostrem el missatge de benvinguda si no estan habilitats els initialMessages
+					this.messageStore.addAgentMessage(sessionData.welcomeMessage);
+				}
+			} else {
+				this.debug.log('debug', 'Session already exists', { sessionId: this.session.id });
 			}
 		} catch (error) {
+			this.debug.log('error', 'Failed to initialize session', error);
 			console.error('Error starting session:', error);
 			this.messageStore.addErrorMessage('There was an error starting the chat session. Please try again later.');
 			return;
 		}
+
+		this.debug.log('info', 'ChatWidget initialized successfully');
+		this.debug.updateSessionInfo();
 
 		// Inicialitzem el xat del dashboard si existeix
 		if (this.elements.dashboardAssistant) {
@@ -301,11 +681,32 @@ const ChatWidget = {
 	},
 
 	async sendMessageToAgent(message, isDashboard = false) {
+		this.debug.log('debug', 'Sending message to agent', {
+			messageType: message.type || 'string',
+			isDashboard,
+			messageText: typeof message === 'string' ? message : message.text
+		});
+
 		try {
-			const agentMessage = await SfAgentApi.sendMessageSynchronous(message);
+			// Si el missatge és userHidden, l'enviem però no el mostrem
+			if (message.type === 'userHidden') {
+				this.debug.log('debug', 'Processing hidden message');
+				const agentResponse = await SfAgentApi.sendMessageSynchronous(message.text);
+				// Afegim la resposta de l'agent però no el missatge ocult
+				this.addAgentMessage(agentResponse, isDashboard);
+				this.debug.log('info', 'Hidden message processed successfully');
+				return true;
+			}
+
+			// Per missatges normals, enviem el text del missatge
+			const messageText = typeof message === 'string' ? message : message.text;
+			this.debug.log('debug', 'Sending normal message', { messageText });
+			const agentMessage = await SfAgentApi.sendMessageSynchronous(messageText);
 			this.addAgentMessage(agentMessage, isDashboard);
+			this.debug.log('info', 'Message sent successfully');
 			return true;
 		} catch (error) {
+			this.debug.log('error', 'Failed to send message', error);
 			console.error('Error sending message:', error);
 			this.messageStore.addErrorMessage('Unable to send message. Please try again.', isDashboard);
 			this.renderMessages();
@@ -314,14 +715,22 @@ const ChatWidget = {
 	},
 
 	async endSession() {
-		if (!this.session.id) return;
+		if (!this.session.id) {
+			this.debug.log('warn', 'No active session to end');
+			return;
+		}
+
+		this.debug.log('info', 'Ending session', { sessionId: this.session.id });
 
 		try {
 			await SfAgentApi.endSession();
 			this.session.id = null;
 			this.session.sequenceId = 0;
 			this.messageStore.addSystemMessage('Agent session ended.', true);
+			this.debug.log('info', 'Session ended successfully');
+			this.debug.updateSessionInfo();
 		} catch (error) {
+			this.debug.log('error', 'Failed to end session', error);
 			console.error('Error ending session:', error);
 			this.messageStore.addErrorMessage('There was a problem ending the session.', true);
 		} finally {
@@ -553,8 +962,17 @@ const ChatWidget = {
 		return this._addMessageAndRender(this.messageStore.addUserMessage, text, isDashboard);
 	},
 
+	addUserHiddenMessage(text, isDashboard = false) {
+		return this._addMessageAndRender(this.messageStore.addUserHiddenMessage, text, isDashboard);
+	},
+
 	addAgentMessage(text, isDashboard = false) {
+		this.debug.log('debug', 'Adding agent message', { text: text.substring(0, 100) + '...', isDashboard });
 		return this._addMessageAndRender(this.messageStore.addAgentMessage, text, isDashboard);
+	},
+
+	addAgentImportantMessage(text, isDashboard = false) {
+		return this._addMessageAndRender(this.messageStore.addAgentImportantMessage, text, isDashboard);
 	},
 
 	addSystemMessage(text, isDashboard = false) {
@@ -676,7 +1094,7 @@ const ChatWidget = {
 
 	initResizeListeners() {
 		if (!this.elements.fixedWidget) return;
-		
+
 		const resizeHandle = this.elements.fixedWidget.querySelector('.resize-handle');
 		if (!resizeHandle) return;
 
@@ -748,5 +1166,34 @@ window.addEventListener('beforeunload', async () => {
 		localStorage.removeItem('futureBankSalesforceAccessToken');
 		// Tanquem la sessió
 		await ChatWidget.endSession();
+	}
+});
+
+// DevMode controls - Available in browser console
+window.AgentforceDevMode = {
+	enable: () => ChatWidget.setDevMode(true),
+	disable: () => ChatWidget.setDevMode(false),
+	toggle: () => ChatWidget.toggleDevMode(),
+	isEnabled: () => ChatWidget.isDevModeEnabled(),
+	log: (level, message, data) => ChatWidget.addDebugLog(level, message, data),
+	showPanel: () => ChatWidget.debug.showDebugPanel(),
+	hidePanel: () => ChatWidget.debug.hideDebugPanel(),
+	exportLogs: () => ChatWidget.debug.exportDebugLogs(),
+	clearLogs: () => ChatWidget.debug.clearDebugLogs(),
+	getSessionInfo: () => ({
+		sessionId: ChatWidget.session.id,
+		sequenceId: ChatWidget.session.sequenceId,
+		messageCount: ChatWidget.messageStore.getMessages().length,
+		isOpen: ChatWidget.elements.isOpen,
+		isWaitingResponse: ChatWidget.elements.isWaitingResponse
+	})
+};
+
+// Keyboard shortcut for devMode (Ctrl+Shift+D)
+document.addEventListener('keydown', (e) => {
+	if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+		e.preventDefault();
+		ChatWidget.toggleDevMode();
+		console.log(`DevMode ${ChatWidget.isDevModeEnabled() ? 'enabled' : 'disabled'}`);
 	}
 });
