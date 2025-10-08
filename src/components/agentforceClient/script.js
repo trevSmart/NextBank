@@ -486,21 +486,21 @@ const ChatWidget = {
 		const messageAvatar = document.createElement('div');
 		messageAvatar.className = 'message-avatar';
 		// messageAvatar.draggable = false;
-		if (message.type === 'agent' || message.type === 'typing') {
-			const avatarImg = document.createElement('img');
-			avatarImg.src = '/src/assets/images/agent_astro.svg';
-			avatarImg.alt = 'Agent Avatar';
-			avatarImg.className = 'agent-avatar';
-			avatarImg.title = 'Agentforce';
-			avatarImg.draggable = false;
-			messageAvatar.appendChild(avatarImg);
+                if (message.type === 'agent' || message.type === 'agentImportant' || message.type === 'typing') {
+                        const avatarImg = document.createElement('img');
+                        avatarImg.src = '/src/assets/images/agent_astro.svg';
+                        avatarImg.alt = 'Agent Avatar';
+                        avatarImg.className = 'agent-avatar';
+                        avatarImg.title = 'Agentforce';
+                        avatarImg.draggable = false;
+                        messageAvatar.appendChild(avatarImg);
 
-			if (message.type === 'agent') {
-				const messageName = document.createElement('div');
-				messageName.className = 'message-name';
-				messageName.textContent = message.name;
-				messageContent.appendChild(messageName);
-			}
+                        if (message.type === 'agent' || message.type === 'agentImportant') {
+                                const messageName = document.createElement('div');
+                                messageName.className = 'message-name';
+                                messageName.textContent = message.name;
+                                messageContent.appendChild(messageName);
+                        }
 		} else {
 			const userAvatar = document.createElement('div');
 			userAvatar.className = 'user-avatar';
