@@ -262,10 +262,10 @@
 
 @keyframes subtle-pulse {
     0%, 100% {
-        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
     }
     50% {
-        box-shadow: 0 3px 12px rgba(255, 152, 0, 0.3);
+        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.7);
     }
 }
 
@@ -623,13 +623,13 @@
 }
 
 .dashboard-card.assistant .message.agentImportant .message-content {
-    background: lightcoral;
-    border: 1px solid #ff9800;
+    background: #913838;
+    border: 1px solid #a53d3d;
     box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
     border-radius: 1.2rem 0 1.2rem 1.2rem;
     padding: 0.8rem 1rem;
     color: #ffffff;
-    animation: subtle-pulse 3s infinite;
+    animation: subtle-pulse 1s infinite;
 }
 
 .dashboard-card.assistant .message.agentImportant .message-time {
