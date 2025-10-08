@@ -248,8 +248,10 @@ const ChatWidget = {
 		if (chatContainer) {
 			this.elements.messages = chatContainer.querySelector('.chat-messages');
 		}
-		this.elements.dashboardMessages = this.elements.dashboardAssistant.querySelector('.chat-messages');
-		this.elements.dashboardSendButton = this.elements.dashboardAssistant.querySelector('.send-button');
+		if (this.elements.dashboardAssistant) {
+			this.elements.dashboardMessages = this.elements.dashboardAssistant.querySelector('.chat-messages');
+			this.elements.dashboardSendButton = this.elements.dashboardAssistant.querySelector('.send-button');
+		}
 
 		// Afegim els event listeners pel xat del dashboard
 		if (this.elements.dashboardInput) {
@@ -645,6 +647,8 @@ const ChatWidget = {
 	},
 
 	initResizeListeners() {
+		if (!this.elements.fixedWidget) return;
+		
 		const resizeHandle = this.elements.fixedWidget.querySelector('.resize-handle');
 		if (!resizeHandle) return;
 
