@@ -11,7 +11,10 @@ let dataUpdateInterval;
 
 //Funcions de navegació del calendari
 function loadDaySchedule() {
-	const calDevice = document.querySelector('calendar-component').shadowRoot.querySelector('.cal-device');
+	const calendarComponent = document.querySelector('calendar-component');
+	if (!calendarComponent || !calendarComponent.shadowRoot) return;
+	
+	const calDevice = calendarComponent.shadowRoot.querySelector('.cal-device');
 	if (calDevice) {
 		//Afegim la classe que mostra la vista d'agenda
 		calDevice.querySelector('.cal-bar .-schedule').style.opacity = '1';
@@ -22,7 +25,10 @@ function loadDaySchedule() {
 }
 
 function showMainView() {
-	const calDevice = document.querySelector('calendar-component').shadowRoot.querySelector('.cal-device');
+	const calendarComponent = document.querySelector('calendar-component');
+	if (!calendarComponent || !calendarComponent.shadowRoot) return;
+	
+	const calDevice = calendarComponent.shadowRoot.querySelector('.cal-device');
 	if (calDevice) {
 		//Tornem a la vista principal
 		calDevice.querySelector('.cal-scene.-calendar').style.opacity = '1';
@@ -45,7 +51,10 @@ function showMainView() {
 }
 
 function loadWeekSchedule(weekId) {
-	const calDevice = document.querySelector('calendar-component').shadowRoot.querySelector('.cal-device');
+	const calendarComponent = document.querySelector('calendar-component');
+	if (!calendarComponent || !calendarComponent.shadowRoot) return;
+	
+	const calDevice = calendarComponent.shadowRoot.querySelector('.cal-device');
 	if (!calDevice) {return}
 
 	const [month, week] = weekId.split('-');
