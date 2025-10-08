@@ -253,8 +253,8 @@ const ChatWidget = {
 
 		// Afegim els event listeners pel xat del dashboard
 		if (this.elements.dashboardInput) {
-			this.elements.dashboardInput.addEventListener('keypress', (e) => {
-				if (e.key === 'Enter') {
+			this.elements.dashboardInput.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
 					e.preventDefault();
 					this.sendDashboardMessage();
 				}
@@ -352,8 +352,8 @@ const ChatWidget = {
 		}
 
 		if (this.elements.input) {
-			this.elements.input.addEventListener('keypress', (e) => {
-				if (e.key === 'Enter') {
+			this.elements.input.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
 					e.preventDefault();
 					this.sendMessage();
 				}

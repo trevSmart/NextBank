@@ -8,6 +8,7 @@ const ChatWidget = {
 		messages: null,
 		dashboardMessages: null,
 		input: null,
+		dashboardInput: null,
 		chatButton: null,
 		chatContainer: null,
 		sendButton: null,
@@ -249,7 +250,7 @@ const ChatWidget = {
 	},
 
 	async initDashboardChat() {
-		this.elements.input = document.querySelector('.chat-input-input');
+		this.elements.dashboardInput = document.querySelector('.chat-input-input');
 		const chatContainer = document.getElementById('chatContainer');
 		if (chatContainer) {
 			this.elements.messages = chatContainer.querySelector('.chat-messages');
@@ -259,15 +260,15 @@ const ChatWidget = {
 
 		this.cacheElements();
 		// Afegim els event listeners pel xat del dashboard
-		if (this.elements.input) {
-			this.elements.input.addEventListener('keydown', (e) => {
+		if (this.elements.dashboardInput) {
+			this.elements.dashboardInput.addEventListener('keydown', (e) => {
 				if (e.key === 'Enter' && !e.shiftKey) {
 					e.preventDefault();
 					this.sendDashboardMessage();
 				}
 			});
 
-			this.elements.input.addEventListener('input', () => {
+			this.elements.dashboardInput.addEventListener('input', () => {
 				this.updateDashboardSendButtonState();
 			});
 		}
@@ -476,7 +477,7 @@ const ChatWidget = {
 	},
 
 	async sendDashboardMessage() {
-		const input = this.elements.input;
+		const input = this.elements.dashboardInput;
 		if (!input || !this.session.id || this.elements.isWaitingResponse) return;
 
 		const message = input.value.trim();
@@ -509,7 +510,7 @@ const ChatWidget = {
 		if (!this.elements.dashboardSendButton) return;
 
 		const isDisabled = !this.session.id ||
-			!this.elements.input?.value.trim() ||
+			!this.elements.dashboardInput?.value.trim() ||
 			this.elements.isWaitingResponse;
 
 		this.elements.dashboardSendButton.disabled = isDisabled;
