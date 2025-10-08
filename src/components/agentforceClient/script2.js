@@ -37,7 +37,7 @@ class AgentforceSession {
 			this.messages.push({from: 'agent', text: response});
 			this.notify();
 		} catch (e) {
-			console.error('[AgentforceSession] Error enviant missatge:', e);
+			console.error('[AgentforceSession] Error sending message:', e);
 		}
 	}
 
