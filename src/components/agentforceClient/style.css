@@ -247,7 +247,7 @@
 }
 
 .message.agentImportant .message-content {
-    background: linear-gradient(135deg, #ffa726, #ffb74d);
+    background: lightcoral;
     border: 1px solid #ff9800;
     box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
     animation: subtle-pulse 3s infinite;
@@ -616,7 +616,7 @@
 }
 
 .dashboard-card.assistant .message.agentImportant .message-content {
-    background: linear-gradient(135deg, #ffa726, #ffb74d);
+    background: lightcoral;
     border: 1px solid #ff9800;
     box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
     animation: subtle-pulse 3s infinite;

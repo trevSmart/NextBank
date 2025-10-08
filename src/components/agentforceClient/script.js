@@ -398,31 +398,6 @@ const ChatWidget = {
 		}
 	},
 
-	// Public methods for devMode control
-	setDevMode(enabled) {
-		this.options.devMode = enabled;
-		this.debug.log('info', `DevMode ${enabled ? 'enabled' : 'disabled'}`);
-
-		if (enabled) {
-			this.debug.showDebugPanel();
-		} else {
-			this.debug.hideDebugPanel();
-		}
-	},
-
-	toggleDevMode() {
-		this.setDevMode(!this.options.devMode);
-	},
-
-	isDevModeEnabled() {
-		return this.options.devMode;
-	},
-
-	// Method to add debug logs from external code
-	addDebugLog(level, message, data = null) {
-		this.debug.log(level, message, data);
-	},
-
 	// Funcions de renderització
 	// Funcions de renderització
 	renderMessage(message) {
@@ -715,22 +690,14 @@ const ChatWidget = {
 	},
 
 	async endSession() {
-		if (!this.session.id) {
-			this.debug.log('warn', 'No active session to end');
-			return;
-		}
-
-		this.debug.log('info', 'Ending session', { sessionId: this.session.id });
+		if (!this.session.id) return;
 
 		try {
 			await SfAgentApi.endSession();
 			this.session.id = null;
 			this.session.sequenceId = 0;
 			this.messageStore.addSystemMessage('Agent session ended.', true);
-			this.debug.log('info', 'Session ended successfully');
-			this.debug.updateSessionInfo();
 		} catch (error) {
-			this.debug.log('error', 'Failed to end session', error);
 			console.error('Error ending session:', error);
 			this.messageStore.addErrorMessage('There was a problem ending the session.', true);
 		} finally {
@@ -967,7 +934,6 @@ const ChatWidget = {
 	},
 
 	addAgentMessage(text, isDashboard = false) {
-		this.debug.log('debug', 'Adding agent message', { text: text.substring(0, 100) + '...', isDashboard });
 		return this._addMessageAndRender(this.messageStore.addAgentMessage, text, isDashboard);
 	},
 
@@ -1166,34 +1132,5 @@ window.addEventListener('beforeunload', async () => {
 		localStorage.removeItem('futureBankSalesforceAccessToken');
 		// Tanquem la sessió
 		await ChatWidget.endSession();
-	}
-});
-
-// DevMode controls - Available in browser console
-window.AgentforceDevMode = {
-	enable: () => ChatWidget.setDevMode(true),
-	disable: () => ChatWidget.setDevMode(false),
-	toggle: () => ChatWidget.toggleDevMode(),
-	isEnabled: () => ChatWidget.isDevModeEnabled(),
-	log: (level, message, data) => ChatWidget.addDebugLog(level, message, data),
-	showPanel: () => ChatWidget.debug.showDebugPanel(),
-	hidePanel: () => ChatWidget.debug.hideDebugPanel(),
-	exportLogs: () => ChatWidget.debug.exportDebugLogs(),
-	clearLogs: () => ChatWidget.debug.clearDebugLogs(),
-	getSessionInfo: () => ({
-		sessionId: ChatWidget.session.id,
-		sequenceId: ChatWidget.session.sequenceId,
-		messageCount: ChatWidget.messageStore.getMessages().length,
-		isOpen: ChatWidget.elements.isOpen,
-		isWaitingResponse: ChatWidget.elements.isWaitingResponse
-	})
-};
-
-// Keyboard shortcut for devMode (Ctrl+Shift+D)
-document.addEventListener('keydown', (e) => {
-	if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-		e.preventDefault();
-		ChatWidget.toggleDevMode();
-		console.log(`DevMode ${ChatWidget.isDevModeEnabled() ? 'enabled' : 'disabled'}`);
 	}
 });

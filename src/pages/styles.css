@@ -184,7 +184,7 @@ body::before {
 	/* background-size: 500% 500%; */
 	transform-origin: 45% 52%;
 	/* will-change: transform; */
-	animation: rotateGradient 20s linear infinite;
+	/* animation: rotateGradient 20s linear infinite; */
 	z-index: -1;
 	filter: blur(20px);
 	/* border-radius: 40%; */
