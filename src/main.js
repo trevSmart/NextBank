@@ -4,6 +4,9 @@ import AfClient from './components/agentforceClient/agentforceClient.js';
 import './components/calendar/calendar.js';
 import LoginComponent from './components/login/login.js';
 
+//Paràmetre per controlar si es mostra o no la pantalla de login
+const BYPASS_LOGIN = true;
+
 let afClient = new AfClient({
 	streaming: false,
 	initialMessages: true,
@@ -14,9 +17,6 @@ let afClient = new AfClient({
 let resizeCleanupFunctions = [];
 let navigationCleanupFunctions = [];
 let dragState = {xOffset: 0, yOffset: 0};
-
-//DEMO: Si vols saltar-te el login, posa LOGIN_DISABLED a true
-const LOGIN_DISABLED = false;
 
 function initializeResizeHandling() {
 	const assistantContainer = document.querySelector('.assistant-container');
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	window.addEventListener('beforeunload', cleanup);
 
-	if (LOGIN_DISABLED) {
+	if (BYPASS_LOGIN) {
 		//Inicialitza directament els assistants sense login
 		document.dispatchEvent(new CustomEvent('loginSuccess', {
 			detail: {
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}));
 	} else {
-		//Inicialitza el login només si LOGIN_DISABLED és false
+		//Inicialitza el login només si BYPASS_LOGIN és false
 		new LoginComponent();
 	}
 });
