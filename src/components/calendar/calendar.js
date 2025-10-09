@@ -146,6 +146,36 @@ class Calendar extends HTMLElement {
 				width: calc((100% - 6px * 6) / 7);
 				height: auto;
 			}
+
+			/* Highlight context areas and selected context from outside (body class) */
+			:host-context(body.afclient-is-adding-context) .afclient-context-area {
+				position: relative;
+				overflow: visible;
+				cursor: pointer;
+			}
+
+			:host-context(body.afclient-is-adding-context) .afclient-context-area::after {
+				content: "";
+				position: absolute;
+				height: calc(100% + 4px);
+				width: calc(100% + 4px);
+				top: -2px;
+				left: -2px;
+				pointer-events: none;
+				z-index: 1;
+				border-radius: 6px;
+				animation: context-area-adding-context-kf 420ms infinite alternate;
+			}
+
+			:host-context(body) .afclient-selected-context {
+				background: rgba(145, 27, 255, 0.3);
+				border-radius: 6px;
+			}
+
+			@keyframes context-area-adding-context-kf {
+				from { background-color: rgba(145, 27, 255, 0.1); }
+				to { background-color: rgba(145, 27, 255, 0.2); }
+			}
         `;
 
 		const fontAwesome = document.createElement('link');
@@ -187,6 +217,12 @@ class Calendar extends HTMLElement {
 		this.shadowRoot.appendChild(wrapper);
 
 		this.date = new Date();
+
+		// Map of ISO date (YYYY-MM-DD) -> { id, label }
+		// Add here the days that should behave as selectable chat context
+		this.contextDays = new Map([
+			['2025-10-08', { id: 'cal-2025-10-08', label: 'Calendar day October 8, 2025' }],
+		]);
 	}
 
 	connectedCallback() {
@@ -232,7 +268,20 @@ class Calendar extends HTMLElement {
 
 			for (let i = 1; i <= lastDay; i++) {
 				const isToday = i === todayDate && month === todayMonth && year === todayYear;
-				days += `<div class="${isToday ? 'today' : ''}">${i}</div>`;
+				const classes = [];
+				if (isToday) {
+					classes.push('today');
+				}
+				const isoMonth = String(month + 1).padStart(2, '0');
+				const isoDay = String(i).padStart(2, '0');
+				const dateKey = `${year}-${isoMonth}-${isoDay}`;
+				const context = this.contextDays.get(dateKey);
+				if (context) {
+					classes.push('afclient-context-area');
+					days += `<div class="${classes.join(' ')}" data-context-id="${context.id}" data-context-label="${context.label}">${i}</div>`;
+				} else {
+					days += `<div class="${classes.join(' ')}">${i}</div>`;
+				}
 			}
 
 			for (let j = 1; j <= nextDays; j++) {

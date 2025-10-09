@@ -134,7 +134,9 @@ class UiInstance {
 
 	sendMessage(text) {
 		if (this.afClient.selectedContext) {
-			text = `itemId: ${this.afClient.selectedContext.dataset.contextId}\n\n${text}`;
+			const contextId = this.afClient.selectedContext.dataset.contextId;
+			const contextLabel = this.afClient.selectedContext.dataset.contextLabel;
+			text = `${contextLabel} (${contextId})\n\n${text}`;
 			this.afClient.removeContext();
 		}
 		this.afClient.sendMessage(text, null);
@@ -232,7 +234,7 @@ class Message {
 			// Format the text with HTML tags
 			let formattedText = this.text
 				.replace(/\n/g, '<br>')
-				.replace(/^(itemId:[^<]*?)(<br>|$)/, '<code>$1</code>$2') // First line with itemId: -> bold
+				.replace(/^([^<]*?\([^)]+\))(<br>|$)/, '<span class="context-info"><i class="fa-solid fa-paperclip"></i> $1</span>$2') // First line with Description (Id) -> context-info with icon
 				.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **text** -> <strong>text</strong>
 				.replace(/\*(.*?)\*/g, '<em>$1</em>') // *text* -> <em>text</em>
 				.replace(/`(.*?)`/g, '<code>$1</code>') // `text` -> <code>text</code>
@@ -261,7 +263,7 @@ class Message {
 			if (messageListItem) {
 				messageListItem.querySelector('.message-text').innerHTML = textToShow
 					.replace(/\n/g, '<br>')
-					.replace(/^(itemId:[^<]*?)(<br>|$)/, '<code>$1</code>$2')
+					.replace(/^([^<]*?\([^)]+\))(<br>|$)/, '<span class="context-info"><i class="fa-solid fa-paperclip"></i> $1</span>$2')
 					.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 					.replace(/\*(.*?)\*/g, '<em>$1</em>')
 					.replace(/`(.*?)`/g, '<code>$1</code>')
@@ -290,7 +292,18 @@ class Conversation {
 		const message = new Message(id || ++this.lastMessageId, type, text, context, this, originEventId, status);
 		type !== 'userHidden' && this.messages.push(message);
 
-		this.afClient.options.devMode && console.log(this.messages);
+		if (this.afClient.options.devMode) {
+			// Safe serialization to avoid circular reference errors
+			const safeMessages = this.messages.map(msg => ({
+				id: msg.id,
+				type: msg.type,
+				text: msg.text,
+				timestamp: msg.timestamp,
+				status: msg.status,
+				originEventId: msg.originEventId
+			}));
+			console.log(safeMessages);
+		}
 
 		if (type === 'user' || type === 'userHidden') {
 			// Disable all send buttons across all UI instances
@@ -339,6 +352,7 @@ class Conversation {
 	}
 
 	removeMessages(ids) {
+		// return;
 		this.messages = this.messages.filter(message => !ids.includes(message.id));
 		this.afClient.uiInstances.forEach(ui => {
 			Array.from(ui.messageListNode.querySelectorAll('.message'))

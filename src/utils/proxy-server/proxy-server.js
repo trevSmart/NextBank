@@ -14,14 +14,47 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+// Configure CORS with more permissive settings for development
 app.use(cors({
-    origin: true, // reflects the origin that makes the request
-    methods: ['GET', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = [
+            'http://localhost:60566',
+            'http://localhost:3000',
+            'http://localhost:5500',
+            'http://127.0.0.1:60566',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5500'
+        ];
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Explicitly handle preflight requests for all routes
+app.options('*', (req, res) => {
+    console.log('Handling preflight request for:', req.url);
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.status(200).end();
+});
 
 // Configurem el servei de fitxers estàtics
 app.use(express.static(path.join(__dirname, '..', 'src')));
@@ -34,9 +67,13 @@ app.use(express.static(path.join(__dirname, '..', 'src')));
 
 app.post('/proxy', async (req, res) => {
     try {
+        console.log('Proxy request received from origin:', req.headers.origin);
+        console.log('Request headers:', req.headers);
+
         const { url, method = 'POST', headers = {}, body } = req.body;
 
         if (!url) {
+            console.log('Missing URL in request body');
             return res.status(400).json({ error: 'Falta el camp "url" al body' });
         }
 

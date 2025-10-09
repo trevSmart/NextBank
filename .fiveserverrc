@@ -1,0 +1,7 @@
+{
+    "injectBody": false,
+    "remoteLogs": false,
+    "injectCss": false,
+    "navigate": false,
+	"highlight": false
+    }

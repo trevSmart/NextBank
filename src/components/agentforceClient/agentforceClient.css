@@ -22,6 +22,21 @@
     color: #eeeeeee0;
 }
 
+.message-text .context-info {
+    font-family: var(--font-family);
+    font-size: 0.73rem;
+    font-weight: 200;
+    background-color: rgba(109, 46, 164, 0.8);
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    color: #eeeeeee0;
+}
+
+.message-text .context-info i {
+    margin-right: 7px;
+    font-weight: 600;
+}
+
 .ui-container {
     display: flex;
     flex-direction: column;
@@ -438,8 +453,40 @@ body.afclient-is-adding-context .add-context-button i {
     padding: 0.8rem 1rem 0.6rem 1rem;
 }
 
+/* Apply glow/pulse effect to important/alert chat messages (same spirit as .alert) */
+.message.agent.important .message-content,
+.message.agent.alert .message-content {
+    animation: importantAlertPulse 640ms infinite;
+}
+
+@keyframes importantAlertPulse {
+    0% {
+        box-shadow:
+            0 1px 12px rgba(255, 107, 107, 0.15),
+            inset 0 0 1px rgba(255, 107, 107, 0.1);
+    }
+    50% {
+        box-shadow:
+            0 1px 26px rgba(255, 107, 107, 0.35),
+            inset 0 0 1px rgba(255, 107, 107, 0.25);
+    }
+    100% {
+        box-shadow:
+            0 1px 12px rgba(255, 107, 107, 0.15),
+            inset 0 0 1px rgba(255, 107, 107, 0.1);
+    }
+}
+
+/* Subtle avatar emphasis for important/alert */
+.message.agent.important .message-avatar,
+.message.agent.alert .message-avatar {
+    box-shadow:
+        0 0 10px rgba(255, 107, 107, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.06);
+}
+
 .message.agent .message-content:has(dotlottie-player) {
-    padding: 0.8rem 1rem 0 1rem;
+    padding: 0 1rem;
 }
 
 .message-name {
