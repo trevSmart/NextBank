@@ -240,17 +240,21 @@ body.afclient-is-adding-context .add-context-button i {
 
 /* Estils per la bombolla de càrrega */
 .message.agent.typing {
-    opacity: 0.8;
+    align-items: flex-start;
 }
 
 .message.agent.typing .message-content {
-    padding: 0.8rem 1rem 0.4rem 1rem !important;
+    padding: 0.4rem 1rem 0.1rem 1rem !important;
     min-width: 80px;
+}
+
+.message.agent.typing .message-avatar {
+    top: -2px;
 }
 
 .message.agent.typing dotlottie-player {
     position: relative;
-    top: -8px;
+    top: -4px;
     width: 55px;
 }
 
@@ -394,6 +398,12 @@ body.afclient-is-adding-context .add-context-button i {
 
 .message.agent.important .message-avatar {
     background: #783b3d;
+}
+
+.message.agent.important .message-avatar i {
+    font-size: 0.7rem;
+    position: relative;
+    top: -1px;
 }
 
 .message-avatar .user-avatar {

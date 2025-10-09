@@ -51,7 +51,7 @@ class UiInstance {
 			chatInput.className = 'chat-input';
 
 			const chatInputInput = document.createElement('input-multiline' );
-			chatInputInput.id = 'chatInputInput';
+			chatInputInput.id = `chatInputInput-${this.id}`;
 
 			const chatInputButtons = document.createElement('div');
 			chatInputButtons.className = 'chat-input-buttons';
@@ -64,7 +64,7 @@ class UiInstance {
 			buttonStartConextSelection.disabled = true;
 
 			const buttonSendMessage = document.createElement('button');
-			buttonSendMessage.id = 'buttonSendMessage';
+			buttonSendMessage.id = `buttonSendMessage-${this.id}`;
 			buttonSendMessage.className = 'send-button';
 			buttonSendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
 			buttonSendMessage.disabled = this.afClient.session.sessionId === null;
@@ -139,8 +139,8 @@ class UiInstance {
 		}
 		this.afClient.sendMessage(text, null);
 
-		document.getElementById('chatInputInput').value = '';
-		document.getElementById('buttonSendMessage').disabled = true;
+		document.getElementById(`chatInputInput-${this.id}`).value = '';
+		document.getElementById(`buttonSendMessage-${this.id}`).disabled = true;
 	}
 }
 
@@ -293,10 +293,11 @@ class Conversation {
 		this.afClient.options.devMode && console.log(this.messages);
 
 		if (type === 'user' || type === 'userHidden') {
-			const chatInputInput = document.getElementById('chatInputInput');
-			const buttonSendMessage = document.getElementById('buttonSendMessage');
+			// Disable all send buttons across all UI instances
 			this.awaitingAgentResponse = true;
-			buttonSendMessage.disabled = true;
+			document.querySelectorAll('[id^="buttonSendMessage-"]').forEach(button => {
+				button.disabled = true;
+			});
 
 			if (this.afClient.options.streaming) {
 				const afClient = this.afClient;
@@ -321,7 +322,14 @@ class Conversation {
 					await this.afClient.addMessage('error', 'Error sending message: ' + error.message);
 				} finally {
 					this.awaitingAgentResponse = false;
-					buttonSendMessage.disabled = chatInputInput.value.length === 0;
+					// Re-enable send buttons for inputs that have content
+					document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
+						const buttonId = input.id.replace('chatInputInput-', 'buttonSendMessage-');
+						const button = document.getElementById(buttonId);
+						if (button) {
+							button.disabled = !this.afClient.isConnected() || !input.value.trim();
+						}
+					});
 				}
 			};
 
@@ -380,7 +388,10 @@ export default class AfClient {
 				this.addMessage('userHidden', 'My name is Elizabeth, give me the initial important messages');
 			}
 
-			document.querySelector('.add-context-button').disabled = false;
+			// Enable all context buttons across all UI instances
+			document.querySelectorAll('.add-context-button').forEach(button => {
+				button.disabled = false;
+			});
 
 		} catch (error) {
 			console.error('Error starting session:', error);
@@ -390,6 +401,11 @@ export default class AfClient {
 
 	async endSession() {
 		await this.session.endSession();
+
+		// Disable all context buttons across all UI instances
+		document.querySelectorAll('.add-context-button').forEach(button => {
+			button.disabled = true;
+		});
 	}
 
 	async newUiInstance(node, id) {
@@ -405,6 +421,24 @@ export default class AfClient {
 		}
 		const uiInstance = new UiInstance(this, newId, node);
 		this.uiInstances.push(uiInstance);
+
+		// Sync context to the new UI instance if there's a selected context
+		if (this.selectedContext) {
+			const {contextId, contextLabel} = this.selectedContext.dataset;
+			const newInput = document.getElementById(`chatInputInput-${newId}`);
+			if (newInput) {
+				newInput.setContextItem(contextId, contextLabel);
+			}
+		}
+
+		// Enable context button for new UI instance if session is active
+		if (this.isConnected()) {
+			const newContextButton = uiInstance.node.querySelector('.add-context-button');
+			if (newContextButton) {
+				newContextButton.disabled = false;
+			}
+		}
+
 		return uiInstance;
 	}
 
@@ -477,9 +511,14 @@ export default class AfClient {
 		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
 		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
 
-		const chatInputInput = document.getElementById('chatInputInput');
-		const buttonSendMessage = document.getElementById('buttonSendMessage');
-		buttonSendMessage.disabled = !chatInputInput.value;
+		// Update send button states for all inputs
+		document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
+			const buttonId = input.id.replace('chatInputInput-', 'buttonSendMessage-');
+			const button = document.getElementById(buttonId);
+			if (button) {
+				button.disabled = !input.value.trim();
+			}
+		});
 	}
 
 	async startContextSelection() {
@@ -497,11 +536,23 @@ export default class AfClient {
 			});
 
 			document.querySelector('body').classList.toggle('afclient-is-adding-context', true);
-			const contextAreas = document.querySelectorAll('.afclient-context-area');
-			contextAreas.forEach(area => {
-				const handler = event => this.selectContext(area, event);
-				this.contextAreaHandlers.set(area, handler);
-				area.addEventListener('click', handler);
+			// Find context areas in light DOM and inside known shadow roots (like custom-calendar)
+			const addHandlers = root => {
+				root.querySelectorAll('.afclient-context-area').forEach(area => {
+					const handler = event => this.selectContext(area, event);
+					this.contextAreaHandlers.set(area, handler);
+					area.addEventListener('click', handler);
+				});
+			};
+
+			// Light DOM
+			addHandlers(document);
+
+			// Shadow DOMs: traverse known components
+			document.querySelectorAll('custom-calendar').forEach(cal => {
+				if (cal.shadowRoot) {
+					addHandlers(cal.shadowRoot);
+				}
 			});
 		} else {
 			this.endContextSelection();
@@ -511,12 +562,21 @@ export default class AfClient {
 	async endContextSelection() {
 		this.addingContext = false;
 		document.querySelector('body').classList.remove('afclient-is-adding-context');
-		const contextAreas = document.querySelectorAll('.afclient-context-area');
-		contextAreas.forEach(area => {
-			const handler = this.contextAreaHandlers.get(area);
-			if (handler) {
-				area.removeEventListener('click', handler);
-				this.contextAreaHandlers.delete(area);
+
+		const removeHandlers = root => {
+			root.querySelectorAll('.afclient-context-area').forEach(area => {
+				const handler = this.contextAreaHandlers.get(area);
+				if (handler) {
+					area.removeEventListener('click', handler);
+					this.contextAreaHandlers.delete(area);
+				}
+			});
+		};
+
+		removeHandlers(document);
+		document.querySelectorAll('custom-calendar').forEach(cal => {
+			if (cal.shadowRoot) {
+				removeHandlers(cal.shadowRoot);
 			}
 		});
 	}
@@ -532,11 +592,12 @@ export default class AfClient {
 		this.selectedContext = node;
 		node.classList.add('afclient-selected-context');
 
-		const chatInputInput = document.getElementById('chatInputInput');
 		if (node) {
 			const {contextId, contextLabel} = node.dataset;
-			chatInputInput.setContextItem(contextId, contextLabel);
-
+			// Apply context to all chat inputs across all UI instances
+			document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
+				input.setContextItem(contextId, contextLabel);
+			});
 		}
 
 		document.querySelector('body').classList.remove('afclient-is-adding-context');
@@ -548,7 +609,10 @@ export default class AfClient {
 		this.selectedContext = null;
 		document.querySelector('body').classList.remove('afclient-selected-context');
 
-		document.getElementById('chatInputInput').clearContext();
+		// Clear context from all chat inputs across all UI instances
+		document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
+			input.clearContext();
+		});
 
 		this.endContextSelection();
 	}
