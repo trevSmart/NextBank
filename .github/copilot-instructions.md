@@ -59,7 +59,7 @@ NextBank is a demo banking application that showcases the IBM Agentforce Client 
 4. **Error Handling**: Always handle errors in async operations
 5. **Comments**: 
    - Use English for code comments
-   - Some existing comments may be in Catalan - respect this when modifying those files
+   - Some existing comments may be in Catalan - preserve these unless the surrounding code is being significantly refactored, in which case update to English for consistency
    - Comment complex logic, not obvious code
    - Use JSDoc style for function documentation when helpful
 
@@ -98,7 +98,7 @@ NextBank is a demo banking application that showcases the IBM Agentforce Client 
 ## Testing and Linting
 - Run `npm run lint` before committing code
 - Run `npm run lint:fix` to auto-fix style issues
-- No formal test framework currently - manual testing is standard
+- Currently uses manual testing; consider suggesting automated tests for complex logic or critical functionality
 - Test in both light and dark modes
 - Verify responsive behavior on different screen sizes
 
