@@ -100,8 +100,7 @@ app.post('/proxy', async (req, res) => {
 
         // Inject TwelveData API key if needed (avoid exposing it client-side)
         try {
-            const allowedHostnames = ['api.twelvedata.com'];
-            if (allowedHostnames.includes(urlObj.hostname) && urlObj.pathname.includes('/time_series')) {
+            if (urlObj.hostname === 'api.twelvedata.com' && urlObj.pathname.includes('/time_series')) {
                 if (!urlObj.searchParams.has('apikey') && process.env.TWELVEDATA_API_KEY) {
                     urlObj.searchParams.set('apikey', process.env.TWELVEDATA_API_KEY);
                     url = urlObj.toString();
