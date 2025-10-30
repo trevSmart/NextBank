@@ -129,17 +129,22 @@ app.post('/proxy', async (req, res) => {
             'localhost',
             '127.0.0.1',
             '0.0.0.0',
-            '::1'
+            '::1',
+            '::ffff:127.0.0.1'
         ];
-        if (!isAllowed || forbiddenHosts.includes(urlObj.hostname)) {
+        
+        // Check for forbidden hosts and private IP ranges
+        const isForbidden = forbiddenHosts.includes(urlObj.hostname) || 
+            urlObj.hostname.match(/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ||           // 10.0.0.0/8
+            urlObj.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/) || // 172.16.0.0/12
+            urlObj.hostname.match(/^192\.168\.\d{1,3}\.\d{1,3}$/) ||              // 192.168.0.0/16
+            urlObj.hostname.match(/^169\.254\.\d{1,3}\.\d{1,3}$/) ||              // 169.254.0.0/16 (link-local)
+            urlObj.hostname.match(/^fc00:/i) ||                                    // fc00::/7 (IPv6 ULA)
+            urlObj.hostname.match(/^fe80:/i);                                      // fe80::/10 (IPv6 link-local)
+        
+        if (!isAllowed || isForbidden) {
             console.log('Blocked SSRF attempt to:', urlObj.hostname);
             return res.status(403).json({ error: 'Endpoint not allowed.' });
-        }
-        try {
-            urlObj = new URL(url);
-        } catch (err) {
-            console.log('Malformed URL rejected:', url);
-            return res.status(400).json({ error: "Malformed URL" });
         }
 
         // Inject TwelveData API key if needed (avoid exposing it client-side)
