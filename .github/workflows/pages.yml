@@ -27,7 +27,7 @@ jobs:
           mkdir -p dist
           cp -R public/* dist/
           mkdir -p dist/src
-          cp -R src dist/src
+          cp -R src/* dist/src/
           touch dist/.nojekyll
           # Normalize paths in index.html so it works at Pages root
           # Replace ../src/ with src/ (relative paths from public/)
