@@ -106,10 +106,8 @@ app.post('/proxy', async (req, res) => {
 
         // SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
         // Define allowed hosts (add your allowed hostnames or domains here)
-        const ALLOWED_HOSTS = [
-            'api.example.com',   // <-- CHANGE to your safe endpoints
-            // 'another-safe-host.com',
-        ];
+        // Use the global ALLOWED_HOSTNAMES constant for SSRF protection
+        const ALLOWED_HOSTS = ALLOWED_HOSTNAMES;
         let urlObj;
         try {
             urlObj = new URL(url);
