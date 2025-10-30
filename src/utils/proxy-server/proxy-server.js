@@ -17,9 +17,9 @@ const PORT = process.env.PORT || 3000;
 // Allow-list for outbound proxy requests (hostnames)
 // Example: add all trusted API endpoint domains here
 const ALLOWED_HOSTNAMES = [
-  "api.twelvedata.com",
-  "login.salesforce.com",
-  "test.salesforce.com",
+  "twelvedata.com",
+  "salesforce.com",
+  "salesforce.com",
   // Add other trusted domains as needed
 ];
 // Configure CORS with more permissive settings for development
