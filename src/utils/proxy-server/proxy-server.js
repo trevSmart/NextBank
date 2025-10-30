@@ -15,11 +15,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Allow-list for outbound proxy requests (hostnames)
-// Example: add all trusted API endpoint domains here
+// Subdomains are automatically allowed (e.g., api.salesforce.com matches salesforce.com)
 const ALLOWED_HOSTNAMES = [
-  "twelvedata.com",
-  "salesforce.com",
-  "salesforce.com",
+  "twelvedata.com",        // Allows api.twelvedata.com, etc.
+  "salesforce.com",        // Allows api.salesforce.com, my.salesforce.com, orgfarm-*.my.salesforce.com, etc.
   // Add other trusted domains as needed
 ];
 // Configure CORS with more permissive settings for development
@@ -85,7 +84,7 @@ app.post('/proxy', async (req, res) => {
             return res.status(400).json({ error: 'Falta el camp "url" al body' });
         }
 
-        // SSRF Protection: Accept only requests to allow-listed hostnames
+        // SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
         let urlObj;
         try {
             urlObj = new URL(url);
@@ -93,14 +92,28 @@ app.post('/proxy', async (req, res) => {
             console.log('Malformed URL rejected:', url);
             return res.status(400).json({ error: "Malformed URL" });
         }
-        if (!ALLOWED_HOSTNAMES.includes(urlObj.hostname)) {
+
+        // Check if hostname matches any allowed hostname or is a subdomain of it
+        const isAllowed = ALLOWED_HOSTNAMES.some(allowedHost => {
+            // Exact match
+            if (urlObj.hostname === allowedHost) {
+                return true;
+            }
+            // Subdomain match (e.g., api.salesforce.com matches salesforce.com)
+            if (urlObj.hostname.endsWith('.' + allowedHost)) {
+                return true;
+            }
+            return false;
+        });
+
+        if (!isAllowed) {
             console.log('Proxy SSRF blocked:', urlObj.hostname, 'not allow-listed');
             return res.status(403).json({ error: "Target hostname not allowed" });
         }
 
         // Inject TwelveData API key if needed (avoid exposing it client-side)
         try {
-            if (urlObj.hostname === 'api.twelvedata.com' && urlObj.pathname.includes('/time_series')) {
+            if (urlObj.hostname.includes('twelvedata.com') && urlObj.pathname.includes('/time_series')) {
                 if (!urlObj.searchParams.has('apikey') && process.env.TWELVEDATA_API_KEY) {
                     urlObj.searchParams.set('apikey', process.env.TWELVEDATA_API_KEY);
                     url = urlObj.toString();
