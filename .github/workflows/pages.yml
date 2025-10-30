@@ -30,7 +30,13 @@ jobs:
           cp -R src dist/src
           touch dist/.nojekyll
           # Normalize paths in index.html so it works at Pages root
-          sed -i 's#\../src/#src/#g; s#/src/#src/#g; s#/public/index.html#index.html#g; s#/public/##g' dist/index.html
+          # Replace ../src/ with src/ (relative paths from public/)
+          sed -i 's|../src/|src/|g' dist/index.html
+          # Replace /src/ with src/ (absolute paths)
+          sed -i 's|/src/|src/|g' dist/index.html
+          # Fix any remaining /public/ references
+          sed -i 's|/public/||g' dist/index.html
+          sed -i 's|/public/index.html|index.html|g' dist/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
