@@ -105,30 +105,43 @@ app.post('/proxy', async (req, res) => {
         }
 
         // SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
+        // Define allowed hosts (add your allowed hostnames or domains here)
+        const ALLOWED_HOSTS = [
+            'api.example.com',   // <-- CHANGE to your safe endpoints
+            // 'another-safe-host.com',
+        ];
         let urlObj;
+        try {
+            urlObj = new URL(url);
+        } catch (e) {
+            console.log('Invalid URL:', url);
+            return res.status(400).json({ error: 'URL is invalid.' });
+        }
+        // Only allow https protocol
+        if (urlObj.protocol !== 'https:') {
+            console.log('Blocked protocol:', urlObj.protocol);
+            return res.status(403).json({ error: 'Only HTTPS endpoints are allowed.' });
+        }
+        // Check hostname allow-list
+        const isAllowed = ALLOWED_HOSTS.some(allowed => (
+            urlObj.hostname === allowed || urlObj.hostname.endsWith('.' + allowed)
+        ));
+        // Block localhost/internal hosts for extra safety
+        const forbiddenHosts = [
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0',
+            '::1'
+        ];
+        if (!isAllowed || forbiddenHosts.includes(urlObj.hostname)) {
+            console.log('Blocked SSRF attempt to:', urlObj.hostname);
+            return res.status(403).json({ error: 'Endpoint not allowed.' });
+        }
         try {
             urlObj = new URL(url);
         } catch (err) {
             console.log('Malformed URL rejected:', url);
             return res.status(400).json({ error: "Malformed URL" });
-        }
-
-        // Check if hostname matches any allowed hostname or is a subdomain of it
-        const isAllowed = ALLOWED_HOSTNAMES.some(allowedHost => {
-            // Exact match
-            if (urlObj.hostname === allowedHost) {
-                return true;
-            }
-            // Subdomain match (e.g., api.salesforce.com matches salesforce.com)
-            if (urlObj.hostname.endsWith('.' + allowedHost)) {
-                return true;
-            }
-            return false;
-        });
-
-        if (!isAllowed) {
-            console.log('Proxy SSRF blocked:', urlObj.hostname, 'not allow-listed');
-            return res.status(403).json({ error: "Target hostname not allowed" });
         }
 
         // Inject TwelveData API key if needed (avoid exposing it client-side)
@@ -170,7 +183,7 @@ app.post('/proxy', async (req, res) => {
         console.log();
         console.log();
         console.log(url);
-        console.log();
+        console.log('Validated target hostname:', urlObj.hostname);
         console.log(JSON.stringify(headers, null, 4));
         console.log();
         console.log(JSON.stringify(formattedBody, null, 4));
