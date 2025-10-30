@@ -51,7 +51,16 @@ app.use(express.urlencoded({ extended: true }));
 app.options('*', (req, res) => {
     console.log('Handling preflight request for:', req.url);
     const requestOrigin = req.headers.origin;
-    if (requestOrigin && allowedOrigins.indexOf(requestOrigin) !== -1) {
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!requestOrigin) {
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        res.status(200).end();
+        return;
+    }
+    
+    if (allowedOrigins.indexOf(requestOrigin) !== -1) {
         res.header('Access-Control-Allow-Origin', requestOrigin);
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
