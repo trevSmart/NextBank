@@ -14,20 +14,21 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+// List of allowed origins for CORS
+const allowedOrigins = [
+    'http://localhost:60566',
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:60566',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5500'
+];
+
 // Configure CORS with more permissive settings for development
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-
-        const allowedOrigins = [
-            'http://localhost:60566',
-            'http://localhost:3000',
-            'http://localhost:5500',
-            'http://127.0.0.1:60566',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5500'
-        ];
 
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
@@ -49,11 +50,17 @@ app.use(express.urlencoded({ extended: true }));
 // Explicitly handle preflight requests for all routes
 app.options('*', (req, res) => {
     console.log('Handling preflight request for:', req.url);
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.status(200).end();
+    const requestOrigin = req.headers.origin;
+    if (requestOrigin && allowedOrigins.indexOf(requestOrigin) !== -1) {
+        res.header('Access-Control-Allow-Origin', requestOrigin);
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.status(200).end();
+    } else {
+        console.log('CORS preflight blocked origin:', requestOrigin);
+        res.status(403).send('CORS Preflight Request Blocked: Origin not allowed');
+    }
 });
 
 // Configurem el servei de fitxers estàtics
