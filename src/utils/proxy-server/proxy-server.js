@@ -31,9 +31,9 @@ const CORS_ALLOW_HEADERS = 'Content-Type, Authorization, X-Requested-With, Accep
 // Allow-list for outbound proxy requests (hostnames)
 // Example: add all trusted API endpoint domains here
 const ALLOWED_HOSTNAMES = [
-  "api.twelvedata.com",
-  "login.salesforce.com",
-  "test.salesforce.com",
+  'api.twelvedata.com',
+  'login.salesforce.com',
+  'test.salesforce.com',
   // Add other trusted domains as needed
 ];
 // Configure CORS with more permissive settings for development
