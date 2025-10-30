@@ -14,6 +14,14 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+// Allow-list for outbound proxy requests (hostnames)
+// Example: add all trusted API endpoint domains here
+const ALLOWED_HOSTNAMES = [
+  "api.twelvedata.com",
+  "login.salesforce.com",
+  "test.salesforce.com",
+  // Add other trusted domains as needed
+];
 // Configure CORS with more permissive settings for development
 app.use(cors({
     origin: function (origin, callback) {
@@ -75,6 +83,19 @@ app.post('/proxy', async (req, res) => {
         if (!url) {
             console.log('Missing URL in request body');
             return res.status(400).json({ error: 'Falta el camp "url" al body' });
+        }
+
+        // SSRF Protection: Accept only requests to allow-listed hostnames
+        let urlObj;
+        try {
+            urlObj = new URL(url);
+        } catch (err) {
+            console.log('Malformed URL rejected:', url);
+            return res.status(400).json({ error: "Malformed URL" });
+        }
+        if (!ALLOWED_HOSTNAMES.includes(urlObj.hostname)) {
+            console.log('Proxy SSRF blocked:', urlObj.hostname, 'not allow-listed');
+            return res.status(403).json({ error: "Target hostname not allowed" });
         }
 
         // Inject TwelveData API key if needed (avoid exposing it client-side)
