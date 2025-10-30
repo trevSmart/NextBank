@@ -29,11 +29,25 @@ export default class SfAgentApi extends EventTarget {
 
 	async _fetch(url, options) {
 		if (this.options.useProxy) {
-			return fetch('http://localhost:3000/proxy', {
-				method: 'POST',
-				headers: {'Content-Type': 'application/json'},
-				body: JSON.stringify({url, ...options})
-			});
+			try {
+				return await fetch('http://localhost:3000/proxy', {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify({url, ...options})
+				});
+			} catch (error) {
+				// Check if proxy is not available
+				const isConnectionError =
+					error.message?.includes('Failed to fetch') ||
+					error.message?.includes('ERR_CONNECTION_REFUSED') ||
+					error.message?.includes('NetworkError') ||
+					error.name === 'TypeError';
+
+				if (isConnectionError) {
+					throw new Error('Proxy server not available. Please start the proxy server with: npm run proxy');
+				}
+				throw error;
+			}
 		} else {
 			return fetch(url, options);
 		}
