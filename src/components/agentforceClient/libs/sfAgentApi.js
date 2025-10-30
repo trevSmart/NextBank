@@ -1,12 +1,14 @@
 import uuid4 from '../../../assets/libs/uuid4.mjs';
 import {createParser} from '../../../assets/libs/eventsource-parser.mjs';
+import { isDevelopment } from '../../../utils/fetchUtils.js';
 
 const salesforceParameters = {
-	urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
-	connectedAppClientId: '3MVG9rZjd7MXFdLhSKI7aMVDTapUmHhDlg4uv8l._iSgHKmMrYP0ND3kjdVo3bkwCXrzQAHq6V5qGSsftVEH6',
-	connectedAppClientSecret: '49799F9C19F97B8CE413894C5387F5C8AA34E9B0FAB35C051F88FB1F810B71E4',
-	agentId: '0XxgK000000D2KDSA0',
-	accessToken: null
+    urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
+    // Values injected by the proxy on token requests
+    connectedAppClientId: '',
+    connectedAppClientSecret: '',
+    agentId: '0XxgK000000D2KDSA0',
+    accessToken: null
 };
 
 export default class SfAgentApi extends EventTarget {
@@ -14,8 +16,13 @@ export default class SfAgentApi extends EventTarget {
 		super();
 		this.session = {id: null, sequenceId: 0};
 		this.streaming = false;
+		// Auto-detect proxy usage: use proxy in development unless explicitly disabled
+		// If useProxy is explicitly set, respect it; otherwise auto-detect based on environment
+		const shouldUseProxy = options.useProxy !== undefined
+			? options.useProxy
+			: isDevelopment();
 		this.options = {
-			useProxy: false,
+			useProxy: shouldUseProxy,
 			...options
 		};
 	}

@@ -70,18 +70,49 @@ app.post('/proxy', async (req, res) => {
         console.log('Proxy request received from origin:', req.headers.origin);
         console.log('Request headers:', req.headers);
 
-        const { url, method = 'POST', headers = {}, body } = req.body;
+        let { url, method = 'POST', headers = {}, body } = req.body;
 
         if (!url) {
             console.log('Missing URL in request body');
             return res.status(400).json({ error: 'Falta el camp "url" al body' });
         }
 
-        // Serialize body only if Content-Type is application/json and body is not a string
-        const formattedBody =
-            headers['Content-Type'] === 'application/json' && typeof body !== 'string'
-                ? JSON.stringify(body)
-                : body;
+        // Inject TwelveData API key if needed (avoid exposing it client-side)
+        try {
+            const urlObj = new URL(url);
+            if (urlObj.hostname.includes('api.twelvedata.com') && urlObj.pathname.includes('/time_series')) {
+                if (!urlObj.searchParams.has('apikey') && process.env.TWELVEDATA_API_KEY) {
+                    urlObj.searchParams.set('apikey', process.env.TWELVEDATA_API_KEY);
+                    url = urlObj.toString();
+                }
+            }
+        } catch (e) {
+            console.log('URL parse error, leaving URL as-is:', e?.message);
+        }
+
+        // Serialize/adjust body
+        let formattedBody = body;
+        const contentType = (headers['Content-Type'] || headers['content-type'] || '').toLowerCase();
+        if (contentType.includes('application/json') && typeof body !== 'string') {
+            formattedBody = JSON.stringify(body);
+        }
+
+        // Inject Salesforce Connected App credentials on OAuth token requests
+        try {
+            const urlObj2 = new URL(url);
+            if (urlObj2.pathname.endsWith('/services/oauth2/token') && contentType.includes('application/x-www-form-urlencoded')) {
+                const params = new URLSearchParams(formattedBody || '');
+                if (process.env.SF_CONNECTED_APP_CLIENT_ID) {
+                    params.set('client_id', process.env.SF_CONNECTED_APP_CLIENT_ID);
+                }
+                if (process.env.SF_CONNECTED_APP_CLIENT_SECRET) {
+                    params.set('client_secret', process.env.SF_CONNECTED_APP_CLIENT_SECRET);
+                }
+                formattedBody = params.toString();
+            }
+        } catch (e) {
+            console.log('OAuth body injection error:', e?.message);
+        }
 
         console.log();
         console.log();
@@ -103,8 +134,8 @@ app.post('/proxy', async (req, res) => {
         console.log(JSON.stringify(response, null, 4));
 
         // Comprova el content-type de la resposta
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.startsWith('text/event-stream')) {
+        const respContentType = response.headers.get('content-type') || '';
+        if (respContentType.startsWith('text/event-stream')) {
             // Configura els headers per SSE
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');

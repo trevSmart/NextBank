@@ -1,8 +1,14 @@
 import mockData from './mock.js';
+import { smartFetch, isProduction } from '../../utils/fetchUtils.js';
+
 const SYMBOLS = {
 	'IBM': 'IBM',
 	'CRM': 'Salesforce (CRM)'
 };
+
+const INTERVAL = '1day';
+const OUTPUT_SIZE = '60';
+const USE_MOCK_DATA = false; // Set to true to use mock data instead of API
 
 class StockChart extends HTMLElement {
 	constructor() {
@@ -47,36 +53,97 @@ class StockChart extends HTMLElement {
 		this._initChart();
 	}
 
-	async _initChart() {
-		const barCount = 60;
-		let datasets = [];
-		Object.keys(mockData)
-			.filter(sym => Object.keys(SYMBOLS).includes(sym))
-			.forEach((sym) => {
-				const barData = [];
-				const lineData = [];
-				this._getRandomData(sym, barData, lineData);
-				datasets.push({
-					label: sym,
-					type: 'candlestick',
-					data: barData,
-					fill: true,
-					barThickness: 5
-				});
-				datasets.push({
-					label: sym + ' - Closing price',
-					type: 'line',
-					data: lineData,
-					borderColor: sym === 'IBM' ? '#7155c4' : '#936b3c',
-					backgroundColor: sym === 'IBM' ? '#7155c4' : '#936b3c',
-					borderWidth: 1,
-					fill: false,
-					tension: 0.3,
-					cubicInterpolationMode: 'monotone'
-				});
+	async _fetchStockData(symbols) {
+		if (USE_MOCK_DATA) {
+			return mockData;
+		}
+
+		try {
+            const url = `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=${INTERVAL}&outputsize=${OUTPUT_SIZE}`;
+
+			// smartFetch automatically uses proxy in development and direct calls in production
+			const response = await smartFetch(url, {
+				method: 'GET',
+				headers: {
+					'Accept': 'application/json'
+				}
 			});
-		this._barData = null;
-		this._lineData = null;
+
+			if (!response.ok) {
+				throw new Error(`API request failed: ${response.status}`);
+			}
+
+			const data = await response.json();
+			return data;
+		} catch (error) {
+			// In production, CORS errors are expected if API doesn't allow it
+			// Fallback to mock data gracefully
+			if (isProduction()) {
+				console.info('Using mock data in production (API may not allow CORS):', error.message);
+			} else {
+				console.warn('Failed to fetch stock data from API, using mock data:', error);
+			}
+			return mockData;
+		}
+	}
+
+	async _initChart() {
+		const symbols = Object.keys(SYMBOLS);
+		const stockData = await this._fetchStockData(symbols);
+
+		let datasets = [];
+		symbols.forEach((sym) => {
+			const symbolData = stockData[sym];
+			if (!symbolData || !symbolData.values || !Array.isArray(symbolData.values)) {
+				return;
+			}
+
+			const barData = [];
+			const lineData = [];
+
+			// Process data - reverse to show oldest to newest
+			const values = [...symbolData.values].reverse();
+			const daysToShow = 25;
+			const dataSlice = values.slice(0, daysToShow);
+
+			for (let i = 0; i < dataSlice.length; i++) {
+				const d = dataSlice[i];
+				const date = new Date(d.datetime);
+				const o = parseFloat(d.open);
+				const h = parseFloat(d.high);
+				const l = parseFloat(d.low);
+				const c = parseFloat(d.close);
+
+				const scale = 1 / 3;
+				barData.push({
+					x: date.valueOf(),
+					o: c + (o - c) * scale,
+					h: c + (h - c) * scale,
+					l: c + (l - c) * scale,
+					c: c
+				});
+				lineData.push({ x: date.valueOf(), y: c });
+			}
+
+			datasets.push({
+				label: sym,
+				type: 'candlestick',
+				data: barData,
+				fill: true,
+				barThickness: 5
+			});
+			datasets.push({
+				label: sym + ' - Closing price',
+				type: 'line',
+				data: lineData,
+				borderColor: sym === 'IBM' ? '#7155c4' : '#936b3c',
+				backgroundColor: sym === 'IBM' ? '#7155c4' : '#936b3c',
+				borderWidth: 1,
+				fill: false,
+				tension: 0.3,
+				cubicInterpolationMode: 'monotone'
+			});
+		});
 
 		const canvas = this.shadowRoot.getElementById('chart');
 		canvas.height = canvas.parentElement.offsetHeight;
@@ -141,35 +208,6 @@ class StockChart extends HTMLElement {
 				}
 			}
 		});
-	}
-
-	_getRandomData(symbol, barData, lineData, days = 25) {
-		const data = mockData[symbol]?.values;
-		if (!data) return;
-		let dataSlice = data;
-		if (days && days > 0) {
-			dataSlice = data.slice(0, days);
-		}
-		barData.length = 0;
-		lineData.length = 0;
-		for (let i = 0; i < dataSlice.length; i++) {
-			const d = dataSlice[i];
-			const date = new Date(d.datetime);
-			const o = parseFloat(d.open);
-			const h = parseFloat(d.high);
-			const l = parseFloat(d.low);
-			const c = parseFloat(d.close);
-
-			const scale = 1 / 3;
-			barData.push({
-				x: date.valueOf(),
-				o: c + (o - c) * scale,
-				h: c + (h - c) * scale,
-				l: c + (l - c) * scale,
-				c: c
-			});
-			lineData.push({ x: date.valueOf(), y: c });
-		}
 	}
 
 	update() {

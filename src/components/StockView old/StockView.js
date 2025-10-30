@@ -31,14 +31,15 @@ class StockChart extends HTMLElement {
 		// this.stockCard = this.closest('.dashboard-card.stocks');
 
 		async function fetchStockData(symbols = []) {
-			const token = '7a30623f47ae4c7da49796d280a41ebf';
+			// API key injected by proxy; keep empty on client
+			const token = '';
 			const res = await fetch('http://localhost:3000/proxy', {
 				method: 'POST',
 				headers: {'Content-Type': 'application/json'},
 				body: JSON.stringify({
 					method: 'GET',
 					headers: {},
-					url: `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=${INTERVAL}&outputsize=${OUTPUT_SIZE}&apikey=${token}`
+					url: `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=${INTERVAL}&outputsize=${OUTPUT_SIZE}`
 				})
 			});
 
