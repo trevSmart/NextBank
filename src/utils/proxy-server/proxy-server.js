@@ -24,6 +24,10 @@ const allowedOrigins = [
     'http://127.0.0.1:5500'
 ];
 
+// CORS preflight headers (shared between no-origin and whitelisted origin responses)
+const CORS_ALLOW_METHODS = 'GET, POST, PUT, DELETE, OPTIONS, PATCH';
+const CORS_ALLOW_HEADERS = 'Content-Type, Authorization, X-Requested-With, Accept, Origin';
+
 // Configure CORS with more permissive settings for development
 app.use(cors({
     origin: function (origin, callback) {
@@ -51,10 +55,19 @@ app.use(express.urlencoded({ extended: true }));
 app.options('*', (req, res) => {
     console.log('Handling preflight request for:', req.url);
     const requestOrigin = req.headers.origin;
-    if (requestOrigin && allowedOrigins.indexOf(requestOrigin) !== -1) {
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!requestOrigin) {
+        res.header('Access-Control-Allow-Methods', CORS_ALLOW_METHODS);
+        res.header('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
+        res.status(200).end();
+        return;
+    }
+    
+    if (allowedOrigins.indexOf(requestOrigin) !== -1) {
         res.header('Access-Control-Allow-Origin', requestOrigin);
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        res.header('Access-Control-Allow-Methods', CORS_ALLOW_METHODS);
+        res.header('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
         res.header('Access-Control-Allow-Credentials', 'true');
         res.status(200).end();
     } else {
