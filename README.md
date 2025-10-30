@@ -1,61 +1,37 @@
-## NextBank
+## IBM Agentforce Client — Live Demo (NextBank)
 
-A modern web experience for exploring a fictional digital bank.
+This repository showcases the IBM Agentforce Client inside a realistic, end‑to‑end banking scenario. The fictional “NextBank” site exists purely to demonstrate how Agentforce can power intuitive, safe and productive user experiences.
 
-### What you can do
+### What is IBM Agentforce Client?
 
-- View an overview dashboard with balances and cards
-- Browse and navigate a calendar of schedules
-- Explore sample stock charts and movements
-- Try a simple login experience
+IBM Agentforce Client is a front‑end experience that lets users interact with AI agents in familiar, guided ways. It focuses on clarity, safety and task completion, with a UX designed for enterprise use cases.
 
-This project is intended for demos and learning. It is not connected to real banking services.
+### Why this demo exists
 
-### Requirements
+The NextBank interface is a narrative backdrop to highlight Agentforce’s value. Account cards, schedules, and market views are sample screens that make the agent’s capabilities tangible, without exposing any real services.
 
-- Node.js 18+
-- npm 9+
+### What you can try here
 
-### Quick start
+- Conversational assistance that adapts to the current page context
+- Guided actions for common tasks (e.g., finding information or navigating views)
+- Safe data handling patterns for enterprise scenarios
+- Dynamic UI responses to agent suggestions
 
-1) Install dependencies
+All interactions are demonstration‑only and rely on mock or sample data.
 
-```bash
-npm install
-```
+### Demo highlights
 
-2) Serve the site locally
+- Clear hand‑offs between the user and the agent, so people stay in control
+- Focused prompts and responses that minimize friction and cognitive load
+- Non‑intrusive guidance layered into a standard web app layout
 
-Use any static server to open the site from the `public/` folder. For example:
+### Data and privacy
 
-```bash
-npx http-server public -p 5173 -c-1
-```
+This demo uses synthetic data and is not connected to any real banking systems. It is intended solely for evaluation and learning.
 
-3) (Optional) Enable API proxy
+### About the NextBank UI
 
-If your demo needs outbound requests, start the proxy service:
-
-```bash
-npm run proxy
-```
-
-By default the proxy listens on port 3000; you can change it with the `PORT` environment variable.
-
-### Using the app
-
-- Open your local server URL in the browser (e.g., `http://localhost:5173`).
-- Navigate between sections (Dashboard, Calendar, Stocks) to explore the experience.
-- All content is sample data designed to showcase interactions and UI.
-
-### Accessibility & compatibility
-
-The UI aims to be usable on modern desktop browsers. For the best experience, use a recent version of Chrome, Edge, Firefox, or Safari.
-
-### Troubleshooting
-
-- If the page does not load, ensure your static server is serving the `public/` folder.
-- If requests fail in demos that fetch data, start the proxy service and retry.
+The dashboard, calendar and stocks areas are illustrative surfaces to show how Agentforce augments typical workflows. They provide enough context to explore agent interactions without requiring real accounts.
 
 ### License
 
