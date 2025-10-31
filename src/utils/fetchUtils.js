@@ -9,10 +9,10 @@
  *   const response = await smartFetch('https://api.example.com/data');
  */
 
-// Detect if we're in development (localhost) or production (GitHub Pages)
-// Regex pattern for valid IP octet (0-255)
+//Detect if we're in development (localhost) or production (GitHub Pages)
+//Regex pattern for valid IP octet (0-255)
 const OCTET = '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)';
-// Precompiled regex patterns for private IP ranges
+//Precompiled regex patterns for private IP ranges
 const REGEX_192_168 = new RegExp(`^192\\.168\\.${OCTET}\\.${OCTET}$`);
 const REGEX_10 = new RegExp(`^10\\.${OCTET}\\.${OCTET}\\.${OCTET}$`);
 const REGEX_172 = new RegExp(`^172\\.(1[6-9]|2[0-9]|3[01])\\.${OCTET}\\.${OCTET}$`);
