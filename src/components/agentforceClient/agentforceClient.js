@@ -386,7 +386,7 @@ export default class AfClient {
 		// Control d'animació incremental per missatge (id -> {timeout, targetText, currentText})
 		this.streamingAnimations = new Map();
 
-		this.sfAgentApi = new SfAgentApi({useProxy: true});
+		this.sfAgentApi = new SfAgentApi();
 	}
 
 	isConnected() {

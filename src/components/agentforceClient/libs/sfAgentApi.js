@@ -8,7 +8,8 @@ const salesforceParameters = {
     connectedAppClientId: '',
     connectedAppClientSecret: '',
     agentId: '0XxgK000000D2KDSA0',
-    accessToken: null
+    // Try to initialize with token from localStorage if available
+    accessToken: typeof localStorage !== 'undefined' ? localStorage.getItem('nextBankSalesforceAccessToken') : null
 };
 
 export default class SfAgentApi extends EventTarget {
