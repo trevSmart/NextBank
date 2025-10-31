@@ -6,9 +6,11 @@
  */
 
 //Private IP range patterns for development environment detection
-const REGEX_192_168 = /^192\.168\.\d{1,3}\.\d{1,3}$/;
-const REGEX_10 = /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
-const REGEX_172 = /^172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}$/;
+// Strict octet pattern: matches 0-255
+const OCTET = '(25[0-5]|2[0-4][0-9]|1\\d{2}|[1-9]?\\d)';
+const REGEX_192_168 = new RegExp(`^192\\.168\\.${OCTET}\\.${OCTET}$`);
+const REGEX_10 = new RegExp(`^10\\.${OCTET}\\.${OCTET}\\.${OCTET}$`);
+const REGEX_172 = new RegExp(`^172\\.(1[6-9]|2[0-9]|3[01])\\.${OCTET}\\.${OCTET}$`);
 
 /**
  * Check if hostname is a local or private IP address
