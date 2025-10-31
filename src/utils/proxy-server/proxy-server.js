@@ -192,7 +192,7 @@ app.post('/proxy', async (req, res) => {
 		console.log();
 		console.log();
 		console.log(JSON.stringify(req.formattedBody, null, 4));
-		const response = await fetch(urlObj.href, {
+		const response = await fetch(url, {
 			method,
 			headers,
 			body: formattedBody
