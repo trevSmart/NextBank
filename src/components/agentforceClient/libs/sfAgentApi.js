@@ -2,6 +2,20 @@ import uuid4 from '../../../assets/libs/uuid4.mjs';
 import {createParser} from '../../../assets/libs/eventsource-parser.mjs';
 import { isDevelopment } from '../../../utils/fetchUtils.js';
 
+const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
+
+// Helper function to safely get access token from localStorage
+function getStoredAccessToken() {
+	try {
+		if (typeof localStorage !== 'undefined') {
+			return localStorage.getItem(SF_ACCESS_TOKEN_KEY);
+		}
+	} catch (error) {
+		console.error('Error reading access token from localStorage:', error);
+	}
+	return null;
+}
+
 const salesforceParameters = {
     urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
     // Values injected by the proxy on token requests
@@ -9,7 +23,7 @@ const salesforceParameters = {
     connectedAppClientSecret: '',
     agentId: '0XxgK000000D2KDSA0',
     // Try to initialize with token from localStorage if available
-    accessToken: typeof localStorage !== 'undefined' ? localStorage.getItem('nextBankSalesforceAccessToken') : null
+    accessToken: getStoredAccessToken()
 };
 
 export default class SfAgentApi extends EventTarget {
@@ -81,7 +95,7 @@ export default class SfAgentApi extends EventTarget {
 
 		const data = await response.json();
 
-		localStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
+		localStorage.setItem(SF_ACCESS_TOKEN_KEY, data.access_token);
 		salesforceParameters.accessToken = data.access_token;
 		return response;
 	}
