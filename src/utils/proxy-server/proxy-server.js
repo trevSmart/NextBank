@@ -105,31 +105,6 @@ app.post('/proxy', async (req, res) => {
 			return res.status(400).json({error: 'Falta el camp "url" al body'});
 		}
 
-		// SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
-		const allowedHosts = [
-			'example.com',
-			'api.example2.com',
-			// Add more allowed hosts as needed
-		];
-
-		let urlObj;
-		try {
-			urlObj = new URL(url);
-		} catch (e) {
-			console.log('Invalid URL:', url);
-			return res.status(400).json({ error: 'Invalid URL format' });
-		}
-
-		// For each allowed host, check that the hostname matches exactly or is a subdomain (endsWith allowed host and has a hostname boundary)
-		const isHostAllowed = allowedHosts.some(allowedHost => {
-			if (urlObj.hostname === allowedHost) return true;
-			return urlObj.hostname.endsWith('.' + allowedHost);
-		});
-
-		if (!isHostAllowed) {
-			console.log('Blocked proxy request to unallowed host:', urlObj.hostname);
-			return res.status(403).json({ error: 'Target host not allowed' });
-		}
 		//Use the global ALLOWED_HOSTNAMES constant for SSRF protection
 		const ALLOWED_HOSTS = ALLOWED_HOSTNAMES;
 		let urlObj;
