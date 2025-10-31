@@ -59,7 +59,7 @@ export default class SfAgentApi extends EventTarget {
 		//Salesforce API calls ALWAYS require a proxy due to CORS restrictions.
 		//Browsers cannot make direct cross-origin requests to Salesforce APIs,
 		//so all requests must go through a local proxy server (npm run proxy).
-		const shouldUseProxy = typeof options.useProxy !== 'undefined'
+		const shouldUseProxy = options.useProxy !== undefined
 			? options.useProxy
 			: true; //Always use proxy for Salesforce APIs
 		this.options = {
