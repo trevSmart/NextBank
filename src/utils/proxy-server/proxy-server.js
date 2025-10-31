@@ -31,9 +31,10 @@ const CORS_ALLOW_HEADERS = 'Content-Type, Authorization, X-Requested-With, Accep
 // Allow-list for outbound proxy requests (hostnames)
 // Subdomains are automatically allowed (e.g., api.salesforce.com matches salesforce.com)
 const ALLOWED_HOSTNAMES = [
-  "twelvedata.com",        // Allows api.twelvedata.com, etc.
-  "salesforce.com",        // Allows api.salesforce.com, my.salesforce.com, orgfarm-*.my.salesforce.com, etc.
-  // Add other trusted domains as needed
+    "twelvedata.com",        // Allows api.twelvedata.com, etc.
+    "salesforce.com",        // Allows api.salesforce.com, my.salesforce.com, orgfarm-*.my.salesforce.com, etc.
+    "github.com",
+    // Add other trusted domains as needed
 ];
 // Configure CORS with more permissive settings for development
 app.use(cors({
@@ -132,16 +133,16 @@ app.post('/proxy', async (req, res) => {
             '::1',
             '::ffff:127.0.0.1'
         ];
-        
+
         // Check for forbidden hosts and private IP ranges
-        const isForbidden = forbiddenHosts.includes(urlObj.hostname) || 
+        const isForbidden = forbiddenHosts.includes(urlObj.hostname) ||
             urlObj.hostname.match(/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ||           // 10.0.0.0/8
             urlObj.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/) || // 172.16.0.0/12
             urlObj.hostname.match(/^192\.168\.\d{1,3}\.\d{1,3}$/) ||              // 192.168.0.0/16
             urlObj.hostname.match(/^169\.254\.\d{1,3}\.\d{1,3}$/) ||              // 169.254.0.0/16 (link-local)
             urlObj.hostname.match(/^fc00:/i) ||                                    // fc00::/7 (IPv6 ULA)
             urlObj.hostname.match(/^fe80:/i);                                      // fe80::/10 (IPv6 link-local)
-        
+
         if (!isAllowed || isForbidden) {
             console.log('Blocked SSRF attempt to:', urlObj.hostname);
             return res.status(403).json({ error: 'Endpoint not allowed.' });
