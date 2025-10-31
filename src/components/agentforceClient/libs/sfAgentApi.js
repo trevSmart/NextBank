@@ -7,8 +7,8 @@ const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
 // Helper function to safely get access token from localStorage
 function getStoredAccessToken() {
 	try {
-		if (typeof localStorage !== 'undefined') {
-			return localStorage.getItem(SF_ACCESS_TOKEN_KEY);
+		if (typeof window !== 'undefined' && window.localStorage) {
+			return window.localStorage.getItem(SF_ACCESS_TOKEN_KEY);
 		}
 	} catch (error) {
 		console.error('Error reading access token from localStorage:', error);
