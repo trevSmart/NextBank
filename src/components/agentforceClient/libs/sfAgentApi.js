@@ -6,13 +6,14 @@ const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
 
 /**
  * Safely retrieves the Salesforce access token from localStorage
- * @returns {string|null} The stored access token, or null if not available or on error
+ * @returns {string|null} The stored access token (non-empty string), or null if not available, empty, or on error
  */
 function getStoredAccessToken() {
 	try {
 		if (typeof window !== 'undefined' && window.localStorage) {
 			const token = window.localStorage.getItem(SF_ACCESS_TOKEN_KEY);
-			return token || null;
+			// Return null for empty/falsy values to ensure consistency
+			return (token && token.trim().length > 0) ? token : null;
 		}
 	} catch (error) {
 		console.error('Error reading access token from localStorage:', error);
