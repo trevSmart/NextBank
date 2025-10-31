@@ -10,12 +10,14 @@
  */
 
 // Detect if we're in development (localhost) or production (GitHub Pages)
+// Regex pattern for valid IP octet (0-255)
+const OCTET = '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)';
 const IS_DEVELOPMENT = typeof window !== 'undefined' && (
 	window.location.hostname === 'localhost' ||
 	window.location.hostname === '127.0.0.1' ||
-	/^192\.168\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
-	/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
-	/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname)
+	new RegExp(`^192\\.168\\.${OCTET}\\.${OCTET}$`).test(window.location.hostname) ||
+	new RegExp(`^10\\.${OCTET}\\.${OCTET}\\.${OCTET}$`).test(window.location.hostname) ||
+	new RegExp(`^172\\.(1[6-9]|2[0-9]|3[01])\\.${OCTET}\\.${OCTET}$`).test(window.location.hostname)
 );
 
 const PROXY_URL = 'http://localhost:3000/proxy';
