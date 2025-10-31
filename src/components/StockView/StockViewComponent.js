@@ -1,5 +1,5 @@
 import mockData from './mock.js';
-import { smartFetch, isProduction } from '../../utils/fetchUtils.js';
+import {smartFetch, isProduction} from '../../utils/fetchUtils.js';
 
 const SYMBOLS = {
 	'IBM': 'IBM',
@@ -8,14 +8,14 @@ const SYMBOLS = {
 
 const INTERVAL = '1day';
 const OUTPUT_SIZE = '60';
-const USE_MOCK_DATA = false; // Set to true to use mock data instead of API
+const USE_MOCK_DATA = false; //Set to true to use mock data instead of API
 
 class StockChart extends HTMLElement {
 	constructor() {
 		super();
-		this.attachShadow({ mode: 'open' });
+		this.attachShadow({mode: 'open'});
 
-		const { width, height } = getComputedStyle(this);
+		const {width, height} = getComputedStyle(this);
 		this.shadowRoot.innerHTML = `
 		<style>
 			:host {
@@ -59,9 +59,9 @@ class StockChart extends HTMLElement {
 		}
 
 		try {
-            const url = `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=${INTERVAL}&outputsize=${OUTPUT_SIZE}`;
+			const url = `https://api.twelvedata.com/time_series?symbol=${symbols.join(',')}&interval=${INTERVAL}&outputsize=${OUTPUT_SIZE}`;
 
-			// smartFetch automatically uses proxy in development and direct calls in production
+			//smartFetch automatically uses proxy in development and direct calls in production
 			const response = await smartFetch(url, {
 				method: 'GET',
 				headers: {
@@ -76,8 +76,8 @@ class StockChart extends HTMLElement {
 			const data = await response.json();
 			return data;
 		} catch (error) {
-			// In production, CORS errors are expected if API doesn't allow it
-			// Fallback to mock data gracefully
+			//In production, CORS errors are expected if API doesn't allow it
+			//Fallback to mock data gracefully
 			if (isProduction()) {
 				console.info('Using mock data in production (API may not allow CORS):', error.message);
 			} else {
@@ -92,7 +92,7 @@ class StockChart extends HTMLElement {
 		const stockData = await this._fetchStockData(symbols);
 
 		let datasets = [];
-		symbols.forEach((sym) => {
+		symbols.forEach(sym => {
 			const symbolData = stockData[sym];
 			if (!symbolData || !symbolData.values || !Array.isArray(symbolData.values)) {
 				return;
@@ -101,7 +101,7 @@ class StockChart extends HTMLElement {
 			const barData = [];
 			const lineData = [];
 
-			// Process data - reverse to show oldest to newest
+			//Process data - reverse to show oldest to newest
 			const values = [...symbolData.values].reverse();
 			const daysToShow = 25;
 			const dataSlice = values.slice(0, daysToShow);
@@ -122,7 +122,7 @@ class StockChart extends HTMLElement {
 					l: c + (l - c) * scale,
 					c: c
 				});
-				lineData.push({ x: date.valueOf(), y: c });
+				lineData.push({x: date.valueOf(), y: c});
 			}
 
 			datasets.push({
@@ -150,17 +150,17 @@ class StockChart extends HTMLElement {
 		canvas.width = canvas.parentElement.offsetWidth;
 		this._chart = new Chart(canvas.getContext('2d'), {
 			type: 'candlestick',
-			data: { datasets },
+			data: {datasets},
 			options: {
 				responsive: false,
 				animation: false,
 				scales: {
 					x: {
 						type: 'timeseries',
-						grid: { color: '#292929' }
+						grid: {color: '#292929'}
 
 					},
-					y: { type: 'linear', grid: { color: '#393939' } }
+					y: {type: 'linear', grid: {color: '#393939'}}
 				},
 				maintainAspectRatio: false,
 				plugins: {
@@ -168,13 +168,13 @@ class StockChart extends HTMLElement {
 						display: true,
 						position: 'top',
 						labels: {
-							filter: function (item, _chart) {
+							filter: function(item, _chart) {
 								return !item.text.includes('Change');
 							},
 							usePointStyle: true,
 							boxHeight: 5,
 							boxWidth: 8,
-							generateLabels: function (chart) {
+							generateLabels: function(chart) {
 								const items = Chart.defaults.plugins.legend.labels.generateLabels(chart);
 								return items.map(item => {
 									const dataset = chart.data.datasets[item.datasetIndex];
@@ -218,7 +218,7 @@ class StockChart extends HTMLElement {
 	}
 
 	resize() {
-		const { height } = getComputedStyle(this);
+		const {height} = getComputedStyle(this);
 		this.shadowRoot.querySelector('.container').style.height = `${height}`;
 	}
 }

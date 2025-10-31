@@ -23,15 +23,15 @@ class StockChart extends HTMLElement {
 
 	async connectedCallback() {
 		const {width, height} = getComputedStyle(this);
-		// this.innerHTML = `<canvas style="width: ${width}; height: ${height};"></canvas>`;
-		this.innerHTML = `<canvas></canvas>`;
+		//this.innerHTML = `<canvas style="width: ${width}; height: ${height};"></canvas>`;
+		this.innerHTML = '<canvas></canvas>';
 		const canvas = this.querySelector('canvas');
 
 		//Observem la card contenidora
-		// this.stockCard = this.closest('.dashboard-card.stocks');
+		//this.stockCard = this.closest('.dashboard-card.stocks');
 
 		async function fetchStockData(symbols = []) {
-			// API key injected by proxy; keep empty on client
+			//API key injected by proxy; keep empty on client
 			const token = '';
 			const res = await fetch('http://localhost:3000/proxy', {
 				method: 'POST',
@@ -95,7 +95,7 @@ class StockChart extends HTMLElement {
 		let datasets = await fetchStockData(Object.keys(SYMBOLS));
 
 		const allValues = datasets.flatMap(ds =>
-			ds.data.map(d => d.y ?? d.l) // y per línies, l per candlestick
+			ds.data.map(d => d.y ?? d.l) //y per línies, l per candlestick
 		);
 		const min = Math.min(...allValues);
 		const max = Math.max(...allValues);
@@ -127,8 +127,8 @@ class StockChart extends HTMLElement {
 										...item,
 										strokeStyle: dataset.borderColor,
 										fillStyle: dataset.borderColor,
-										fontColor: dataset.borderColor, // per compatibilitat antiga
-										color: dataset.borderColor // per versions modernes
+										fontColor: dataset.borderColor, //per compatibilitat antiga
+										color: dataset.borderColor //per versions modernes
 									};
 								});
 							}
