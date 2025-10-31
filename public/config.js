@@ -21,6 +21,6 @@
  */
 
 window.NEXTBANK_CONFIG = {
-	//Set to your deployed proxy server URL, or null for local development
+	// See documentation above for configuration options
 	PROXY_URL: null
 };
