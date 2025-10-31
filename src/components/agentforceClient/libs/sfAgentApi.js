@@ -55,11 +55,11 @@ export default class SfAgentApi extends EventTarget {
 		super();
 		this.session = {id: null, sequenceId: 0};
 		this.streaming = false;
-		//Auto-detect proxy usage: use proxy in development unless explicitly disabled
-		//If useProxy is explicitly set, respect it; otherwise auto-detect based on environment
+		// Salesforce API calls ALWAYS require a proxy due to CORS restrictions
+		// The proxy must be running locally (npm run proxy) for the app to work
 		const shouldUseProxy = options.useProxy !== undefined
 			? options.useProxy
-			: isDevelopment();
+			: true; // Always use proxy for Salesforce APIs
 		this.options = {
 			useProxy: shouldUseProxy,
 			...options
@@ -75,7 +75,7 @@ export default class SfAgentApi extends EventTarget {
 					body: JSON.stringify({url, ...options})
 				});
 			} catch (error) {
-				//Check if proxy is not available
+				// Check if proxy is not available
 				const isConnectionError =
 					error.message?.includes('Failed to fetch') ||
 					error.message?.includes('ERR_CONNECTION_REFUSED') ||
@@ -83,7 +83,10 @@ export default class SfAgentApi extends EventTarget {
 					error.name === 'TypeError';
 
 				if (isConnectionError) {
-					throw new Error('Proxy server not available. Please start the proxy server with: npm run proxy');
+					const envInfo = isDevelopment()
+						? 'Please start the proxy server locally with: npm run proxy'
+						: 'This application requires a local proxy server to connect to Salesforce APIs. Please clone the repository and run it locally with "npm run proxy" in one terminal and serve the app in another.';
+					throw new Error(`Proxy server not available. ${envInfo}`);
 				}
 				throw error;
 			}
@@ -138,7 +141,7 @@ export default class SfAgentApi extends EventTarget {
 			try {
 				await this.login();
 			} catch (loginError) {
-				throw new Error('No s\'ha pogut iniciar sessió amb Salesforce: ' + loginError.message);
+				throw new Error('Failed to start Salesforce session: ' + loginError.message);
 			}
 		}
 
@@ -222,7 +225,7 @@ export default class SfAgentApi extends EventTarget {
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				throw new Error('Error al enviar el missatge: ' + errorText);
+				throw new Error('Error sending message: ' + errorText);
 			}
 
 			const data = await response.json();
@@ -259,7 +262,7 @@ export default class SfAgentApi extends EventTarget {
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				throw new Error('Error al enviar el missatge: ' + errorText);
+				throw new Error('Error sending message: ' + errorText);
 			}
 
 			const decoder = new TextDecoder('utf-8');
