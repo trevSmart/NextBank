@@ -1,6 +1,7 @@
 import uuid4 from '../../../assets/libs/uuid4.mjs';
 import {createParser} from '../../../assets/libs/eventsource-parser.mjs';
 import {isDevelopment} from '../../../utils/fetchUtils.js';
+import {getProxyUrl} from '../../../config.js';
 
 const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
 
@@ -12,8 +13,8 @@ function getStoredAccessToken() {
 	try {
 		if (typeof window !== 'undefined' && window.sessionStorage) {
 			const token = window.sessionStorage.getItem(SF_ACCESS_TOKEN_KEY);
-			// Return null for empty/falsy values to ensure consistency
-			return (token && token.trim().length > 0) ? token : null;
+			//Return null for empty/falsy values to ensure consistency
+			return token && token.trim().length > 0 ? token : null;
 		}
 	} catch (error) {
 		console.error('Error reading access token from sessionStorage:', error);
@@ -42,11 +43,11 @@ function setStoredAccessToken(token) {
 
 const salesforceParameters = {
 	urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
-	// Values injected by the proxy on token requests
+	//Values injected by the proxy on token requests
 	connectedAppClientId: '',
 	connectedAppClientSecret: '',
 	agentId: '0XxgK000000D2KDSA0',
-	// Try to initialize with token from sessionStorage if available
+	//Try to initialize with token from sessionStorage if available
 	accessToken: getStoredAccessToken()
 };
 
@@ -55,12 +56,12 @@ export default class SfAgentApi extends EventTarget {
 		super();
 		this.session = {id: null, sequenceId: 0};
 		this.streaming = false;
-		// Salesforce API calls ALWAYS require a proxy due to CORS restrictions.
-		// Browsers cannot make direct cross-origin requests to Salesforce APIs,
-		// so all requests must go through a local proxy server (npm run proxy).
+		//Salesforce API calls ALWAYS require a proxy due to CORS restrictions.
+		//Browsers cannot make direct cross-origin requests to Salesforce APIs,
+		//so all requests must go through a local proxy server (npm run proxy).
 		const shouldUseProxy = options.useProxy !== undefined
 			? options.useProxy
-			: true; // Always use proxy for Salesforce APIs
+			: true; //Always use proxy for Salesforce APIs
 		this.options = {
 			useProxy: shouldUseProxy,
 			...options
@@ -69,14 +70,29 @@ export default class SfAgentApi extends EventTarget {
 
 	async _fetch(url, options) {
 		if (this.options.useProxy) {
+			const proxyUrl = getProxyUrl();
+
+			if (!proxyUrl) {
+				//No proxy URL configured - provide helpful error message
+				const setupInstructions = 'This application requires a proxy server to connect to Salesforce APIs.\n\n' +
+					'To run NextBank:\n' +
+					'1. Clone the repository: git clone https://github.com/trevSmart/NextBank.git\n' +
+					'2. Install dependencies: npm install\n' +
+					'3. Set up environment variables (see README for details)\n' +
+					'4. Start the proxy server: npm run proxy\n' +
+					'5. Serve the application in another terminal\n\n' +
+					'Alternatively, deploy the proxy server to a cloud platform and configure NEXTBANK_CONFIG.PROXY_URL.';
+				throw new Error(`Proxy server not configured. ${setupInstructions}`);
+			}
+
 			try {
-				return await fetch('http://localhost:3000/proxy', {
+				return await fetch(proxyUrl, {
 					method: 'POST',
 					headers: {'Content-Type': 'application/json'},
 					body: JSON.stringify({url, ...options})
 				});
 			} catch (error) {
-				// Check if proxy is not available
+				//Check if proxy is not available
 				const isConnectionError =
 					error.message?.includes('Failed to fetch') ||
 					error.message?.includes('ERR_CONNECTION_REFUSED') ||
@@ -84,11 +100,16 @@ export default class SfAgentApi extends EventTarget {
 					error.name === 'TypeError';
 
 				if (isConnectionError) {
-					// Provide environment-specific guidance
-					const devMessage = 'Please start the proxy server locally with: npm run proxy';
-					const prodMessage = 'This application requires a local proxy server to connect to Salesforce APIs. ' +
-						'Please clone the repository and run it locally with "npm run proxy" in one terminal and serve the app in another.';
-					const envInfo = isDevelopment() ? devMessage : prodMessage;
+					//Provide environment-specific guidance
+					const devMessage = `Please start the proxy server locally with: npm run proxy\n(Configured proxy URL: ${proxyUrl})`;
+					const proxyUnavailableMessage = 'The configured proxy server is not responding.\n\n' +
+						`Proxy URL: ${proxyUrl}\n\n` +
+						'Please ensure:\n' +
+						'1. The proxy server is running and accessible\n' +
+						'2. CORS is properly configured on the proxy\n' +
+						'3. The proxy URL is correct\n\n' +
+						'For local development, clone the repository and run "npm run proxy".';
+					const envInfo = isDevelopment() ? devMessage : proxyUnavailableMessage;
 					throw new Error(`Proxy server not available. ${envInfo}`);
 				}
 				throw error;

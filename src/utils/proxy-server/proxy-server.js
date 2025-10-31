@@ -15,13 +15,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 //List of allowed origins for CORS
+//To add your own deployment, add your frontend URL to this array
+//For example: 'https://your-custom-domain.com'
 const allowedOrigins = [
 	'http://localhost:60566',
 	'http://localhost:3000',
 	'http://localhost:5500',
 	'http://127.0.0.1:60566',
 	'http://127.0.0.1:3000',
-	'http://127.0.0.1:5500'
+	'http://127.0.0.1:5500',
+	// 'https://yourusername.github.io'  // Example: GitHub Pages deployment (replace with your own deployment URL)
 ];
 
 //CORS preflight headers (shared between no-origin and whitelisted origin responses)
