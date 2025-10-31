@@ -16,6 +16,19 @@ function getStoredAccessToken() {
 	return null;
 }
 
+// Helper function to safely set access token in localStorage
+function setStoredAccessToken(token) {
+	try {
+		if (typeof window !== 'undefined' && window.localStorage) {
+			window.localStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
+			return true;
+		}
+	} catch (error) {
+		console.error('Error storing access token in localStorage:', error);
+	}
+	return false;
+}
+
 const salesforceParameters = {
     urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
     // Values injected by the proxy on token requests
@@ -95,7 +108,7 @@ export default class SfAgentApi extends EventTarget {
 
 		const data = await response.json();
 
-		localStorage.setItem(SF_ACCESS_TOKEN_KEY, data.access_token);
+		setStoredAccessToken(data.access_token);
 		salesforceParameters.accessToken = data.access_token;
 		return response;
 	}
