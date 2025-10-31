@@ -5,6 +5,26 @@
  * between development and production environments.
  */
 
+//Private IP range patterns for development environment detection
+const REGEX_192_168 = /^192\.168\.\d{1,3}\.\d{1,3}$/;
+const REGEX_10 = /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+const REGEX_172 = /^172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}$/;
+
+/**
+ * Check if hostname is a local or private IP address
+ * @param {string} hostname - The hostname to check
+ * @returns {boolean} True if hostname is local or private IP
+ */
+function isLocalHostname(hostname) {
+	return (
+		hostname === 'localhost' ||
+		hostname === '127.0.0.1' ||
+		REGEX_192_168.test(hostname) ||
+		REGEX_10.test(hostname) ||
+		REGEX_172.test(hostname)
+	);
+}
+
 /**
  * Get the proxy server URL based on environment
  * Priority:
@@ -27,13 +47,7 @@ export function getProxyUrl() {
 	}
 
 	//Check if we're in development (localhost or private IPs)
-	const isDev = typeof window !== 'undefined' && (
-		window.location.hostname === 'localhost' ||
-		window.location.hostname === '127.0.0.1' ||
-		/^192\.168\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
-		/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
-		/^172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname)
-	);
+	const isDev = typeof window !== 'undefined' && isLocalHostname(window.location.hostname);
 
 	//In development, default to local proxy
 	if (isDev) {
@@ -53,13 +67,7 @@ export function isDevelopment() {
 		return false;
 	}
 
-	return (
-		window.location.hostname === 'localhost' ||
-		window.location.hostname === '127.0.0.1' ||
-		/^192\.168\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
-		/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
-		/^172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname)
-	);
+	return isLocalHostname(window.location.hostname);
 }
 
 /**
