@@ -11,7 +11,8 @@ const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
 function getStoredAccessToken() {
 	try {
 		if (typeof window !== 'undefined' && window.localStorage) {
-			return window.localStorage.getItem(SF_ACCESS_TOKEN_KEY);
+			const token = window.localStorage.getItem(SF_ACCESS_TOKEN_KEY);
+			return token || null;
 		}
 	} catch (error) {
 		console.error('Error reading access token from localStorage:', error);
@@ -27,7 +28,7 @@ function getStoredAccessToken() {
 function setStoredAccessToken(token) {
 	try {
 		if (typeof window !== 'undefined' && window.localStorage) {
-			if (token && typeof token === 'string') {
+			if (token && typeof token === 'string' && token.trim().length > 0) {
 				window.localStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
 				return true;
 			}
