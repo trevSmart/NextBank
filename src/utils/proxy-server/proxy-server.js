@@ -105,8 +105,6 @@ app.post('/proxy', async (req, res) => {
 			return res.status(400).json({error: 'Falta el camp "url" al body'});
 		}
 
-		//SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
-		//Define allowed hosts (add your allowed hostnames or domains here)
 		//Use the global ALLOWED_HOSTNAMES constant for SSRF protection
 		const ALLOWED_HOSTS = ALLOWED_HOSTNAMES;
 		let urlObj;
