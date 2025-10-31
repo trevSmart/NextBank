@@ -55,8 +55,9 @@ export default class SfAgentApi extends EventTarget {
 		super();
 		this.session = {id: null, sequenceId: 0};
 		this.streaming = false;
-		// Salesforce API calls ALWAYS require a proxy due to CORS restrictions
-		// The proxy must be running locally (npm run proxy) for the app to work
+		// Salesforce API calls ALWAYS require a proxy due to CORS restrictions.
+		// Browsers cannot make direct cross-origin requests to Salesforce APIs,
+		// so all requests must go through a local proxy server (npm run proxy).
 		const shouldUseProxy = options.useProxy !== undefined
 			? options.useProxy
 			: true; // Always use proxy for Salesforce APIs
@@ -83,9 +84,11 @@ export default class SfAgentApi extends EventTarget {
 					error.name === 'TypeError';
 
 				if (isConnectionError) {
-					const envInfo = isDevelopment()
-						? 'Please start the proxy server locally with: npm run proxy'
-						: 'This application requires a local proxy server to connect to Salesforce APIs. Please clone the repository and run it locally with "npm run proxy" in one terminal and serve the app in another.';
+					// Provide environment-specific guidance
+					const devMessage = 'Please start the proxy server locally with: npm run proxy';
+					const prodMessage = 'This application requires a local proxy server to connect to Salesforce APIs. ' +
+						'Please clone the repository and run it locally with "npm run proxy" in one terminal and serve the app in another.';
+					const envInfo = isDevelopment() ? devMessage : prodMessage;
 					throw new Error(`Proxy server not available. ${envInfo}`);
 				}
 				throw error;
