@@ -49,7 +49,9 @@ export function getProxyUrl() {
  * @returns {boolean}
  */
 export function isDevelopment() {
-	if (typeof window === 'undefined') {return false}
+	if (typeof window === 'undefined') {
+		return false;
+	}
 
 	return (
 		window.location.hostname === 'localhost' ||
