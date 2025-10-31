@@ -46,7 +46,7 @@ const salesforceParameters = {
     connectedAppClientId: '',
     connectedAppClientSecret: '',
     agentId: '0XxgK000000D2KDSA0',
-    // Try to initialize with token from localStorage if available
+    // Try to initialize with token from sessionStorage if available
     accessToken: getStoredAccessToken()
 };
 
@@ -119,8 +119,11 @@ export default class SfAgentApi extends EventTarget {
 
 		const data = await response.json();
 
-		setStoredAccessToken(data.access_token);
+		const stored = setStoredAccessToken(data.access_token);
 		salesforceParameters.accessToken = data.access_token;
+		if (!stored) {
+			console.error('Warning: Failed to store Salesforce access token in sessionStorage. Token will not persist across sessions.');
+		}
 		return response;
 	}
 
