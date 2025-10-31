@@ -119,7 +119,7 @@ export default class SfAgentApi extends EventTarget {
 
 		const data = await response.json();
 
-		setStoredAccessToken(data.access_token);
+		sessionStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
 		salesforceParameters.accessToken = data.access_token;
 		return response;
 	}
