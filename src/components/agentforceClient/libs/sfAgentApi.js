@@ -74,7 +74,7 @@ export default class SfAgentApi extends EventTarget {
 
 			if (!proxyUrl) {
 				//No proxy URL configured - provide helpful error message
-				const prodMessage = 'This application requires a proxy server to connect to Salesforce APIs.\n\n' +
+				const setupInstructions = 'This application requires a proxy server to connect to Salesforce APIs.\n\n' +
 					'To run NextBank:\n' +
 					'1. Clone the repository: git clone https://github.com/trevSmart/NextBank.git\n' +
 					'2. Install dependencies: npm install\n' +
@@ -82,7 +82,7 @@ export default class SfAgentApi extends EventTarget {
 					'4. Start the proxy server: npm run proxy\n' +
 					'5. Serve the application in another terminal\n\n' +
 					'Alternatively, deploy the proxy server to a cloud platform and configure NEXTBANK_CONFIG.PROXY_URL.';
-				throw new Error(`Proxy server not configured. ${prodMessage}`);
+				throw new Error(`Proxy server not configured. ${setupInstructions}`);
 			}
 
 			try {
@@ -102,14 +102,14 @@ export default class SfAgentApi extends EventTarget {
 				if (isConnectionError) {
 					//Provide environment-specific guidance
 					const devMessage = `Please start the proxy server locally with: npm run proxy\n(Configured proxy URL: ${proxyUrl})`;
-					const prodMessage = 'The configured proxy server is not responding.\n\n' +
+					const proxyUnavailableMessage = 'The configured proxy server is not responding.\n\n' +
 						`Proxy URL: ${proxyUrl}\n\n` +
 						'Please ensure:\n' +
 						'1. The proxy server is running and accessible\n' +
 						'2. CORS is properly configured on the proxy\n' +
 						'3. The proxy URL is correct\n\n' +
 						'For local development, clone the repository and run "npm run proxy".';
-					const envInfo = isDevelopment() ? devMessage : prodMessage;
+					const envInfo = isDevelopment() ? devMessage : proxyUnavailableMessage;
 					throw new Error(`Proxy server not available. ${envInfo}`);
 				}
 				throw error;
