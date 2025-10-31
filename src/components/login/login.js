@@ -59,14 +59,14 @@ class LoginComponent {
 		document.body.insertAdjacentHTML('beforeend', loginHTML);
 	}
 
-        bindEvents() {
-                const form = document.getElementById('loginForm');
-                const usernameInput = document.getElementById('username');
-                const passwordInput = document.getElementById('password');
+	bindEvents() {
+		const form = document.getElementById('loginForm');
+		const usernameInput = document.getElementById('username');
+		const passwordInput = document.getElementById('password');
 
-                //Manejar envío del formulario
-                form.addEventListener('submit', e => {
-                        e.preventDefault();
+		//Manejar envío del formulario
+		form.addEventListener('submit', e => {
+			e.preventDefault();
 			this.handleLogin();
 		});
 
@@ -87,17 +87,17 @@ class LoginComponent {
 		});
 	}
 
-        handleLogin() {
-                //Per la demo, ocultem qualsevol missatge d'error i mostrem
-                //un petit estat de càrrega abans d'entrar
-                this.hideError();
-                this.setLoadingState(true);
+	handleLogin() {
+		//Per la demo, ocultem qualsevol missatge d'error i mostrem
+		//un petit estat de càrrega abans d'entrar
+		this.hideError();
+		this.setLoadingState(true);
 
-                //Simular delay de autenticación
-                setTimeout(() => {
-                        this.loginSuccess();
-                }, 800);
-        }
+		//Simular delay de autenticación
+		setTimeout(() => {
+			this.loginSuccess();
+		}, 800);
+	}
 
 	setLoadingState(isLoading) {
 		const loginButton = document.getElementById('loginButton');

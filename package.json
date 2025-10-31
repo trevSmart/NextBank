@@ -4,7 +4,7 @@
 	"description": "Lloc web modern per NextBank",
 	"main": "index.js",
 	"scripts": {
-		"lint": "eslint . --config .eslintrc.cjs",
+		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"proxy": "node src/utils/proxy-server/proxy-server.js"
 	},
