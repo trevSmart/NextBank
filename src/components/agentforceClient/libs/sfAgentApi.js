@@ -5,37 +5,37 @@ import { isDevelopment } from '../../../utils/fetchUtils.js';
 const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
 
 /**
- * Safely retrieves the Salesforce access token from localStorage
+ * Safely retrieves the Salesforce access token from sessionStorage
  * @returns {string|null} The stored access token (non-empty string), or null if not available, empty, or on error
  */
 function getStoredAccessToken() {
 	try {
-		if (typeof window !== 'undefined' && window.localStorage) {
-			const token = window.localStorage.getItem(SF_ACCESS_TOKEN_KEY);
+		if (typeof window !== 'undefined' && window.sessionStorage) {
+			const token = window.sessionStorage.getItem(SF_ACCESS_TOKEN_KEY);
 			// Return null for empty/falsy values to ensure consistency
 			return (token && token.trim().length > 0) ? token : null;
 		}
 	} catch (error) {
-		console.error('Error reading access token from localStorage:', error);
+		console.error('Error reading access token from sessionStorage:', error);
 	}
 	return null;
 }
 
 /**
- * Safely stores the Salesforce access token in localStorage
+ * Safely stores the Salesforce access token in sessionStorage
  * @param {string} token - The access token to store
  * @returns {boolean} true if successfully stored, false otherwise
  */
 function setStoredAccessToken(token) {
 	try {
-		if (typeof window !== 'undefined' && window.localStorage) {
+		if (typeof window !== 'undefined' && window.sessionStorage) {
 			if (token && typeof token === 'string' && token.trim().length > 0) {
-				window.localStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
+				window.sessionStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
 				return true;
 			}
 		}
 	} catch (error) {
-		console.error('Error storing access token in localStorage:', error);
+		console.error('Error storing access token in sessionStorage:', error);
 	}
 	return false;
 }
