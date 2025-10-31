@@ -4,7 +4,10 @@ import { isDevelopment } from '../../../utils/fetchUtils.js';
 
 const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
 
-// Helper function to safely get access token from localStorage
+/**
+ * Safely retrieves the Salesforce access token from localStorage
+ * @returns {string|null} The stored access token, or null if not available or on error
+ */
 function getStoredAccessToken() {
 	try {
 		if (typeof window !== 'undefined' && window.localStorage) {
@@ -16,12 +19,18 @@ function getStoredAccessToken() {
 	return null;
 }
 
-// Helper function to safely set access token in localStorage
+/**
+ * Safely stores the Salesforce access token in localStorage
+ * @param {string} token - The access token to store
+ * @returns {boolean} true if successfully stored, false otherwise
+ */
 function setStoredAccessToken(token) {
 	try {
 		if (typeof window !== 'undefined' && window.localStorage) {
-			window.localStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
-			return true;
+			if (token && typeof token === 'string') {
+				window.localStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
+				return true;
+			}
 		}
 	} catch (error) {
 		console.error('Error storing access token in localStorage:', error);
