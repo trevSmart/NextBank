@@ -9,13 +9,19 @@
  *   const response = await smartFetch('https://api.example.com/data');
  */
 
-//Detect if we're in development (localhost) or production (GitHub Pages)
+// Detect if we're in development (localhost) or production (GitHub Pages)
+// Regex pattern for valid IP octet (0-255)
+const OCTET = '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)';
+// Precompiled regex patterns for private IP ranges
+const REGEX_192_168 = new RegExp(`^192\\.168\\.${OCTET}\\.${OCTET}$`);
+const REGEX_10 = new RegExp(`^10\\.${OCTET}\\.${OCTET}\\.${OCTET}$`);
+const REGEX_172 = new RegExp(`^172\\.(1[6-9]|2[0-9]|3[01])\\.${OCTET}\\.${OCTET}$`);
 const IS_DEVELOPMENT = typeof window !== 'undefined' && (
 	window.location.hostname === 'localhost' ||
 	window.location.hostname === '127.0.0.1' ||
-	window.location.hostname.startsWith('192.168.') ||
-	window.location.hostname.startsWith('10.') ||
-	window.location.hostname.startsWith('172.')
+	REGEX_192_168.test(window.location.hostname) ||
+	REGEX_10.test(window.location.hostname) ||
+	REGEX_172.test(window.location.hostname)
 );
 
 const PROXY_URL = 'http://localhost:3000/proxy';
