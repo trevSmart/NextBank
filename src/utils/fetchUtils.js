@@ -34,17 +34,17 @@ const PROXY_URL = 'http://localhost:3000/proxy';
  * @returns {Promise<Response>} - The fetch response
  */
 export async function smartFetch(url, options = {}, proxyOptions = {}) {
-	const { forceProxy = false, forceDirect = false } = proxyOptions;
+	const {forceProxy = false, forceDirect = false} = proxyOptions;
 
-	// Determine if we should try proxy first
-	const tryProxy = forceProxy || (!forceDirect && IS_DEVELOPMENT);
+	//Determine if we should try proxy first
+	const tryProxy = forceProxy || !forceDirect && IS_DEVELOPMENT;
 
 	if (tryProxy) {
-		// Try proxy first in development to avoid CORS issues
+		//Try proxy first in development to avoid CORS issues
 		try {
 			const proxyResponse = await fetch(PROXY_URL, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {'Content-Type': 'application/json'},
 				body: JSON.stringify({
 					method: options.method || 'GET',
 					headers: options.headers || {},
@@ -52,10 +52,10 @@ export async function smartFetch(url, options = {}, proxyOptions = {}) {
 					body: options.body
 				})
 			});
-			// If proxy responds (even with error status), return it
+			//If proxy responds (even with error status), return it
 			return proxyResponse;
 		} catch (error) {
-			// If proxy is not available (connection refused or network error), fallback to direct call
+			//If proxy is not available (connection refused or network error), fallback to direct call
 			const isConnectionError =
 				error.message?.includes('Failed to fetch') ||
 				error.message?.includes('ERR_CONNECTION_REFUSED') ||
@@ -65,15 +65,15 @@ export async function smartFetch(url, options = {}, proxyOptions = {}) {
 
 			if (isConnectionError) {
 				console.info('Proxy not available, falling back to direct API call');
-				// Fall through to direct call
+				//Fall through to direct call
 			} else {
-				// Re-throw other errors (non-connection errors)
+				//Re-throw other errors (non-connection errors)
 				throw error;
 			}
 		}
 	}
 
-	// Direct API call (production, forced, or fallback from failed proxy)
+	//Direct API call (production, forced, or fallback from failed proxy)
 	return fetch(url, options);
 }
 
@@ -92,4 +92,3 @@ export function isDevelopment() {
 export function isProduction() {
 	return !IS_DEVELOPMENT;
 }
-

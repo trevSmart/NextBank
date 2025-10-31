@@ -218,10 +218,10 @@ class Calendar extends HTMLElement {
 
 		this.date = new Date();
 
-		// Map of ISO date (YYYY-MM-DD) -> { id, label }
-		// Add here the days that should behave as selectable chat context
+		//Map of ISO date (YYYY-MM-DD) -> { id, label }
+		//Add here the days that should behave as selectable chat context
 		this.contextDays = new Map([
-			['2025-10-08', { id: 'cal-2025-10-08', label: 'Calendar day October 8, 2025' }],
+			['2025-10-08', {id: 'cal-2025-10-08', label: 'Calendar day October 8, 2025'}],
 		]);
 	}
 

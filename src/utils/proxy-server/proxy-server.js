@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,227 +14,227 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// List of allowed origins for CORS
+//List of allowed origins for CORS
 const allowedOrigins = [
-    'http://localhost:60566',
-    'http://localhost:3000',
-    'http://localhost:5500',
-    'http://127.0.0.1:60566',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5500'
+	'http://localhost:60566',
+	'http://localhost:3000',
+	'http://localhost:5500',
+	'http://127.0.0.1:60566',
+	'http://127.0.0.1:3000',
+	'http://127.0.0.1:5500'
 ];
 
-// CORS preflight headers (shared between no-origin and whitelisted origin responses)
+//CORS preflight headers (shared between no-origin and whitelisted origin responses)
 const CORS_ALLOW_METHODS = 'GET, POST, PUT, DELETE, OPTIONS, PATCH';
 const CORS_ALLOW_HEADERS = 'Content-Type, Authorization, X-Requested-With, Accept, Origin';
 
-// Allow-list for outbound proxy requests (hostnames)
-// Subdomains are automatically allowed (e.g., api.salesforce.com matches salesforce.com)
+//Allow-list for outbound proxy requests (hostnames)
+//Subdomains are automatically allowed (e.g., api.salesforce.com matches salesforce.com)
 const ALLOWED_HOSTNAMES = [
-  "twelvedata.com",        // Allows api.twelvedata.com, etc.
-  "salesforce.com",        // Allows api.salesforce.com, my.salesforce.com, orgfarm-*.my.salesforce.com, etc.
-  // Add other trusted domains as needed
+	'twelvedata.com',        //Allows api.twelvedata.com, etc.
+	'salesforce.com',        //Allows api.salesforce.com, my.salesforce.com, orgfarm-*.my.salesforce.com, etc.
+	'github.com',
+	//Add other trusted domains as needed
 ];
-// Configure CORS with more permissive settings for development
+//Configure CORS with more permissive settings for development
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
+	origin: function(origin, callback) {
+		//Allow requests with no origin (like mobile apps or curl requests)
+		if (!origin) {return callback(null, true)}
 
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            console.log('CORS blocked origin:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 200
+		if (allowedOrigins.indexOf(origin) !== -1) {
+			callback(null, true);
+		} else {
+			console.log('CORS blocked origin:', origin);
+			callback(new Error('Not allowed by CORS'));
+		}
+	},
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+	allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+	credentials: true,
+	preflightContinue: false,
+	optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 
-// Explicitly handle preflight requests for all routes
+//Explicitly handle preflight requests for all routes
 app.options('*', (req, res) => {
-    console.log('Handling preflight request for:', req.url);
-    const requestOrigin = req.headers.origin;
+	console.log('Handling preflight request for:', req.url);
+	const requestOrigin = req.headers.origin;
 
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!requestOrigin) {
-        res.header('Access-Control-Allow-Methods', CORS_ALLOW_METHODS);
-        res.header('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
-        res.status(200).end();
-        return;
-    }
+	//Allow requests with no origin (like mobile apps or curl requests)
+	if (!requestOrigin) {
+		res.header('Access-Control-Allow-Methods', CORS_ALLOW_METHODS);
+		res.header('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
+		res.status(200).end();
+		return;
+	}
 
-    if (allowedOrigins.indexOf(requestOrigin) !== -1) {
-        res.header('Access-Control-Allow-Origin', requestOrigin);
-        res.header('Access-Control-Allow-Methods', CORS_ALLOW_METHODS);
-        res.header('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.status(200).end();
-    } else {
-        console.log('CORS preflight blocked origin:', requestOrigin);
-        res.status(403).send('CORS Preflight Request Blocked: Origin not allowed');
-    }
+	if (allowedOrigins.indexOf(requestOrigin) !== -1) {
+		res.header('Access-Control-Allow-Origin', requestOrigin);
+		res.header('Access-Control-Allow-Methods', CORS_ALLOW_METHODS);
+		res.header('Access-Control-Allow-Headers', CORS_ALLOW_HEADERS);
+		res.header('Access-Control-Allow-Credentials', 'true');
+		res.status(200).end();
+	} else {
+		console.log('CORS preflight blocked origin:', requestOrigin);
+		res.status(403).send('CORS Preflight Request Blocked: Origin not allowed');
+	}
 });
 
-// Configurem el servei de fitxers estàtics
+//Configurem el servei de fitxers estàtics
 app.use(express.static(path.join(__dirname, '..', 'src')));
-// app.use('/node_modules', express.static(path.join(__dirname, '..', 'node_modules')));
+//app.use('/node_modules', express.static(path.join(__dirname, '..', 'node_modules')));
 
-// Ruta principal per servir l'aplicació SPA
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname, '..', 'src', 'index.html'));
-// });
+//Ruta principal per servir l'aplicació SPA
+//app.get('/', (req, res) => {
+//res.sendFile(path.join(__dirname, '..', 'src', 'index.html'));
+//});
 
 app.post('/proxy', async (req, res) => {
-    try {
-        console.log('Proxy request received from origin:', req.headers.origin);
-        console.log('Request headers:', req.headers);
+	try {
+		console.log('Proxy request received from origin:', req.headers.origin);
+		console.log('Request headers:', req.headers);
 
-        let { url, method = 'POST', headers = {}, body } = req.body;
+		let {url, method = 'POST', headers = {}, body} = req.body;
 
-        if (!url) {
-            console.log('Missing URL in request body');
-            return res.status(400).json({ error: 'Falta el camp "url" al body' });
-        }
+		if (!url) {
+			console.log('Missing URL in request body');
+			return res.status(400).json({error: 'Falta el camp "url" al body'});
+		}
 
-        // SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
-        // Define allowed hosts (add your allowed hostnames or domains here)
-        // Use the global ALLOWED_HOSTNAMES constant for SSRF protection
-        const ALLOWED_HOSTS = ALLOWED_HOSTNAMES;
-        let urlObj;
-        try {
-            urlObj = new URL(url);
-        } catch (e) {
-            console.log('Invalid URL:', url);
-            return res.status(400).json({ error: 'URL is invalid.' });
-        }
-        // Only allow https protocol
-        if (urlObj.protocol !== 'https:') {
-            console.log('Blocked protocol:', urlObj.protocol);
-            return res.status(403).json({ error: 'Only HTTPS endpoints are allowed.' });
-        }
-        // Check hostname allow-list
-        const isAllowed = ALLOWED_HOSTS.some(allowed => (
-            urlObj.hostname === allowed || urlObj.hostname.endsWith('.' + allowed)
-        ));
-        // Block localhost/internal hosts for extra safety
-        const forbiddenHosts = [
-            'localhost',
-            '127.0.0.1',
-            '0.0.0.0',
-            '::1',
-            '::ffff:127.0.0.1'
-        ];
-        
-        // Check for forbidden hosts and private IP ranges
-        const isForbidden = forbiddenHosts.includes(urlObj.hostname) || 
-            urlObj.hostname.match(/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ||           // 10.0.0.0/8
-            urlObj.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/) || // 172.16.0.0/12
-            urlObj.hostname.match(/^192\.168\.\d{1,3}\.\d{1,3}$/) ||              // 192.168.0.0/16
-            urlObj.hostname.match(/^169\.254\.\d{1,3}\.\d{1,3}$/) ||              // 169.254.0.0/16 (link-local)
-            urlObj.hostname.match(/^fc00:/i) ||                                    // fc00::/7 (IPv6 ULA)
-            urlObj.hostname.match(/^fe80:/i);                                      // fe80::/10 (IPv6 link-local)
-        
-        if (!isAllowed || isForbidden) {
-            console.log('Blocked SSRF attempt to:', urlObj.hostname);
-            return res.status(403).json({ error: 'Endpoint not allowed.' });
-        }
+		//SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
+		//Define allowed hosts (add your allowed hostnames or domains here)
+		//Use the global ALLOWED_HOSTNAMES constant for SSRF protection
+		const ALLOWED_HOSTS = ALLOWED_HOSTNAMES;
+		let urlObj;
+		try {
+			urlObj = new URL(url);
+		} catch (e) {
+			console.log('Invalid URL:', url);
+			return res.status(400).json({error: 'URL is invalid.'});
+		}
+		//Only allow https protocol
+		if (urlObj.protocol !== 'https:') {
+			console.log('Blocked protocol:', urlObj.protocol);
+			return res.status(403).json({error: 'Only HTTPS endpoints are allowed.'});
+		}
+		//Check hostname allow-list
+		const isAllowed = ALLOWED_HOSTS.some(allowed =>
+			urlObj.hostname === allowed || urlObj.hostname.endsWith('.' + allowed));
+		//Block localhost/internal hosts for extra safety
+		const forbiddenHosts = [
+			'localhost',
+			'127.0.0.1',
+			'0.0.0.0',
+			'::1',
+			'::ffff:127.0.0.1'
+		];
 
-        // Inject TwelveData API key if needed (avoid exposing it client-side)
-        try {
-            const TWELVEDATA_DOMAIN = 'twelvedata.com';
-            if ((urlObj.hostname === TWELVEDATA_DOMAIN || urlObj.hostname.endsWith('.' + TWELVEDATA_DOMAIN)) && urlObj.pathname.includes('/time_series')) {
-                if (!urlObj.searchParams.has('apikey') && process.env.TWELVEDATA_API_KEY) {
-                    urlObj.searchParams.set('apikey', process.env.TWELVEDATA_API_KEY);
-                    url = urlObj.toString();
-                }
-            }
-        } catch (e) {
-            console.log('URL parse error, leaving URL as-is:', e?.message);
-        }
+		//Check for forbidden hosts and private IP ranges
+		const isForbidden = forbiddenHosts.includes(urlObj.hostname) ||
+            urlObj.hostname.match(/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ||           //10.0.0.0/8
+            urlObj.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/) || //172.16.0.0/12
+            urlObj.hostname.match(/^192\.168\.\d{1,3}\.\d{1,3}$/) ||              //192.168.0.0/16
+            urlObj.hostname.match(/^169\.254\.\d{1,3}\.\d{1,3}$/) ||              //169.254.0.0/16 (link-local)
+            urlObj.hostname.match(/^fc00:/i) ||                                    //fc00::/7 (IPv6 ULA)
+            urlObj.hostname.match(/^fe80:/i);                                      //fe80::/10 (IPv6 link-local)
 
-        // Serialize/adjust body
-        let formattedBody = body;
-        const contentType = (headers['Content-Type'] || headers['content-type'] || '').toLowerCase();
-        if (contentType.includes('application/json') && typeof body !== 'string') {
-            formattedBody = JSON.stringify(body);
-        }
+		if (!isAllowed || isForbidden) {
+			console.log('Blocked SSRF attempt to:', urlObj.hostname);
+			return res.status(403).json({error: 'Endpoint not allowed.'});
+		}
 
-        // Inject Salesforce Connected App credentials on OAuth token requests
-        try {
-            const urlObj2 = new URL(url);
-            if (urlObj2.pathname.endsWith('/services/oauth2/token') && contentType.includes('application/x-www-form-urlencoded')) {
-                const params = new URLSearchParams(formattedBody || '');
-                if (process.env.SF_CONNECTED_APP_CLIENT_ID) {
-                    params.set('client_id', process.env.SF_CONNECTED_APP_CLIENT_ID);
-                }
-                if (process.env.SF_CONNECTED_APP_CLIENT_SECRET) {
-                    params.set('client_secret', process.env.SF_CONNECTED_APP_CLIENT_SECRET);
-                }
-                formattedBody = params.toString();
-            }
-        } catch (e) {
-            console.log('OAuth body injection error:', e?.message);
-        }
+		//Inject TwelveData API key if needed (avoid exposing it client-side)
+		try {
+			const TWELVEDATA_DOMAIN = 'twelvedata.com';
+			if ((urlObj.hostname === TWELVEDATA_DOMAIN || urlObj.hostname.endsWith('.' + TWELVEDATA_DOMAIN)) && urlObj.pathname.includes('/time_series')) {
+				if (!urlObj.searchParams.has('apikey') && process.env.TWELVEDATA_API_KEY) {
+					urlObj.searchParams.set('apikey', process.env.TWELVEDATA_API_KEY);
+					url = urlObj.toString();
+				}
+			}
+		} catch (e) {
+			console.log('URL parse error, leaving URL as-is:', e?.message);
+		}
 
-        console.log();
-        console.log();
-        console.log(url);
-        console.log('Validated target hostname:', urlObj.hostname);
-        console.log(JSON.stringify(headers, null, 4));
-        console.log();
-        console.log(JSON.stringify(formattedBody, null, 4));
-        console.log();
-        console.log();
-        console.log(JSON.stringify(req.formattedBody, null, 4));
-        const response = await fetch(url, {
-            method,
-            headers,
-            body: formattedBody
-        });
-        console.log();
-        console.log();
-        console.log(JSON.stringify(response, null, 4));
+		//Serialize/adjust body
+		let formattedBody = body;
+		const contentType = (headers['Content-Type'] || headers['content-type'] || '').toLowerCase();
+		if (contentType.includes('application/json') && typeof body !== 'string') {
+			formattedBody = JSON.stringify(body);
+		}
 
-        // Comprova el content-type de la resposta
-        const respContentType = response.headers.get('content-type') || '';
-        if (respContentType.startsWith('text/event-stream')) {
-            // Configura els headers per SSE
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
+		//Inject Salesforce Connected App credentials on OAuth token requests
+		try {
+			const urlObj2 = new URL(url);
+			if (urlObj2.pathname.endsWith('/services/oauth2/token') && contentType.includes('application/x-www-form-urlencoded')) {
+				const params = new URLSearchParams(formattedBody || '');
+				if (process.env.SF_CONNECTED_APP_CLIENT_ID) {
+					params.set('client_id', process.env.SF_CONNECTED_APP_CLIENT_ID);
+				}
+				if (process.env.SF_CONNECTED_APP_CLIENT_SECRET) {
+					params.set('client_secret', process.env.SF_CONNECTED_APP_CLIENT_SECRET);
+				}
+				formattedBody = params.toString();
+			}
+		} catch (e) {
+			console.log('OAuth body injection error:', e?.message);
+		}
 
-            console.log('Streaming response');
-            console.log(response.body);
-            // Retransmet el flux tal qual
-            response.body.pipe(res);
-        } else {
-            // Per la resta de casos, primer llegim el text i després intentem parsejar com JSON
-            const textData = await response.text();
-            console.log();
-            console.log();
-            console.log(response.status + ' ' + response.statusText);
-            console.log('Response text:', textData);
+		console.log();
+		console.log();
+		console.log(url);
+		console.log('Validated target hostname:', urlObj.hostname);
+		console.log(JSON.stringify(headers, null, 4));
+		console.log();
+		console.log(JSON.stringify(formattedBody, null, 4));
+		console.log();
+		console.log();
+		console.log(JSON.stringify(req.formattedBody, null, 4));
+		const response = await fetch(url, {
+			method,
+			headers,
+			body: formattedBody
+		});
+		console.log();
+		console.log();
+		console.log(JSON.stringify(response, null, 4));
 
-            try {
-                const data = JSON.parse(textData);
-                res.status(response.status).json(data);
-            } catch (jsonError) {
-                // Si no és JSON vàlid, retorna el text
-                res.status(response.status).send(textData);
-            }
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: error.message });
-    }
+		//Comprova el content-type de la resposta
+		const respContentType = response.headers.get('content-type') || '';
+		if (respContentType.startsWith('text/event-stream')) {
+			//Configura els headers per SSE
+			res.setHeader('Content-Type', 'text/event-stream');
+			res.setHeader('Cache-Control', 'no-cache');
+			res.setHeader('Connection', 'keep-alive');
+
+			console.log('Streaming response');
+			console.log(response.body);
+			//Retransmet el flux tal qual
+			response.body.pipe(res);
+		} else {
+			//Per la resta de casos, primer llegim el text i després intentem parsejar com JSON
+			const textData = await response.text();
+			console.log();
+			console.log();
+			console.log(response.status + ' ' + response.statusText);
+			console.log('Response text:', textData);
+
+			try {
+				const data = JSON.parse(textData);
+				res.status(response.status).json(data);
+			} catch (jsonError) {
+				//Si no és JSON vàlid, retorna el text
+				res.status(response.status).send(textData);
+			}
+		}
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({error: error.message});
+	}
 });
 
 app.listen(PORT, () => console.log(`Proxy server running on port ${PORT}`));

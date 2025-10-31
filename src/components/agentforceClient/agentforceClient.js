@@ -12,7 +12,7 @@ class Session {
 	async startSession() {
 		const response = await this.afClient.sfAgentApi.startSession(this.afClient.options.streaming);
 		//eslint-disable-next-line no-console
-		console.log('Agentforce session started with id:', response.sessionId ) ;
+		console.log('Agentforce session started with id:', response.sessionId) ;
 		this.sessionId = response.sessionId;
 		return response;
 	}
@@ -27,7 +27,7 @@ class Session {
 }
 
 class UiInstance {
-	constructor(afClient, id, node ) {
+	constructor(afClient, id, node) {
 		this.afClient = afClient;
 		this.id = id || node.id;
 		this.node = node;
@@ -37,7 +37,7 @@ class UiInstance {
 		};
 
 		const createElements = () => {
-			const uiContainer = document.createElement('div' ) ;
+			const uiContainer = document.createElement('div') ;
 			uiContainer.id = 'uiContainer';
 			uiContainer.className = 'ui-container';
 
@@ -50,7 +50,7 @@ class UiInstance {
 			const chatInput = document.createElement('div');
 			chatInput.className = 'chat-input';
 
-			const chatInputInput = document.createElement('input-multiline' );
+			const chatInputInput = document.createElement('input-multiline');
 			chatInputInput.id = `chatInputInput-${this.id}`;
 
 			const chatInputButtons = document.createElement('div');
@@ -58,7 +58,7 @@ class UiInstance {
 
 			const buttonStartConextSelection = document.createElement('button');
 			buttonStartConextSelection.className = 'add-context-button';
-			// buttonStartConextSelection.innerHTML = '<i class="fas fa-plus"></i>';
+			//buttonStartConextSelection.innerHTML = '<i class="fas fa-plus"></i>';
 			buttonStartConextSelection.innerHTML = '<i class="fas fa-paperclip"></i>';
 			buttonStartConextSelection.title = 'Add context';
 			buttonStartConextSelection.disabled = true;
@@ -106,7 +106,7 @@ class UiInstance {
 			contextSelectionBackdrop.addEventListener('click', () => this.afClient.endContextSelection());
 
 			this.messageListNode = uiMessagesList;
-		}
+		};
 
 		if (!document.querySelector('link[href$="agentforceClient.css"]')) {
 			const linkStyle = document.createElement('link');
@@ -158,7 +158,7 @@ class Message {
 		this.context = context;
 		this.conversation = conversation;
 		this.timestamp = new Date();
-		this.status = status; // 'Streaming' o 'Completed'
+		this.status = status; //'Streaming' o 'Completed'
 		return this;
 	}
 
@@ -215,7 +215,7 @@ class Message {
 					messageContent.appendChild(messageName);
 				}
 			} else {
-				// avatar d'usuari
+				//avatar d'usuari
 				const userAvatar = document.createElement('div');
 				userAvatar.className = 'user-avatar';
 				userAvatar.textContent = 'E';
@@ -231,14 +231,14 @@ class Message {
 		if (this.type === 'typing') {
 			messageText.innerHTML = '<dotlottie-player src="/src/assets/animations/typing.json" background="transparent" speed="1" style="width: 53px"; loop autoplay></dotlottie-player>';
 		} else if (this.text) {
-			// Format the text with HTML tags
+			//Format the text with HTML tags
 			let formattedText = this.text
 				.replace(/\n/g, '<br>')
-				.replace(/^([^<]*?\([^)]+\))(<br>|$)/, '<span class="context-info"><i class="fa-solid fa-paperclip"></i> $1</span>$2') // First line with Description (Id) -> context-info with icon
-				.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **text** -> <strong>text</strong>
-				.replace(/\*(.*?)\*/g, '<em>$1</em>') // *text* -> <em>text</em>
-				.replace(/`(.*?)`/g, '<code>$1</code>') // `text` -> <code>text</code>
-				.replace(/~~(.*?)~~/g, '<del>$1</del>'); // ~~text~~ -> <del>text</del>
+				.replace(/^([^<]*?\([^)]+\))(<br>|$)/, '<span class="context-info"><i class="fa-solid fa-paperclip"></i> $1</span>$2') //First line with Description (Id) -> context-info with icon
+				.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') //**text** -> <strong>text</strong>
+				.replace(/\*(.*?)\*/g, '<em>$1</em>') //*text* -> <em>text</em>
+				.replace(/`(.*?)`/g, '<code>$1</code>') //`text` -> <code>text</code>
+				.replace(/~~(.*?)~~/g, '<del>$1</del>'); //~~text~~ -> <del>text</del>
 
 			messageText.innerHTML = formattedText;
 		}
@@ -293,7 +293,7 @@ class Conversation {
 		type !== 'userHidden' && this.messages.push(message);
 
 		if (this.afClient.options.devMode) {
-			// Safe serialization to avoid circular reference errors
+			//Safe serialization to avoid circular reference errors
 			const safeMessages = this.messages.map(msg => ({
 				id: msg.id,
 				type: msg.type,
@@ -306,7 +306,7 @@ class Conversation {
 		}
 
 		if (type === 'user' || type === 'userHidden') {
-			// Disable all send buttons across all UI instances
+			//Disable all send buttons across all UI instances
 			this.awaitingAgentResponse = true;
 			document.querySelectorAll('[id^="buttonSendMessage-"]').forEach(button => {
 				button.disabled = true;
@@ -316,7 +316,7 @@ class Conversation {
 				const afClient = this.afClient;
 				afClient.sfAgentApi.addEventListener('chunk', ({detail: chunk}) => {
 					if (chunk.eventType === 'PROGRESS_INDICATOR') {
-						afClient.addMessage('typing', null, null)
+						afClient.addMessage('typing', null, null);
 
 					} else if (chunk.eventType === 'TEXT_CHUNK') {
 						console.log(JSON.stringify(chunk));
@@ -335,7 +335,7 @@ class Conversation {
 					await this.afClient.addMessage('error', 'Error sending message: ' + error.message);
 				} finally {
 					this.awaitingAgentResponse = false;
-					// Re-enable send buttons for inputs that have content
+					//Re-enable send buttons for inputs that have content
 					document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
 						const buttonId = input.id.replace('chatInputInput-', 'buttonSendMessage-');
 						const button = document.getElementById(buttonId);
@@ -352,7 +352,7 @@ class Conversation {
 	}
 
 	removeMessages(ids) {
-		// return;
+		//return;
 		this.messages = this.messages.filter(message => !ids.includes(message.id));
 		this.afClient.uiInstances.forEach(ui => {
 			Array.from(ui.messageListNode.querySelectorAll('.message'))
@@ -383,7 +383,7 @@ export default class AfClient {
 			devMode: false,
 			...options
 		};
-		// Control d'animació incremental per missatge (id -> {timeout, targetText, currentText})
+		//Control d'animació incremental per missatge (id -> {timeout, targetText, currentText})
 		this.streamingAnimations = new Map();
 
 		this.sfAgentApi = new SfAgentApi({useProxy: true});
@@ -397,12 +397,12 @@ export default class AfClient {
 		try {
 			const {welcomeMessage} = await this.session.startSession();
 			this.addMessage('system', 'Your AI assistant is ready');
-			// this.addMessage('agent', welcomeMessage);
+			//this.addMessage('agent', welcomeMessage);
 			if (this.options.initialMessages) {
 				this.addMessage('userHidden', 'My name is Elizabeth, give me the initial important messages');
 			}
 
-			// Enable all context buttons across all UI instances
+			//Enable all context buttons across all UI instances
 			document.querySelectorAll('.add-context-button').forEach(button => {
 				button.disabled = false;
 			});
@@ -416,7 +416,7 @@ export default class AfClient {
 	async endSession() {
 		await this.session.endSession();
 
-		// Disable all context buttons across all UI instances
+		//Disable all context buttons across all UI instances
 		document.querySelectorAll('.add-context-button').forEach(button => {
 			button.disabled = true;
 		});
@@ -436,7 +436,7 @@ export default class AfClient {
 		const uiInstance = new UiInstance(this, newId, node);
 		this.uiInstances.push(uiInstance);
 
-		// Sync context to the new UI instance if there's a selected context
+		//Sync context to the new UI instance if there's a selected context
 		if (this.selectedContext) {
 			const {contextId, contextLabel} = this.selectedContext.dataset;
 			const newInput = document.getElementById(`chatInputInput-${newId}`);
@@ -445,7 +445,7 @@ export default class AfClient {
 			}
 		}
 
-		// Enable context button for new UI instance if session is active
+		//Enable context button for new UI instance if session is active
 		if (this.isConnected()) {
 			const newContextButton = uiInstance.node.querySelector('.add-context-button');
 			if (newContextButton) {
@@ -501,7 +501,7 @@ export default class AfClient {
 				await this.addMessage('agentImportant', afterWarning, null, undefined);
 			}
 			document.querySelector('body').classList.add('alerts-visible');
-			// Scroll any lists with an element with class alert to make it visible
+			//Scroll any lists with an element with class alert to make it visible
 			const alertElements = document.querySelectorAll('.alert');
 			if (alertElements.length) {
 				const firstAlert = alertElements[0];
@@ -510,7 +510,7 @@ export default class AfClient {
 				const elementRect = firstAlert.getBoundingClientRect();
 
 				if (!(elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom)) {
-					firstAlert.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+					firstAlert.scrollIntoView({block: 'nearest', behavior: 'smooth'});
 				}
 			}
 
@@ -525,7 +525,7 @@ export default class AfClient {
 		const typingIndicators = this.conversation.getMessages().filter(msg => msg.type === 'typing');
 		this.conversation.removeMessages(typingIndicators.map(msg => msg.id));
 
-		// Update send button states for all inputs
+		//Update send button states for all inputs
 		document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
 			const buttonId = input.id.replace('chatInputInput-', 'buttonSendMessage-');
 			const button = document.getElementById(buttonId);
@@ -550,7 +550,7 @@ export default class AfClient {
 			});
 
 			document.querySelector('body').classList.toggle('afclient-is-adding-context', true);
-			// Find context areas in light DOM and inside known shadow roots (like custom-calendar)
+			//Find context areas in light DOM and inside known shadow roots (like custom-calendar)
 			const addHandlers = root => {
 				root.querySelectorAll('.afclient-context-area').forEach(area => {
 					const handler = event => this.selectContext(area, event);
@@ -559,10 +559,10 @@ export default class AfClient {
 				});
 			};
 
-			// Light DOM
+			//Light DOM
 			addHandlers(document);
 
-			// Shadow DOMs: traverse known components
+			//Shadow DOMs: traverse known components
 			document.querySelectorAll('custom-calendar').forEach(cal => {
 				if (cal.shadowRoot) {
 					addHandlers(cal.shadowRoot);
@@ -608,7 +608,7 @@ export default class AfClient {
 
 		if (node) {
 			const {contextId, contextLabel} = node.dataset;
-			// Apply context to all chat inputs across all UI instances
+			//Apply context to all chat inputs across all UI instances
 			document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
 				input.setContextItem(contextId, contextLabel);
 			});
@@ -623,7 +623,7 @@ export default class AfClient {
 		this.selectedContext = null;
 		document.querySelector('body').classList.remove('afclient-selected-context');
 
-		// Clear context from all chat inputs across all UI instances
+		//Clear context from all chat inputs across all UI instances
 		document.querySelectorAll('[id^="chatInputInput-"]').forEach(input => {
 			input.clearContext();
 		});
