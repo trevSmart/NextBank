@@ -2,13 +2,52 @@ import uuid4 from '../../../assets/libs/uuid4.mjs';
 import {createParser} from '../../../assets/libs/eventsource-parser.mjs';
 import {isDevelopment} from '../../../utils/fetchUtils.js';
 
+const SF_ACCESS_TOKEN_KEY = 'nextBankSalesforceAccessToken';
+
+/**
+ * Safely retrieves the Salesforce access token from sessionStorage
+ * @returns {string|null} The stored access token (non-empty string), or null if not available, empty, or on error
+ */
+function getStoredAccessToken() {
+	try {
+		if (typeof window !== 'undefined' && window.sessionStorage) {
+			const token = window.sessionStorage.getItem(SF_ACCESS_TOKEN_KEY);
+			// Return null for empty/falsy values to ensure consistency
+			return (token && token.trim().length > 0) ? token : null;
+		}
+	} catch (error) {
+		console.error('Error reading access token from sessionStorage:', error);
+	}
+	return null;
+}
+
+/**
+ * Safely stores the Salesforce access token in sessionStorage
+ * @param {string} token - The access token to store
+ * @returns {boolean} true if successfully stored, false otherwise
+ */
+function setStoredAccessToken(token) {
+	try {
+		if (typeof window !== 'undefined' && window.sessionStorage) {
+			if (token && typeof token === 'string' && token.trim().length > 0) {
+				window.sessionStorage.setItem(SF_ACCESS_TOKEN_KEY, token);
+				return true;
+			}
+		}
+	} catch (error) {
+		console.error('Error storing access token in sessionStorage:', error);
+	}
+	return false;
+}
+
 const salesforceParameters = {
 	urlMyDomain: 'https://orgfarm-a5b40e9c5b-dev-ed.develop.my.salesforce.com',
-	//Values injected by the proxy on token requests
+	// Values injected by the proxy on token requests
 	connectedAppClientId: '',
 	connectedAppClientSecret: '',
 	agentId: '0XxgK000000D2KDSA0',
-	accessToken: null
+	// Try to initialize with token from sessionStorage if available
+	accessToken: getStoredAccessToken()
 };
 
 export default class SfAgentApi extends EventTarget {
@@ -80,8 +119,11 @@ export default class SfAgentApi extends EventTarget {
 
 		const data = await response.json();
 
-		sessionStorage.setItem('nextBankSalesforceAccessToken', data.access_token);
+		const stored = setStoredAccessToken(data.access_token);
 		salesforceParameters.accessToken = data.access_token;
+		if (!stored) {
+			console.error('Warning: Failed to store Salesforce access token in sessionStorage. Token will not persist across sessions.');
+		}
 		return response;
 	}
 
