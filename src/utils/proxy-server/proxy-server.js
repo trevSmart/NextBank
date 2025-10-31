@@ -105,30 +105,46 @@ app.post('/proxy', async (req, res) => {
         }
 
         // SSRF Protection: Accept only requests to allow-listed hostnames or their subdomains
+        // Define allowed hosts (add your allowed hostnames or domains here)
+        // Use the global ALLOWED_HOSTNAMES constant for SSRF protection
+        const ALLOWED_HOSTS = ALLOWED_HOSTNAMES;
         let urlObj;
         try {
             urlObj = new URL(url);
-        } catch (err) {
-            console.log('Malformed URL rejected:', url);
-            return res.status(400).json({ error: "Malformed URL" });
+        } catch (e) {
+            console.log('Invalid URL:', url);
+            return res.status(400).json({ error: 'URL is invalid.' });
         }
-
-        // Check if hostname matches any allowed hostname or is a subdomain of it
-        const isAllowed = ALLOWED_HOSTNAMES.some(allowedHost => {
-            // Exact match
-            if (urlObj.hostname === allowedHost) {
-                return true;
-            }
-            // Subdomain match (e.g., api.salesforce.com matches salesforce.com)
-            if (urlObj.hostname.endsWith('.' + allowedHost)) {
-                return true;
-            }
-            return false;
-        });
-
-        if (!isAllowed) {
-            console.log('Proxy SSRF blocked:', urlObj.hostname, 'not allow-listed');
-            return res.status(403).json({ error: "Target hostname not allowed" });
+        // Only allow https protocol
+        if (urlObj.protocol !== 'https:') {
+            console.log('Blocked protocol:', urlObj.protocol);
+            return res.status(403).json({ error: 'Only HTTPS endpoints are allowed.' });
+        }
+        // Check hostname allow-list
+        const isAllowed = ALLOWED_HOSTS.some(allowed => (
+            urlObj.hostname === allowed || urlObj.hostname.endsWith('.' + allowed)
+        ));
+        // Block localhost/internal hosts for extra safety
+        const forbiddenHosts = [
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0',
+            '::1',
+            '::ffff:127.0.0.1'
+        ];
+        
+        // Check for forbidden hosts and private IP ranges
+        const isForbidden = forbiddenHosts.includes(urlObj.hostname) || 
+            urlObj.hostname.match(/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) ||           // 10.0.0.0/8
+            urlObj.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/) || // 172.16.0.0/12
+            urlObj.hostname.match(/^192\.168\.\d{1,3}\.\d{1,3}$/) ||              // 192.168.0.0/16
+            urlObj.hostname.match(/^169\.254\.\d{1,3}\.\d{1,3}$/) ||              // 169.254.0.0/16 (link-local)
+            urlObj.hostname.match(/^fc00:/i) ||                                    // fc00::/7 (IPv6 ULA)
+            urlObj.hostname.match(/^fe80:/i);                                      // fe80::/10 (IPv6 link-local)
+        
+        if (!isAllowed || isForbidden) {
+            console.log('Blocked SSRF attempt to:', urlObj.hostname);
+            return res.status(403).json({ error: 'Endpoint not allowed.' });
         }
 
         // Inject TwelveData API key if needed (avoid exposing it client-side)
@@ -170,7 +186,7 @@ app.post('/proxy', async (req, res) => {
         console.log();
         console.log();
         console.log(url);
-        console.log();
+        console.log('Validated target hostname:', urlObj.hostname);
         console.log(JSON.stringify(headers, null, 4));
         console.log();
         console.log(JSON.stringify(formattedBody, null, 4));
