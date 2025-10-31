@@ -24,7 +24,7 @@ const allowedOrigins = [
 	'http://127.0.0.1:60566',
 	'http://127.0.0.1:3000',
 	'http://127.0.0.1:5500',
-	'https://trevsmart.github.io'  //GitHub Pages deployment (update for your own deployment)
+	// 'https://yourusername.github.io'  // Example: GitHub Pages deployment (replace with your own deployment URL)
 ];
 
 //CORS preflight headers (shared between no-origin and whitelisted origin responses)
