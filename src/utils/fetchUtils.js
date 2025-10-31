@@ -13,9 +13,9 @@
 const IS_DEVELOPMENT = typeof window !== 'undefined' && (
 	window.location.hostname === 'localhost' ||
 	window.location.hostname === '127.0.0.1' ||
-	window.location.hostname.startsWith('192.168.') ||
-	window.location.hostname.startsWith('10.') ||
-	window.location.hostname.startsWith('172.')
+	/^192\.168\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
+	/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname) ||
+	/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(window.location.hostname)
 );
 
 const PROXY_URL = 'http://localhost:3000/proxy';
