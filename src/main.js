@@ -168,9 +168,9 @@ function dragStart(event) {
 }
 
 function cleanup() {
-	if (localStorage.getItem('nextBankSalesforceAccessToken')) {
+	if (sessionStorage.getItem('nextBankSalesforceAccessToken')) {
 		afClient.endSession();
-		localStorage.removeItem('nextBankSalesforceAccessToken');
+		sessionStorage.removeItem('nextBankSalesforceAccessToken');
 	}
 
 	//Netejar tots els event listeners
